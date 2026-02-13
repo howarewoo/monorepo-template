@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui";
+import { cn } from "@infrastructure/ui";
 import * as React from "react";
 
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(

@@ -14,12 +14,12 @@
     "@hono/node-server": "^1.13.8",
     "@orpc/openapi": "^0.46.0",
     "@orpc/server": "catalog:",
-    "@repo/api-client": "workspace:*",
+    "@infrastructure/api-client": "workspace:*",
     "hono": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
+    "@infrastructure/typescript-config": "workspace:*",
     "@types/node": "^22.10.5",
     "tsx": "^4.19.2",
     "typescript": "catalog:"
