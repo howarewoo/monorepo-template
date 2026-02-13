@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui";
+import { cn } from "@infrastructure/ui";
 import { Text, type TextProps, View, type ViewProps } from "react-native";
 
 export interface CardProps extends ViewProps {

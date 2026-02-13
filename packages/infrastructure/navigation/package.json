@@ -1,5 +1,5 @@
 {
-  "name": "@infrastructure/utils",
+  "name": "@infrastructure/navigation",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -15,8 +15,14 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
+  "dependencies": {
+    "react": "catalog:"
+  },
   "devDependencies": {
     "@infrastructure/typescript-config": "workspace:*",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "catalog:",
+    "jsdom": "^26.0.0",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
