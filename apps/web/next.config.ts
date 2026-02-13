@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  transpilePackages: ["@repo/ui", "@repo/utils", "@repo/api-client"],
+  transpilePackages: [
+    "@infrastructure/ui",
+    "@infrastructure/utils",
+    "@infrastructure/api-client",
+    "@infrastructure/navigation",
+  ],
 };
 
 export default nextConfig;

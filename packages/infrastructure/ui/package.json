@@ -1,5 +1,5 @@
 {
-  "name": "@repo/ui",
+  "name": "@infrastructure/ui",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -24,7 +24,7 @@
     "tailwind-merge": "^2.6.0"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
+    "@infrastructure/typescript-config": "workspace:*",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
   }
