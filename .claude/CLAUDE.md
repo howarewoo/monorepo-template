@@ -36,13 +36,13 @@ pnpm --filter @infrastructure/navigation test
 **Monorepo with three package types:**
 - **Apps** (`apps/*`): Deployable applications
   - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui + Tailwind CSS (port 3000)
-  - `apps/mobile` — Expo + React Native + NativeWind + react-native-reusables
+  - `apps/mobile` — Expo + React Native + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
 - **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure
 - **Infrastructure** (`packages/infrastructure/*`): Shared utilities; can be used anywhere
   - `@infrastructure/api-client` — oRPC contracts, router, and typed client
   - `@infrastructure/navigation` — Platform-agnostic navigation (Link, useNavigation, NavigationProvider)
-  - `@infrastructure/ui` — Shared Tailwind preset, design tokens, CSS utilities (`cn()`, `tokens`)
+  - `@infrastructure/ui` — Shared design tokens, CSS utilities (`cn()`, `tokens`)
   - `@infrastructure/utils` — Cross-platform utility functions
   - `@infrastructure/typescript-config` — Shared TypeScript configs (base, library, nextjs, react-native)
 
@@ -70,8 +70,11 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 ### Cross-Platform UI
 
 - **Web**: shadcn/ui components + Tailwind CSS
-- **Mobile**: react-native-reusables + NativeWind
-- **Shared**: Tailwind preset and design tokens in `@infrastructure/ui`; both platforms consume the same theme
+- **Mobile**: react-native-reusables + UniWind
+- **Shared**: Design tokens and CSS utilities in `@infrastructure/ui`; both platforms consume the same theme
+- **Tailwind v4**: CSS-first config — theme defined via `@theme` blocks in each app's CSS (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
+
+**Gotcha**: UniWind requires `react-native>=0.81.0`. Expo SDK 52 uses RN 0.76.6 — iOS/Android work fine but mobile web export is disabled (`expo export --platform ios --platform android`).
 
 ### Dependencies
 
