@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code when working with this monorepo template.
 
-## Constitution (Binding)
+## Project Overview
 
 See [eng-constitution.md](../eng-constitution.md) for foundational rules. The constitution is **binding** and supersedes other instructions.
 
@@ -35,7 +35,7 @@ pnpm --filter @infrastructure/navigation test
 
 **Monorepo with three package types:**
 - **Apps** (`apps/*`): Deployable applications
-  - `apps/web` — Next.js 15 (App Router) + shadcn/ui + Tailwind CSS (port 3000)
+  - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui + Tailwind CSS (port 3000)
   - `apps/mobile` — Expo + React Native + NativeWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
 - **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure
@@ -95,6 +95,7 @@ react: "^19.0.0"
 - Max 500 lines per non-test source file
 - TDD methodology (see constitution Principle VIII)
 - All user-facing components and procedures need JSDoc comments
+- React Compiler is enabled in `apps/web`
 
 ## Testing
 
