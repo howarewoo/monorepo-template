@@ -34,7 +34,7 @@ export default function HomeScreen() {
             </CardHeader>
             <CardContent>
               <Text className="text-sm text-muted-foreground">
-                React Native with Expo Router and NativeWind styling
+                React Native with Expo Router and UniWind styling
               </Text>
             </CardContent>
           </Card>
