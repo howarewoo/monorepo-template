@@ -33,7 +33,7 @@ export default function Home() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                React Native with Expo Router and NativeWind styling
+                React Native with Expo Router and UniWind styling
               </p>
             </CardContent>
           </Card>
