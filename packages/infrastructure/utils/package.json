@@ -1,5 +1,5 @@
 {
-  "name": "@repo/utils",
+  "name": "@infrastructure/utils",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -16,7 +16,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@repo/typescript-config": "workspace:*",
+    "@infrastructure/typescript-config": "workspace:*",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

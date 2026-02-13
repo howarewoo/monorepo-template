@@ -1,4 +1,4 @@
-import { cn } from "@repo/ui";
+import { cn } from "@infrastructure/ui";
 import { type VariantProps, cva } from "class-variance-authority";
 import { Pressable, type PressableProps } from "react-native";
 
