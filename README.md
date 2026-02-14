@@ -1,16 +1,56 @@
+<div align="center">
+
 # monorepo-template
 
-![monorepo-template screenshot](docs/web-app.png)
+**Ship web, mobile, and API from a single codebase.**\
+Type-safe from database to device, with shared packages that keep your team moving fast.
 
-> Ship web, mobile, and API from a single codebase. Type-safe from database to device, with shared packages that keep your team moving fast.
+[![CI](https://github.com/howarewoo/monorepo-template/actions/workflows/ci.yml/badge.svg)](https://github.com/howarewoo/monorepo-template/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+
+<img src="docs/web-app.png" alt="Web app screenshot" width="680">
+
+<details>
+<summary>Landing page</summary>
+<br>
+<img src="docs/landing-page.png" alt="Landing page screenshot" width="680">
+</details>
+
+</div>
+
+---
+
+## Table of Contents
+
+- [Why This Template?](#why-this-template)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Architecture](#architecture)
+- [Scripts](#scripts)
+- [Key Patterns](#key-patterns)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
+
+## Why This Template?
+
+Starting a multi-platform project usually means stitching together separate repos, duplicating types, and fighting config drift. This template solves that:
+
+- **One repo, three platforms** — Web, mobile, and API share code from day one with no copy-paste
+- **Type safety everywhere** — oRPC contracts generate typed clients so API changes break at compile time, not in production
+- **Production-ready CI** — GitHub Actions, Biome linting, Vitest tests, and Playwright E2E wired up out of the box
+- **Modern defaults** — React 19, Next.js 16, Expo SDK 54, Tailwind v4, and Turborepo with zero legacy baggage
 
 ## Features
 
-- **Shared by default** — Design tokens, navigation, UI components, and utilities in shared packages
-- **Type-safe end to end** — oRPC contracts generate typed clients; errors caught at compile time
-- **Cross-platform** — Next.js 16 web + Expo SDK 54 mobile + Hono API, one repo
+- **Shared by default** — Design tokens, navigation, UI components, and utilities live in shared packages consumed by every app
+- **Type-safe end to end** — oRPC contracts generate typed clients; mismatches caught at compile time
+- **Cross-platform** — Next.js 16 web + Expo SDK 54 mobile + Hono API, all in one repo
 - **Modern tooling** — React 19, React Compiler, Tailwind v4, Turborepo, Biome, pnpm
-- **Production CI/CD** — GitHub Actions for linting, testing, and database migrations
+- **Production CI/CD** — GitHub Actions for linting, testing, and database migrations on every PR
 
 ## Tech Stack
 
@@ -23,6 +63,11 @@
 | **Language** | TypeScript | Strict types everywhere, no `any` |
 | **Monorepo** | Turborepo, pnpm | Cached builds, workspace dependency catalog |
 | **Quality** | Biome, Vitest, Playwright | Lint + format, unit tests, E2E tests |
+
+## Prerequisites
+
+- **Node.js 22** — [download](https://nodejs.org/) or use a version manager like `fnm` / `nvm`
+- **pnpm 10.29.3** — install via `corepack enable && corepack prepare pnpm@10.29.3 --activate`
 
 ## Quick Start
 
@@ -62,6 +107,11 @@ monorepo-template/
 
 Three-tier dependency flow:
 
+```
+  Apps  →  Features  →  Infrastructure
+  (web, mobile, api)    (business logic)    (shared utilities)
+```
+
 - **Infrastructure** — shared utilities, used by everything
 - **Features** — standalone business logic, imports only infrastructure
 - **Apps** — compose infrastructure + features into deployable units
@@ -73,10 +123,13 @@ Three-tier dependency flow:
 | `pnpm dev` | Start all apps in development |
 | `pnpm build` | Build all packages via Turborepo |
 | `pnpm test` | Run Vitest tests |
+| `pnpm test:changed` | Test only packages changed since last commit |
 | `pnpm test:e2e` | Run Playwright E2E tests |
 | `pnpm typecheck` | Type check all packages |
 | `pnpm lint` | Lint with Biome |
 | `pnpm format` | Format with Biome |
+| `pnpm clean` | Remove build artifacts and node_modules |
+| `pnpm --filter <app> dev` | Run a single app (e.g. `pnpm --filter web dev`) |
 
 ## Key Patterns
 
@@ -115,8 +168,14 @@ catalog:
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and workflow. Architectural decisions are in the [engineering constitution](eng-constitution.md).
+Contributions are welcome! Whether it's a bug fix, new feature, or documentation improvement — we'd love your help.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and workflow. Architectural decisions are documented in the [engineering constitution](eng-constitution.md).
+
+## Acknowledgments
+
+Built with [Next.js](https://nextjs.org/), [Expo](https://expo.dev/), [Hono](https://hono.dev/), [oRPC](https://orpc.unnoq.com/), [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/), [Turborepo](https://turbo.build/), and [Biome](https://biomejs.dev/).
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) &copy; Adam Woo

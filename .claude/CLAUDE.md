@@ -8,7 +8,7 @@ See [eng-constitution.md](../eng-constitution.md) for foundational rules. The co
 
 ## Prerequisites
 
-- **pnpm 9.15.4** (enforced via `packageManager` in root `package.json`)
+- **pnpm 10.29.3** (enforced via `packageManager` in root `package.json`)
 - **Node.js 22** (CI pins v22; compatible with ES2022 target)
 
 ## Commands
@@ -24,6 +24,7 @@ pnpm typecheck        # Type check all packages
 pnpm lint             # Lint via Biome
 pnpm lint:fix         # Auto-fix linting issues
 pnpm format           # Format via Biome + sort package.json
+pnpm format:unsafe    # Format + apply unsafe fixes (used by pre-commit)
 pnpm pre-commit       # Install, format, and test changed files
 pnpm clean            # Remove build artifacts and node_modules
 pnpm reset            # Deep clean: node_modules, .next, dist, .turbo, untracked files
@@ -125,6 +126,8 @@ react: "19.1.0"
 
 **Gotcha**: `pnpm build` runs `pnpm self-update && turbo build` — this upgrades pnpm before building. If local builds behave differently from CI, check whether `pnpm --version` still matches the `packageManager` field in root `package.json`.
 
+**Gotcha**: pnpm 10 disables dependency lifecycle scripts by default. If a new dependency has a `postinstall` script (e.g., `esbuild`, `prisma`, native modules), add it to `pnpm.onlyBuiltDependencies` in the root `package.json` or it will silently fail to build.
+
 ## Conventions
 
 - **Biome**: 100-char line width, double quotes, semicolons, ES5 trailing commas
@@ -142,11 +145,12 @@ react: "19.1.0"
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 1. `biome ci` — lint + format check
-2. `pnpm test:changed` — tests for changed packages only
+2. `pnpm turbo build` — build all packages
+3. `pnpm test:changed` — tests for changed packages only
 
 **Note**: CI does not run `typecheck` — run `pnpm typecheck` locally before pushing.
 
-**Dependabot** (`.github/dependabot.yml`) runs weekly scans for npm and GitHub Actions updates.
+**Dependabot** (`.github/dependabot.yml`) runs weekly scans for npm and GitHub Actions updates. PRs target `staging` (not `main`).
 
 **Community files**: Issue templates (bug report, feature request), PR template, and `CONTRIBUTING.md` guide new contributors.
 
