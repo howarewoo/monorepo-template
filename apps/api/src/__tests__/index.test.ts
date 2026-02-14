@@ -10,9 +10,8 @@ vi.mock("@infrastructure/api-client/server", () => ({
   router: {},
 }));
 
-// Mock RPCHandler - create a shared mock handle function
-const createMockHandle = () => vi.fn();
-let mockHandle = createMockHandle();
+// Mock RPCHandler
+const mockHandle = vi.fn();
 
 vi.mock("@orpc/server/fetch", () => ({
   RPCHandler: vi.fn(() => ({
@@ -27,7 +26,7 @@ import app from "../index";
 
 describe("API Server", () => {
   beforeEach(() => {
-    mockHandle = createMockHandle();
+    vi.clearAllMocks();
   });
 
   it("should return welcome message on GET /", async () => {
@@ -53,6 +52,24 @@ describe("API Server", () => {
       expect.objectContaining({
         prefix: "/",
         context: expect.objectContaining({ requestId: undefined }),
+      })
+    );
+  });
+
+  it("should forward x-request-id header to oRPC context", async () => {
+    mockHandle.mockResolvedValueOnce({
+      matched: true,
+      response: new Response("ok"),
+    });
+
+    await app.request("/api/users", {
+      headers: { "x-request-id": "test-req-123" },
+    });
+
+    expect(mockHandle).toHaveBeenCalledWith(
+      expect.any(Request),
+      expect.objectContaining({
+        context: expect.objectContaining({ requestId: "test-req-123" }),
       })
     );
   });

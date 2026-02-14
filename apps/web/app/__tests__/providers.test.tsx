@@ -1,6 +1,6 @@
 import { Providers } from "@/app/providers";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockNavigationValue = {
   router: {
@@ -15,16 +15,20 @@ vi.mock("@/lib/navigation", () => ({
   useWebNavigation: () => mockNavigationValue,
 }));
 
-let capturedNavigationValue: unknown;
+const navigationProviderSpy = vi.fn();
 
 vi.mock("@infrastructure/navigation", () => ({
   NavigationProvider: ({ children, value }: { children: React.ReactNode; value: unknown }) => {
-    capturedNavigationValue = value;
+    navigationProviderSpy(value);
     return <div data-testid="navigation-provider">{children}</div>;
   },
 }));
 
 describe("Providers", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("renders children wrapped in providers", () => {
     render(
       <Providers>
@@ -53,9 +57,15 @@ describe("Providers", () => {
       </Providers>
     );
 
-    expect(capturedNavigationValue).toBeDefined();
-    const value = capturedNavigationValue as { router: unknown; Link: unknown };
-    expect(value.router).toBeDefined();
-    expect(value.Link).toBeDefined();
+    expect(navigationProviderSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        router: expect.objectContaining({
+          navigate: expect.any(Function),
+          replace: expect.any(Function),
+          back: expect.any(Function),
+        }),
+        Link: expect.any(Function),
+      })
+    );
   });
 });

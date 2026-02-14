@@ -29,17 +29,17 @@ pnpm reset            # Clear node_modules, .next, dist, .turbo caches
 pnpm gencode          # Run code generation tasks via Turborepo
 
 # Run a single package
-pnpm --filter @repo/web dev
-pnpm --filter @repo/api dev
+pnpm --filter web dev
+pnpm --filter api dev
 pnpm --filter @infrastructure/navigation test
 
 # Landing page
-pnpm --filter @repo/landing dev
+pnpm --filter landing dev
 
 # Mobile platform targets
-pnpm --filter @repo/mobile ios
-pnpm --filter @repo/mobile android
-pnpm --filter @repo/mobile web
+pnpm --filter mobile ios
+pnpm --filter mobile android
+pnpm --filter mobile web
 ```
 
 ## Architecture

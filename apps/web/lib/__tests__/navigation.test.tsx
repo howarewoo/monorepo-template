@@ -1,6 +1,6 @@
 import { useWebNavigation } from "@/lib/navigation";
 import { render, renderHook, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
@@ -31,6 +31,10 @@ vi.mock("next/link", () => ({
     </a>
   ),
 }));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("useWebNavigation", () => {
   it("returns router with navigate, replace, and back functions", () => {
