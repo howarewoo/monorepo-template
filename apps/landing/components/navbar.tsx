@@ -1,5 +1,6 @@
 "use client";
 
+import { Logo } from "@/components/logo";
 import { Button } from "@infrastructure/ui-web";
 import { useState } from "react";
 
@@ -18,23 +19,7 @@ export function Navbar() {
       <nav className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
         {/* Logo */}
         <a href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 22 22"
-            fill="none"
-            aria-hidden="true"
-            className="text-primary"
-          >
-            <rect width="22" height="22" rx="5" fill="currentColor" />
-            <path
-              d="M6 11h4l2-4 2 8 2-4h2"
-              stroke="white"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <Logo />
           <span>Monorepo Template</span>
         </a>
 

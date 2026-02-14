@@ -9,8 +9,8 @@ const technologies = [
   "Turborepo",
 ];
 
-/** Horizontal strip of technology names in muted gray. */
-export function LogoBar() {
+/** Horizontal strip of technology names showcasing the template's stack. */
+export function TechStackBar() {
   return (
     <section className="border-b border-border/40 py-10">
       <div className="mx-auto max-w-6xl px-6">
