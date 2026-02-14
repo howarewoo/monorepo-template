@@ -1,6 +1,6 @@
-import { apiClient } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Text, View } from "react-native";
+import { apiClient } from "@/lib/api";
 
 export function UserList() {
   const {

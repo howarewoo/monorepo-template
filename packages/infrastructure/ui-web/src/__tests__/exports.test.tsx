@@ -2,6 +2,7 @@ import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
   Button,
+  buttonVariants,
   Card,
   CardAction,
   CardContent,
@@ -9,7 +10,6 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  buttonVariants,
 } from "../index";
 
 describe("@infrastructure/ui-web exports", () => {

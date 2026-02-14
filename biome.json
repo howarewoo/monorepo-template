@@ -1,7 +1,11 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
+  "$schema": "https://biomejs.dev/schemas/2.3.15/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   },
   "linter": {
     "enabled": true,
@@ -32,16 +36,24 @@
       "trailingCommas": "es5"
     }
   },
+  "css": {
+    "parser": {
+      "cssModules": true,
+      "tailwindDirectives": true
+    }
+  },
   "files": {
-    "ignore": [
-      "node_modules",
-      ".next",
-      ".expo",
-      "dist",
-      ".turbo",
-      "coverage",
-      "*.config.js",
-      "*.config.mjs"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/.expo",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/coverage",
+      "!**/*.config.js",
+      "!**/*.config.mjs",
+      "!**/.claude/skills"
     ]
   }
 }

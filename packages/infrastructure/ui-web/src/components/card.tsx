@@ -1,6 +1,5 @@
-import type * as React from "react";
-
 import { cn } from "@infrastructure/ui";
+import type * as React from "react";
 
 /** Container component for grouping related content with consistent styling. */
 function Card({
