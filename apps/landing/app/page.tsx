@@ -1,10 +1,9 @@
 import { FeatureSection } from "@/components/feature-section";
 import { Footer } from "@/components/footer";
 import { Hero } from "@/components/hero";
-import { LogoBar } from "@/components/logo-bar";
+import { TechStackBar } from "@/components/logo-bar";
 import { Navbar } from "@/components/navbar";
-import { Button } from "@infrastructure/ui-web";
-import { Card, CardContent, CardHeader, CardTitle } from "@infrastructure/ui-web";
+import { Button, Card, CardContent, CardHeader, CardTitle } from "@infrastructure/ui-web";
 
 const valueProps = [
   {
@@ -42,12 +41,13 @@ const testimonials = [
   },
 ];
 
+/** Marketing landing page showcasing monorepo features, tech stack, and testimonials. */
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
       <Hero />
-      <LogoBar />
+      <TechStackBar />
 
       {/* Mission Statement */}
       <section className="border-b border-border/40 py-20 md:py-28">

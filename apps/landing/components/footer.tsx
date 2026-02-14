@@ -1,3 +1,7 @@
+import { Logo } from "@/components/logo";
+
+const PLACEHOLDER_HREF = "#" as const;
+
 const footerLinks = [
   {
     title: "Product",
@@ -22,23 +26,7 @@ export function Footer() {
           {/* Logo & tagline */}
           <div className="md:col-span-1">
             <div className="flex items-center gap-2.5 font-semibold tracking-tight">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 22 22"
-                fill="none"
-                aria-hidden="true"
-                className="text-primary"
-              >
-                <rect width="22" height="22" rx="5" fill="currentColor" />
-                <path
-                  d="M6 11h4l2-4 2 8 2-4h2"
-                  stroke="white"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <Logo size={20} />
               <span>Monorepo Template</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -54,7 +42,7 @@ export function Footer() {
                 {group.links.map((link) => (
                   <li key={link}>
                     <a
-                      href="/placeholder"
+                      href={PLACEHOLDER_HREF}
                       className="text-sm text-muted-foreground transition-colors hover:text-foreground"
                     >
                       {link}
@@ -70,10 +58,10 @@ export function Footer() {
         <div className="mt-16 flex flex-col items-center justify-between gap-4 border-t border-border/40 pt-6 text-xs text-muted-foreground md:flex-row">
           <span>MIT License</span>
           <div className="flex gap-6">
-            <a href="/placeholder" className="transition-colors hover:text-foreground">
+            <a href={PLACEHOLDER_HREF} className="transition-colors hover:text-foreground">
               Privacy
             </a>
-            <a href="/placeholder" className="transition-colors hover:text-foreground">
+            <a href={PLACEHOLDER_HREF} className="transition-colors hover:text-foreground">
               Terms
             </a>
           </div>

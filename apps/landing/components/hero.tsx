@@ -1,17 +1,16 @@
 import { Button } from "@infrastructure/ui-web";
 
+const DOT_GRID_STYLE = {
+  backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
+  backgroundSize: "24px 24px",
+} as const;
+
 /** Hero section with headline, subtitle, and a stylized terminal visual. */
 export function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-border/40">
       {/* Subtle dot grid background */}
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-          backgroundSize: "24px 24px",
-        }}
-      />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={DOT_GRID_STYLE} />
 
       <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-24 md:pb-28 md:pt-32">
         {/* Announcement badge */}

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description: "The modern monorepo template for web, mobile, and API",
 };
 
+/** Root layout for the landing app. Applies Inter font and global styles. */
 export default function RootLayout({
   children,
 }: Readonly<{

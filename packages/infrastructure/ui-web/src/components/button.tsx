@@ -42,6 +42,7 @@ const buttonVariants = cva(
   }
 );
 
+/** Primary action button with multiple variants and sizes. Built on Base UI Button primitive. */
 function Button({
   className,
   variant = "default",
