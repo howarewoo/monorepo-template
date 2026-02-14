@@ -16,6 +16,7 @@
     "test": "turbo test",
     "test:changed": "turbo run test --filter='...[HEAD^1]' --output-logs=errors-only",
     "test:e2e": "turbo test:e2e",
+    "test:changed": "turbo run test --filter='...[HEAD^1]' --output-logs=errors-only",
     "typecheck": "turbo typecheck"
   },
   "devDependencies": {
