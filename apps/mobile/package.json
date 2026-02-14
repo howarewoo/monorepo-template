@@ -17,7 +17,7 @@
     "@expo/metro-runtime": "catalog:",
     "@expo/vector-icons": "catalog:",
     "@orpc/client": "catalog:",
-    "@orpc/react-query": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
     "@react-navigation/native": "catalog:",
     "@infrastructure/api-client": "workspace:*",
     "@infrastructure/navigation": "workspace:*",

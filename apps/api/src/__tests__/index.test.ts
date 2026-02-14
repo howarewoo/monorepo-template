@@ -10,15 +10,15 @@ vi.mock("@infrastructure/api-client/server", () => ({
   router: {},
 }));
 
-// Mock RPCHandler
+// Mock RPCHandler — class syntax required: Vitest 4 arrow functions are not constructable
 const mockHandle = vi.fn();
 
 vi.mock("@orpc/server/fetch", () => ({
-  RPCHandler: vi.fn(() => ({
+  RPCHandler: class {
     get handle() {
       return mockHandle;
-    },
-  })),
+    }
+  },
 }));
 
 // Now import app
