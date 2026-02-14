@@ -13,14 +13,6 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-// Enable package exports resolution
-config.resolver.unstable_enablePackageExports = true;
-config.resolver.unstable_conditionNames = [
-  "browser",
-  "require",
-  "react-native",
-];
-
 module.exports = withUniwindConfig(config, {
   cssEntryFile: "./global.css",
   dtsFile: "./uniwind-types.d.ts",

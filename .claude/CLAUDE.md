@@ -23,6 +23,7 @@ pnpm typecheck        # Type check all packages
 pnpm lint             # Lint via Biome
 pnpm lint:fix         # Auto-fix linting issues
 pnpm format           # Format via Biome + sort package.json
+pnpm pre-commit       # Install, format, and test changed files
 pnpm reset            # Clear node_modules, .next, dist, .turbo caches
 
 # Run a single package
@@ -36,7 +37,7 @@ pnpm --filter @infrastructure/navigation test
 **Monorepo with three package types:**
 - **Apps** (`apps/*`): Deployable applications
   - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui + Tailwind CSS (port 3000)
-  - `apps/mobile` — Expo + React Native + UniWind + react-native-reusables
+  - `apps/mobile` — Expo SDK 54 + React Native 0.81 + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
 - **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure
 - **Infrastructure** (`packages/infrastructure/*`): Shared utilities; can be used anywhere
@@ -72,16 +73,22 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 - **Web**: shadcn/ui components + Tailwind CSS
 - **Mobile**: react-native-reusables + UniWind
 - **Shared**: Design tokens and CSS utilities in `@infrastructure/ui`; both platforms consume the same theme
-- **Tailwind v4**: CSS-first config — theme defined via `@theme` blocks in each app's CSS (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
+- **Tailwind v4**: CSS-first config (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
+- **Web CSS**: `apps/web/app/globals.css` imports from `@infrastructure/ui/globals.css` — single source of truth
+- **Mobile CSS**: `apps/mobile/global.css` hardcodes theme tokens (UniWind on RN doesn't support CSS `var()` indirection in `@theme` blocks); dark mode uses `@layer theme { :root { @variant dark {} } }`
 
-**Gotcha**: UniWind requires `react-native>=0.81.0`. Expo SDK 52 uses RN 0.76.6 — iOS/Android work fine but mobile web export is disabled (`expo export --platform ios --platform android`).
+**Note**: Mobile web export is enabled — Expo SDK 54 ships with RN 0.81, satisfying UniWind's `react-native>=0.81.0` requirement.
+
+**Gotcha**: Do not set `config.resolver.unstable_conditionNames` in `apps/mobile/metro.config.js` — it overrides Metro's platform-aware defaults and breaks UniWind's web resolver (causes `createOrderedCSSStyleSheet` resolution failures).
+
+**Gotcha**: Mobile theme tokens in `apps/mobile/global.css` are hardcoded HSL values that must stay in sync with `packages/infrastructure/ui/src/globals.css` `:root` / `.dark` blocks. When updating the shared theme, update both files.
 
 ### Dependencies
 
 Use pnpm catalog for shared dependency versions:
 ```yaml
 # pnpm-workspace.yaml catalog:
-react: "^19.0.0"
+react: "^19.2.0"
 ```
 ```json
 // package.json
