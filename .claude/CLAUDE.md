@@ -18,6 +18,7 @@ pnpm install          # Install dependencies
 pnpm dev              # Start all apps (web:3000, api:3001)
 pnpm build            # Build all packages/apps via Turborepo
 pnpm test             # Run Vitest tests across all packages
+pnpm test:changed     # Run tests for packages changed since last commit
 pnpm test:e2e         # Run Playwright E2E tests
 pnpm typecheck        # Type check all packages
 pnpm lint             # Lint via Biome
@@ -30,6 +31,11 @@ pnpm reset            # Clear node_modules, .next, dist, .turbo caches
 pnpm --filter @repo/web dev
 pnpm --filter @repo/api dev
 pnpm --filter @infrastructure/navigation test
+
+# Mobile platform targets
+pnpm --filter @repo/mobile ios
+pnpm --filter @repo/mobile android
+pnpm --filter @repo/mobile web
 ```
 
 ## Architecture
@@ -39,7 +45,7 @@ pnpm --filter @infrastructure/navigation test
   - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui (Base UI) + Tailwind CSS (port 3000)
   - `apps/mobile` — Expo SDK 54 + React Native 0.81 + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
-- **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure
+- **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure (currently empty — scaffold for new features)
 - **Infrastructure** (`packages/infrastructure/*`): Shared utilities; can be used anywhere
   - `@infrastructure/api-client` — oRPC contracts, router, and typed client
   - `@infrastructure/navigation` — Platform-agnostic navigation (Link, useNavigation, NavigationProvider)
@@ -75,14 +81,14 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 - **Shared**: Design tokens and CSS utilities in `@infrastructure/ui`; both platforms consume the same theme
 - **Tailwind v4**: CSS-first config (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
 - **Web CSS**: `apps/web/app/globals.css` imports from `@infrastructure/ui/globals.css` — single source of truth
-- **Mobile CSS**: `apps/mobile/global.css` hardcodes theme tokens (UniWind on RN doesn't support CSS `var()` indirection in `@theme` blocks); dark mode uses `@layer theme { :root { @variant dark {} } }`
+- **Mobile CSS**: `apps/mobile/global.css` hardcodes theme tokens (UniWind on RN doesn't support CSS `var()` indirection in `@theme` blocks); light/dark colors use `@layer theme { :root { @variant light {} @variant dark {} } }` — both variants are required
 - **Adding components**: `pnpx shadcn@latest add <component>` from `apps/web/`; `components.json` configures style (`base-vega`), utils alias (`@infrastructure/ui`), and icon library (`lucide`)
 
 **Note**: Mobile web export is enabled — Expo SDK 54 ships with RN 0.81, satisfying UniWind's `react-native>=0.81.0` requirement.
 
 **Gotcha**: Do not set `config.resolver.unstable_conditionNames` in `apps/mobile/metro.config.js` — it overrides Metro's platform-aware defaults and breaks UniWind's web resolver (causes `createOrderedCSSStyleSheet` resolution failures).
 
-**Gotcha**: Mobile theme tokens in `apps/mobile/global.css` are hardcoded HSL values that must stay in sync with `packages/infrastructure/ui/src/globals.css` `:root` / `.dark` blocks. When updating the shared theme, update both files.
+**Gotcha**: Mobile theme tokens in `apps/mobile/global.css` are hardcoded HSL values that must stay in sync with `packages/infrastructure/ui/src/globals.css` `:root` / `.dark` blocks. When updating the shared theme, update both files. UniWind requires both `@variant light` and `@variant dark` inside `@layer theme` — putting color tokens only in `@theme` without a `@variant light` block causes always-dark rendering.
 
 ### Dependencies
 
