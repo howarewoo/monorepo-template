@@ -125,9 +125,6 @@ For each config file, check if the source exists and create a symlink if it does
 ```bash
 # Root .env
 test -f <repo-root>/.env && ln -s <repo-root>/.env .worktrees/<name>/.env
-
-# Payload .env
-test -f <repo-root>/apps/payload/.env && ln -s <repo-root>/apps/payload/.env .worktrees/<name>/apps/payload/.env
 ```
 
 If a source file doesn't exist, skip it silently.
@@ -152,7 +149,6 @@ Worktree created:
 
   Configs symlinked:
     .env                     symlinked | not found, skipped
-    apps/payload/.env        symlinked | not found, skipped
 
   Dependencies: installed
 
