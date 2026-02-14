@@ -13,9 +13,9 @@ This skill provides comprehensive pull request analysis with deep semantic under
 1. **Parallel Sub-Agent Architecture** - 5 specialized auditors run concurrently for faster, deeper analysis:
    - Security Auditor - Injection vulnerabilities, auth gaps, data exposure, race conditions
    - Architecture Auditor - Import boundaries, monorepo structure, file organization, naming
-   - Constitution Auditor - All 21 project principles compliance verification
+   - Constitution Auditor - All 14 project principles compliance verification
    - Code Quality Auditor - Complexity, code smells, performance, testing gaps
-   - API Stability Auditor - oRPC compliance (Principle XVIII), breaking changes (Principle XIX)
+   - API Stability Auditor - oRPC compliance (Principle IX), breaking changes (Principle XIII)
 2. **Smart Aggregation** - Findings merged, deduplicated, and sorted by severity
 3. **PR Metadata Updates** - Automatically updates PR title and description (never just recommends)
 4. **Logic Flow Visualization** - Mermaid diagrams for complex workflows
@@ -64,7 +64,7 @@ Execute the entire workflow from start to finish:
 - **GitHub CLI Required**: Must have `gh` authenticated and be in a git repository
 - **Parallel Execution**: Uses Task tool to launch 5 specialized auditors concurrently
 - **AI-Driven Analysis**: All findings generated through semantic analysis
-- **Constitution Knowledge**: Understands all 21 project principles (v1.35.0)
+- **Constitution Knowledge**: Understands all 14 project principles (v1.0.0)
 - **Completion Criteria**: See [WORKFLOW.md](WORKFLOW.md) Tasks 7 and 8 for success criteria
 
 ## Specialized Auditors
@@ -73,9 +73,9 @@ Execute the entire workflow from start to finish:
 |---------|------------|------------|
 | **Security** | Vulnerabilities | Injection, XSS, auth gaps, data exposure, race conditions |
 | **Architecture** | Structure | Import boundaries, file organization, naming conventions |
-| **Constitution** | 21 Principles | Full compliance with all project principles |
+| **Constitution** | 14 Principles | Full compliance with all project principles |
 | **Code Quality** | Maintainability | Complexity, code smells, performance, testing |
-| **API Stability** | oRPC/APIs | Principle XVIII & XIX, breaking changes |
+| **API Stability** | oRPC/APIs | Principle IX & XIII, breaking changes |
 
 Each auditor runs independently via the Task tool and returns findings in a structured format for aggregation.
 

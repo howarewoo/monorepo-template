@@ -1,7 +1,6 @@
 # monorepo-template
 
-<!-- TODO: Replace with actual screenshot -->
-<!-- ![monorepo-template screenshot](docs/screenshot.png) -->
+![monorepo-template screenshot](docs/web-app.png)
 
 > Ship web, mobile, and API from a single codebase. Type-safe from database to device, with shared packages that keep your team moving fast.
 
@@ -111,7 +110,7 @@ import { Button, Card } from "@infrastructure/ui-web";
 # pnpm-workspace.yaml
 catalog:
   react: "19.1.0"
-  next: "16.0.0"
+  next: "^16.0.0"
 ```
 
 ## Contributing
