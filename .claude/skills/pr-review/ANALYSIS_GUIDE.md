@@ -460,11 +460,6 @@ const teamsWithMembers = await db
   .select()
   .from(teamsTable)
   .leftJoin(teamMembersTable, eq(teamsTable.id, teamMembersTable.teamId));
-      user_id,
-      role,
-      users (id, email, name)
-    )
-  `);
 ```
 
 ---
