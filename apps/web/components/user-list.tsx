@@ -1,7 +1,7 @@
 "use client";
 
-import { apiClient } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api";
 
 export function UserList() {
   const {

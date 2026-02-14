@@ -1,6 +1,6 @@
-import { useWebNavigation } from "@/lib/navigation";
 import { render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useWebNavigation } from "@/lib/navigation";
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();

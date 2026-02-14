@@ -1,8 +1,8 @@
 "use client";
 
-import { Logo } from "@/components/logo";
 import { Button } from "@infrastructure/ui-web";
 import { useState } from "react";
+import { Logo } from "@/components/logo";
 
 const navLinks = [
   { label: "Features", href: "#features" },

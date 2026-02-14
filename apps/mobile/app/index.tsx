@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserList } from "@/components/user-list";
 import { useNavigation } from "@infrastructure/navigation";
 import * as Linking from "expo-linking";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { UserList } from "@/components/user-list";
 
 const DOCS_URL = "https://github.com/howarewoo/monorepo-template#readme";
 const HEADER_TOP_PADDING = 12;
