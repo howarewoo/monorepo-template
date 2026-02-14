@@ -26,6 +26,7 @@ pnpm lint:fix         # Auto-fix linting issues
 pnpm format           # Format via Biome + sort package.json
 pnpm pre-commit       # Install, format, and test changed files
 pnpm reset            # Clear node_modules, .next, dist, .turbo caches
+pnpm gencode          # Run code generation tasks via Turborepo
 
 # Run a single package
 pnpm --filter @repo/web dev
@@ -137,6 +138,8 @@ react: "19.1.0"
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 1. `biome ci` — lint + format check
 2. `pnpm test:changed` — tests for changed packages only
+
+**Note**: CI does not run `typecheck` — run `pnpm typecheck` locally before pushing.
 
 **Dependabot** (`.github/dependabot.yml`) runs weekly scans for npm and GitHub Actions updates.
 
