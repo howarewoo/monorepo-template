@@ -1,20 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserList } from "@/components/user-list";
+import { useNavigation } from "@infrastructure/navigation";
+import * as Linking from "expo-linking";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+const DOCS_URL = "https://github.com/howarewoo/monorepo-template#readme";
 const HEADER_TOP_PADDING = 12;
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { navigate } = useNavigation();
 
   const handleGetStarted = () => {
-    // TODO: Navigate to onboarding
+    navigate("/");
   };
 
-  const handleDocumentation = () => {
-    // TODO: Open documentation
+  const handleDocumentation = async () => {
+    const supported = await Linking.canOpenURL(DOCS_URL);
+    if (supported) {
+      await Linking.openURL(DOCS_URL);
+    }
   };
 
   return (

@@ -2,6 +2,7 @@
   "name": "@repo/mobile",
   "version": "0.0.0",
   "private": true,
+  "license": "MIT",
   "main": "expo-router/entry",
   "scripts": {
     "dev": "expo start",
