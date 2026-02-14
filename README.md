@@ -67,7 +67,7 @@ Starting a multi-platform project usually means stitching together separate repo
 ## Prerequisites
 
 - **Node.js 22** — [download](https://nodejs.org/) or use a version manager like `fnm` / `nvm`
-- **pnpm 9.15.4** — install via `corepack enable && corepack prepare pnpm@9.15.4 --activate`
+- **pnpm 10.29.3** — install via `corepack enable && corepack prepare pnpm@10.29.3 --activate`
 
 ## Quick Start
 

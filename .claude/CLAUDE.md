@@ -8,7 +8,7 @@ See [eng-constitution.md](../eng-constitution.md) for foundational rules. The co
 
 ## Prerequisites
 
-- **pnpm 9.15.4** (enforced via `packageManager` in root `package.json`)
+- **pnpm 10.29.3** (enforced via `packageManager` in root `package.json`)
 - **Node.js 22** (CI pins v22; compatible with ES2022 target)
 
 ## Commands
