@@ -94,7 +94,7 @@ The AI-powered review process is now analyzing this pull request using **5 paral
 |---------|-------|
 | Security | Vulnerabilities, injection, auth gaps |
 | Architecture | Import boundaries, file organization |
-| Constitution | 21 project principles compliance |
+| Constitution | 14 project principles compliance |
 | Code Quality | Complexity, code smells, performance |
 | API Stability | oRPC compliance, breaking changes |
 
@@ -203,7 +203,7 @@ Task tool call:
 - description: "Constitution audit PR"
 - run_in_background: true
 - prompt: |
-    You are a Constitution Auditor. Verify compliance with all 21 project principles.
+    You are a Constitution Auditor. Verify compliance with all 14 project principles.
 
     ## Instructions
     Read the agent instructions at: .claude/skills/pr-review/agents/constitution-auditor.md
