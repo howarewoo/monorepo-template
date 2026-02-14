@@ -36,7 +36,7 @@ pnpm --filter @infrastructure/navigation test
 **Monorepo with three package types:**
 - **Apps** (`apps/*`): Deployable applications
   - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui + Tailwind CSS (port 3000)
-  - `apps/mobile` — Expo + React Native + UniWind + react-native-reusables
+  - `apps/mobile` — Expo SDK 54 + React Native 0.81 + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
 - **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure
 - **Infrastructure** (`packages/infrastructure/*`): Shared utilities; can be used anywhere
@@ -74,14 +74,16 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 - **Shared**: Design tokens and CSS utilities in `@infrastructure/ui`; both platforms consume the same theme
 - **Tailwind v4**: CSS-first config — theme defined via `@theme` blocks in each app's CSS (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
 
-**Gotcha**: UniWind requires `react-native>=0.81.0`. Expo SDK 52 uses RN 0.76.6 — iOS/Android work fine but mobile web export is disabled (`expo export --platform ios --platform android`).
+**Note**: Mobile web export is enabled — Expo SDK 54 ships with RN 0.81, satisfying UniWind's `react-native>=0.81.0` requirement. All three platforms (iOS, Android, web) are built via `expo export`.
+
+**Gotcha**: Do not set `config.resolver.unstable_conditionNames` in `apps/mobile/metro.config.js` — it overrides Metro's platform-aware defaults and breaks UniWind's web resolver (causes `createOrderedCSSStyleSheet` resolution failures).
 
 ### Dependencies
 
 Use pnpm catalog for shared dependency versions:
 ```yaml
 # pnpm-workspace.yaml catalog:
-react: "^19.0.0"
+react: "^19.2.0"
 ```
 ```json
 // package.json
