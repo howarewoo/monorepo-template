@@ -1,7 +1,7 @@
-import { useNavigation } from "@infrastructure/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserList } from "@/components/user-list";
+import { useNavigation } from "@infrastructure/navigation";
 import * as Linking from "expo-linking";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
