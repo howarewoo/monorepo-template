@@ -22,10 +22,7 @@ function extractHslTokens(css: string): Map<string, string> {
  * then resolves them to full `hsl(...)` strings for comparison with mobile tokens.
  */
 function extractSharedTokens(css: string, selector: ":root" | ".dark"): Map<string, string> {
-  const selectorPattern =
-    selector === ":root"
-      ? /:root\s*\{([^}]+)\}/
-      : /\.dark\s*\{([^}]+)\}/;
+  const selectorPattern = selector === ":root" ? /:root\s*\{([^}]+)\}/ : /\.dark\s*\{([^}]+)\}/;
 
   const blockMatch = css.match(selectorPattern);
   if (!blockMatch) return new Map();
@@ -76,15 +73,12 @@ function extractSharedTokens(css: string, selector: ":root" | ".dark"): Map<stri
 /**
  * Extracts mobile tokens from a specific CSS block (light @theme or dark @variant).
  */
-function extractMobileTokens(
-  css: string,
-  mode: "light" | "dark",
-): Map<string, string> {
+function extractMobileTokens(css: string, mode: "light" | "dark"): Map<string, string> {
   let block: string;
   if (mode === "light") {
-    // Extract from @theme { ... } block (before @layer)
-    const themeMatch = css.match(/@theme\s*\{([\s\S]*?)\n\}/);
-    block = themeMatch ? themeMatch[1] : "";
+    // Extract from @variant light { ... } block inside @layer theme
+    const lightMatch = css.match(/@variant light\s*\{([\s\S]*?)\n\s*\}/);
+    block = lightMatch ? lightMatch[1] : "";
   } else {
     // Extract from @variant dark { ... } block
     const darkMatch = css.match(/@variant dark\s*\{([\s\S]*?)\n\s*\}/);
