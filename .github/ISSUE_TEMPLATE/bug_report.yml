@@ -1,0 +1,47 @@
+name: Bug Report
+description: Report a bug in the monorepo template
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: app
+    attributes:
+      label: Affected app/package
+      options:
+        - apps/web
+        - apps/landing
+        - apps/mobile
+        - apps/api
+        - "@infrastructure/ui"
+        - "@infrastructure/ui-web"
+        - "@infrastructure/navigation"
+        - "@infrastructure/api-client"
+        - "@infrastructure/utils"
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to trigger the bug.
+      placeholder: |
+        1. Run `pnpm dev`
+        2. Navigate to ...
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Node version, OS, browser/device, etc.
+      placeholder: "Node 22, macOS 15, Chrome 131"
+    validations:
+      required: false

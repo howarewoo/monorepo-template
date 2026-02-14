@@ -39,6 +39,9 @@ pnpm-debug.log*
 # Claude Code
 .claude/settings.local.json
 
+# Playwright MCP
+.playwright-mcp/
+
 # Misc
 *.tsbuildinfo
 .vercel

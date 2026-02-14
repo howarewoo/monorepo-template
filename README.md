@@ -115,7 +115,7 @@ catalog:
 
 ## Contributing
 
-See [eng-constitution.md](eng-constitution.md) for project conventions and principles.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and workflow. Architectural decisions are in the [engineering constitution](eng-constitution.md).
 
 ## License
 
