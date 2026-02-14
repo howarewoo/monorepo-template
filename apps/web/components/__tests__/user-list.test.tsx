@@ -1,8 +1,8 @@
+import { UserList } from "@/components/user-list";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { UserList } from "./user-list";
 
 vi.mock("@/lib/api", () => ({
   apiClient: {
