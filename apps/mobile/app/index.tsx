@@ -17,8 +17,11 @@ export default function HomeScreen() {
     navigate("/");
   };
 
-  const handleDocumentation = () => {
-    Linking.openURL(DOCS_URL);
+  const handleDocumentation = async () => {
+    const supported = await Linking.canOpenURL(DOCS_URL);
+    if (supported) {
+      await Linking.openURL(DOCS_URL);
+    }
   };
 
   return (
