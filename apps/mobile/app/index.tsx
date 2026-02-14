@@ -4,14 +4,24 @@ import { UserList } from "@/components/user-list";
 import { ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+const HEADER_TOP_PADDING = 12;
+
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+
+  const handleGetStarted = () => {
+    // TODO: Navigate to onboarding
+  };
+
+  const handleDocumentation = () => {
+    // TODO: Open documentation
+  };
 
   return (
     <View className="flex-1 bg-background">
       <View
         className="bg-background border-b border-border px-4 pb-3"
-        style={{ paddingTop: insets.top + 12 }}
+        style={{ paddingTop: insets.top + HEADER_TOP_PADDING }}
       >
         <Text className="text-lg font-semibold text-foreground">Monorepo Template</Text>
       </View>
@@ -73,10 +83,10 @@ export default function HomeScreen() {
           </Card>
 
           <View className="flex-row justify-center gap-4">
-            <Button onPress={() => {}}>
+            <Button onPress={handleGetStarted}>
               <Text className="text-primary-foreground font-medium">Get Started</Text>
             </Button>
-            <Button variant="outline" onPress={() => {}}>
+            <Button variant="outline" onPress={handleDocumentation}>
               <Text className="text-foreground font-medium">Documentation</Text>
             </Button>
           </View>

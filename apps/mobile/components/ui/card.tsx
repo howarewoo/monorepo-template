@@ -14,7 +14,11 @@ export function Card({ className, ...props }: CardProps) {
   );
 }
 
-export function CardHeader({ className, ...props }: CardProps) {
+export interface CardHeaderProps extends ViewProps {
+  className?: string;
+}
+
+export function CardHeader({ className, ...props }: CardHeaderProps) {
   return <View className={cn("flex flex-col gap-1.5 p-4", className)} {...props} />;
 }
 
@@ -34,14 +38,26 @@ export function CardTitle({ className, ...props }: CardTitleProps) {
   );
 }
 
-export function CardDescription({ className, ...props }: CardTitleProps) {
+export interface CardDescriptionProps extends TextProps {
+  className?: string;
+}
+
+export function CardDescription({ className, ...props }: CardDescriptionProps) {
   return <Text className={cn("text-sm text-muted-foreground", className)} {...props} />;
 }
 
-export function CardContent({ className, ...props }: CardProps) {
+export interface CardContentProps extends ViewProps {
+  className?: string;
+}
+
+export function CardContent({ className, ...props }: CardContentProps) {
   return <View className={cn("p-4 pt-0", className)} {...props} />;
 }
 
-export function CardFooter({ className, ...props }: CardProps) {
+export interface CardFooterProps extends ViewProps {
+  className?: string;
+}
+
+export function CardFooter({ className, ...props }: CardFooterProps) {
   return <View className={cn("flex items-center p-4 pt-0", className)} {...props} />;
 }
