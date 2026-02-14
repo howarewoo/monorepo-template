@@ -15,12 +15,10 @@ Analyze the provided code changes for these architectural concerns:
   - Public exports from other features (Surface/Handler/Layout patterns only)
 
 ### File Organization (Principle III)
-- **Missing Folders** - Required folders not present: `actions/`, `queries/`, `mutations/`, `contracts/`, `routers/`, `components/`, `surfaces/`, `schemas/`, `layouts/`
+- **Missing Folders** - Required folders not present: `actions/`, `contracts/`, `routers/`, `components/`, `surfaces/`, `schemas/`, `layouts/`
 - **Misplaced Files** - Files in wrong folders (e.g., server action not in `actions/`)
 - **Naming Violations**:
   - Server actions must be `action{Name}.ts` in `actions/` folder
-  - Query options must be `get{Name}QueryOptions.ts` in `queries/` folder
-  - Mutation options must be `get{Name}MutationOptions.ts` in `mutations/` folder
   - Contracts must be `{feature}Contract.ts` in `contracts/` folder
   - Routers must be `{feature}ORPCRouter.ts` in `routers/` folder
 
