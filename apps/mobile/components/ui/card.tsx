@@ -15,7 +15,7 @@ export function Card({ className, ...props }: CardProps) {
 }
 
 export function CardHeader({ className, ...props }: CardProps) {
-  return <View className={cn("flex flex-col space-y-1.5 p-4", className)} {...props} />;
+  return <View className={cn("flex flex-col gap-1.5 p-4", className)} {...props} />;
 }
 
 export interface CardTitleProps extends TextProps {

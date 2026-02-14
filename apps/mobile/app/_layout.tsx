@@ -24,14 +24,7 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <NavigationProvider value={navigationValue}>
         <StatusBar style="auto" />
-        <Stack>
-          <Stack.Screen
-            name="index"
-            options={{
-              title: "Monorepo Template",
-            }}
-          />
-        </Stack>
+        <Stack screenOptions={{ headerShown: false }} />
       </NavigationProvider>
     </QueryClientProvider>
   );
