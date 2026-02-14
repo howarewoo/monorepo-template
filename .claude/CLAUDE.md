@@ -23,6 +23,7 @@ pnpm typecheck        # Type check all packages
 pnpm lint             # Lint via Biome
 pnpm lint:fix         # Auto-fix linting issues
 pnpm format           # Format via Biome + sort package.json
+pnpm pre-commit       # Install, format, and test changed files
 pnpm reset            # Clear node_modules, .next, dist, .turbo caches
 
 # Run a single package
@@ -72,11 +73,15 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 - **Web**: shadcn/ui components + Tailwind CSS
 - **Mobile**: react-native-reusables + UniWind
 - **Shared**: Design tokens and CSS utilities in `@infrastructure/ui`; both platforms consume the same theme
-- **Tailwind v4**: CSS-first config — theme defined via `@theme` blocks in each app's CSS (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
+- **Tailwind v4**: CSS-first config (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
+- **Web CSS**: `apps/web/app/globals.css` imports from `@infrastructure/ui/globals.css` — single source of truth
+- **Mobile CSS**: `apps/mobile/global.css` hardcodes theme tokens (UniWind on RN doesn't support CSS `var()` indirection in `@theme` blocks); dark mode uses `@layer theme { :root { @variant dark {} } }`
 
-**Note**: Mobile web export is enabled — Expo SDK 54 ships with RN 0.81, satisfying UniWind's `react-native>=0.81.0` requirement. All three platforms (iOS, Android, web) are built via `expo export`.
+**Note**: Mobile web export is enabled — Expo SDK 54 ships with RN 0.81, satisfying UniWind's `react-native>=0.81.0` requirement.
 
 **Gotcha**: Do not set `config.resolver.unstable_conditionNames` in `apps/mobile/metro.config.js` — it overrides Metro's platform-aware defaults and breaks UniWind's web resolver (causes `createOrderedCSSStyleSheet` resolution failures).
+
+**Gotcha**: Mobile theme tokens in `apps/mobile/global.css` are hardcoded HSL values that must stay in sync with `packages/infrastructure/ui/src/globals.css` `:root` / `.dark` blocks. When updating the shared theme, update both files.
 
 ### Dependencies
 
