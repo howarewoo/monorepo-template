@@ -31,6 +31,7 @@ Type-safe from database to device, with shared packages that keep your team movi
 - [Architecture](#architecture)
 - [Scripts](#scripts)
 - [Key Patterns](#key-patterns)
+- [AI-First Documentation](#ai-first-documentation)
 - [Contributing](#contributing)
 - [Acknowledgments](#acknowledgments)
 - [License](#license)
@@ -165,6 +166,19 @@ catalog:
   react: "19.1.0"
   next: "^16.0.0"
 ```
+
+## AI-First Documentation
+
+This repo uses documentation that serves as executable context for AI coding agents, so the AI follows the same rules as human contributors.
+
+| File | Purpose | When to update |
+| --- | --- | --- |
+| `eng-constitution.md` | Binding engineering principles — architecture, code style, TDD, API stability. The AI agent treats these as non-negotiable rules. | When adding new architectural decisions or changing existing principles |
+| `.claude/CLAUDE.md` | Operational instructions for Claude Code — commands, gotchas, key patterns, conventions. Loaded into every AI session. | When discovering new gotchas, adding packages, or changing workflows |
+| `.claude/skills/*` | Automated workflows (PR review, commit, worktree). Define multi-step procedures the AI executes. | When adding or modifying automated development workflows |
+| `.claude/commands/*` | Slash commands that invoke skills (e.g., `/commit`, `/pr-review`). | When exposing new skills as user-invocable commands |
+
+The constitution sets the rules, CLAUDE.md provides operational details, and skills automate recurring tasks. When the AI agent works on this codebase, it reads these files and follows them as constraints — enforcing TDD, import boundaries, naming conventions, etc. without being told each time.
 
 ## Contributing
 
