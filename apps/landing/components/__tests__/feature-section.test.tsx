@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { FeatureSection } from "./feature-section";
+import { FeatureSection } from "@/components/feature-section";
 
 const defaultProps = {
   number: "1.0",

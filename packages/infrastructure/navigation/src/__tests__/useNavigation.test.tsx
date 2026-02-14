@@ -17,7 +17,11 @@ function createMockNavValue(): NavigationContextValue {
       href,
       children,
       className,
-    }: { href: string; children: ReactNode; className?: string }) => (
+    }: {
+      href: string;
+      children: ReactNode;
+      className?: string;
+    }) => (
       <a href={href} className={className}>
         {children}
       </a>
