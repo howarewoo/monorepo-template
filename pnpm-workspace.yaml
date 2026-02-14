@@ -34,6 +34,7 @@ catalog:
   tailwind-merge: "^2.6.0"
 
   # UI Components
+  "@base-ui/react": "^1.2.0"
   "@radix-ui/react-slot": "^1.1.1"
   lucide-react: "^0.469.0"
 

@@ -15,7 +15,7 @@ See [eng-constitution.md](../eng-constitution.md) for foundational rules. The co
 
 ```bash
 pnpm install          # Install dependencies
-pnpm dev              # Start all apps (web:3000, api:3001)
+pnpm dev              # Start all apps (web:3000, api:3001, landing:3002)
 pnpm build            # Build all packages/apps via Turborepo
 pnpm test             # Run Vitest tests across all packages
 pnpm test:changed     # Run tests for packages changed since last commit
@@ -32,6 +32,9 @@ pnpm --filter @repo/web dev
 pnpm --filter @repo/api dev
 pnpm --filter @infrastructure/navigation test
 
+# Landing page
+pnpm --filter @repo/landing dev
+
 # Mobile platform targets
 pnpm --filter @repo/mobile ios
 pnpm --filter @repo/mobile android
@@ -43,6 +46,7 @@ pnpm --filter @repo/mobile web
 **Monorepo with three package types:**
 - **Apps** (`apps/*`): Deployable applications
   - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui (Base UI) + Tailwind CSS (port 3000)
+  - `apps/landing` — Next.js 16 marketing/landing page consuming shared UI components (port 3002)
   - `apps/mobile` — Expo SDK 54 + React Native 0.81 + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
 - **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure (currently empty — scaffold for new features)
@@ -50,6 +54,7 @@ pnpm --filter @repo/mobile web
   - `@infrastructure/api-client` — oRPC contracts, router, and typed client
   - `@infrastructure/navigation` — Platform-agnostic navigation (Link, useNavigation, NavigationProvider)
   - `@infrastructure/ui` — Shared design tokens, CSS utilities (`cn()`, `tokens`)
+  - `@infrastructure/ui-web` — Shared shadcn/ui components (Button, Card, etc.) for web apps
   - `@infrastructure/utils` — Cross-platform utility functions
   - `@infrastructure/typescript-config` — Shared TypeScript configs (base, library, nextjs, react-native)
 
@@ -82,9 +87,13 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 - **Tailwind v4**: CSS-first config (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
 - **Web CSS**: `apps/web/app/globals.css` imports from `@infrastructure/ui/globals.css` — single source of truth
 - **Mobile CSS**: `apps/mobile/global.css` hardcodes theme tokens (UniWind on RN doesn't support CSS `var()` indirection in `@theme` blocks); light/dark colors use `@layer theme { :root { @variant light {} @variant dark {} } }` — both variants are required
-- **Adding components**: `pnpx shadcn@latest add <component>` from `apps/web/`; `components.json` configures style (`base-vega`), utils alias (`@infrastructure/ui`), and icon library (`lucide`)
+- **Adding components**: `pnpx shadcn@latest add <component>` from `apps/web/` or `apps/landing/`; `components.json` configures style (`base-vega`), utils alias (`@infrastructure/ui`), and icon library (`lucide`). To share a component across web apps, move it from `apps/<app>/components/ui/` to `packages/infrastructure/ui-web/src/components/` and re-export from the barrel index
 
 **Note**: Mobile web export is enabled — Expo SDK 54 ships with RN 0.81, satisfying UniWind's `react-native>=0.81.0` requirement.
+
+**New web app checklist**: When creating a new Next.js app that consumes `@infrastructure/ui-web`: (1) add `"@infrastructure/ui-web": "workspace:*"` to dependencies, (2) add `"@infrastructure/ui-web"` to `transpilePackages` in `next.config.ts`, (3) add `@source "../node_modules/@infrastructure/ui-web/src";` in `app/globals.css`.
+
+**Gotcha**: Tailwind v4 does not auto-scan `@infrastructure/ui-web` for class names. Each consuming web app must add `@source "../node_modules/@infrastructure/ui-web/src";` in its `app/globals.css` (path relative to the CSS file) to ensure component styles are compiled.
 
 **Gotcha**: Do not set `config.resolver.unstable_conditionNames` in `apps/mobile/metro.config.js` — it overrides Metro's platform-aware defaults and breaks UniWind's web resolver (causes `createOrderedCSSStyleSheet` resolution failures).
 
@@ -112,7 +121,7 @@ react: "^19.2.0"
 - Max 500 lines per non-test source file
 - TDD methodology (see constitution Principle VIII)
 - All user-facing components and procedures need JSDoc comments
-- React Compiler is enabled in `apps/web`
+- React Compiler is enabled in `apps/web` and `apps/landing`
 
 ## Testing
 

@@ -13,11 +13,12 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@base-ui/react": "^1.2.0",
+    "@base-ui/react": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "@infrastructure/api-client": "workspace:*",
     "@infrastructure/navigation": "workspace:*",
     "@infrastructure/ui": "workspace:*",
+    "@infrastructure/ui-web": "workspace:*",
     "@infrastructure/utils": "workspace:*",
     "@orpc/client": "catalog:",
     "@orpc/react-query": "catalog:",
