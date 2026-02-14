@@ -23,6 +23,7 @@
     "@testing-library/react": "^16.1.0",
     "@types/react": "catalog:",
     "jsdom": "^26.0.0",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

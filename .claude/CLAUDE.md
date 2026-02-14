@@ -99,17 +99,25 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 
 **Gotcha**: Mobile theme tokens in `apps/mobile/global.css` are hardcoded HSL values that must stay in sync with `packages/infrastructure/ui/src/globals.css` `:root` / `.dark` blocks. When updating the shared theme, update both files. UniWind requires both `@variant light` and `@variant dark` inside `@layer theme` — putting color tokens only in `@theme` without a `@variant light` block causes always-dark rendering.
 
+**Gotcha**: Do not use `space-y-*` or `space-x-*` in mobile components — they compile to CSS logical properties (`margin-block-start`/`margin-block-end`) which React Native does not support. Use `gap-*` on flex containers instead.
+
+**Gotcha**: React Navigation's default `Stack` header does not use UniWind theme tokens. Use `headerShown: false` with a custom header component styled via UniWind classes and `useSafeAreaInsets()` for status bar spacing.
+
 ### Dependencies
 
 Use pnpm catalog for shared dependency versions:
 ```yaml
 # pnpm-workspace.yaml catalog:
-react: "^19.2.0"
+react: "19.1.0"
 ```
 ```json
 // package.json
 "dependencies": { "react": "catalog:" }
 ```
+
+**Gotcha**: React is pinned to exact `19.1.0` because React Native 0.81's bundled renderer (`react-native-renderer@19.1.0`) performs a strict equality check against the installed React version. Using `^19.2.0` causes a hard runtime crash on iOS.
+
+**Gotcha**: `pnpm build` runs `pnpm self-update` before Turborepo — this can silently upgrade pnpm beyond the version locked in `packageManager`. Be aware of this when debugging build differences between local and CI.
 
 ## Conventions
 
