@@ -17,7 +17,7 @@ See [eng-constitution.md](../eng-constitution.md) for foundational rules. The co
 pnpm install          # Install dependencies
 pnpm dev              # Start all apps (web:3000, api:3001, landing:3002, mobile:8081)
 pnpm build            # Build all packages/apps via Turborepo
-pnpm test             # Run Vitest tests across all packages
+pnpm test             # Run tests across all packages
 pnpm test:changed     # Run tests for packages changed since last commit
 pnpm test:e2e         # Run Playwright E2E tests
 pnpm typecheck        # Type check all packages
@@ -25,7 +25,8 @@ pnpm lint             # Lint via Biome
 pnpm lint:fix         # Auto-fix linting issues
 pnpm format           # Format via Biome + sort package.json
 pnpm pre-commit       # Install, format, and test changed files
-pnpm reset            # Clear node_modules, .next, dist, .turbo caches
+pnpm clean            # Remove build artifacts and node_modules
+pnpm reset            # Deep clean: node_modules, .next, dist, .turbo, untracked files
 pnpm gencode          # Run code generation tasks via Turborepo
 
 # Run a single package
@@ -44,7 +45,7 @@ pnpm --filter mobile web
 
 ## Architecture
 
-**Monorepo with three package types:**
+**Monorepo with three package types.** Apps use unscoped names (`web`, `api`, `landing`, `mobile`); infrastructure uses `@infrastructure/*` scope.
 - **Apps** (`apps/*`): Deployable applications
   - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui (Base UI) + Tailwind CSS (port 3000)
   - `apps/landing` — Next.js 16 marketing/landing page consuming shared UI components (port 3002)
@@ -147,6 +148,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 
 ## Testing
 
-- **Framework**: Vitest (unit/integration), Playwright (E2E)
+- **Framework**: Vitest (unit/integration), Jest via `jest-expo` (mobile/React Native), Playwright (E2E)
 - **Test locations**: colocated as `{filename}.test.ts` or in `__tests__/` directories
 - Run `pnpm test` before committing; new procedures require tests
+- Run per-app: `pnpm --filter web test`, `pnpm --filter landing test`, `pnpm --filter api test`, `pnpm --filter mobile test`
