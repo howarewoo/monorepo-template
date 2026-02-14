@@ -142,7 +142,8 @@ react: "19.1.0"
 
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 1. `biome ci` — lint + format check
-2. `pnpm test:changed` — tests for changed packages only
+2. `pnpm turbo build` — build all packages
+3. `pnpm test:changed` — tests for changed packages only
 
 **Note**: CI does not run `typecheck` — run `pnpm typecheck` locally before pushing.
 
