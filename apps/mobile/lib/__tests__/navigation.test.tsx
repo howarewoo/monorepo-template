@@ -1,5 +1,5 @@
-import { useMobileNavigation } from "@/lib/navigation";
 import { renderHook } from "@testing-library/react-native";
+import { useMobileNavigation } from "@/lib/navigation";
 
 // Create mock functions for expo-router
 const mockPush = jest.fn();

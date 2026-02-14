@@ -1,6 +1,6 @@
-import { TechStackBar } from "@/components/logo-bar";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
+import { TechStackBar } from "@/components/logo-bar";
 
 describe("TechStackBar", () => {
   beforeEach(() => {

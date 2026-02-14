@@ -1,9 +1,9 @@
+import { Button, Card, CardContent, CardHeader, CardTitle } from "@infrastructure/ui-web";
 import { FeatureSection } from "@/components/feature-section";
 import { Footer } from "@/components/footer";
 import { Hero } from "@/components/hero";
 import { TechStackBar } from "@/components/logo-bar";
 import { Navbar } from "@/components/navbar";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@infrastructure/ui-web";
 
 const valueProps = [
   {

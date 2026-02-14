@@ -1,6 +1,6 @@
-import Home from "@/app/page";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import Home from "@/app/page";
 
 vi.mock("@/components/user-list", () => ({
   UserList: () => <div data-testid="user-list">Mocked UserList</div>,

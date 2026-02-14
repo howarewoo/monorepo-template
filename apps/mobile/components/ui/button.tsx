@@ -1,5 +1,5 @@
 import { cn } from "@infrastructure/ui";
-import { type VariantProps, cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import { Pressable, type PressableProps } from "react-native";
 
 const buttonVariants = cva("flex items-center justify-center rounded-md", {

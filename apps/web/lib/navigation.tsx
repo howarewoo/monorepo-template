@@ -1,7 +1,6 @@
 "use client";
 
-import type { NavigationContextValue } from "@infrastructure/navigation";
-import type { LinkProps } from "@infrastructure/navigation";
+import type { LinkProps, NavigationContextValue } from "@infrastructure/navigation";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";

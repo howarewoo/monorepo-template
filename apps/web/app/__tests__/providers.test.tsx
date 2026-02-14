@@ -1,6 +1,6 @@
-import { Providers } from "@/app/providers";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Providers } from "@/app/providers";
 
 const mockNavigationValue = {
   router: {
