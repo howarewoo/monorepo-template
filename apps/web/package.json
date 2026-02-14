@@ -13,13 +13,14 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@orpc/client": "catalog:",
-    "@orpc/react-query": "catalog:",
+    "@base-ui/react": "^1.2.0",
     "@radix-ui/react-slot": "catalog:",
     "@infrastructure/api-client": "workspace:*",
     "@infrastructure/navigation": "workspace:*",
     "@infrastructure/ui": "workspace:*",
     "@infrastructure/utils": "workspace:*",
+    "@orpc/client": "catalog:",
+    "@orpc/react-query": "catalog:",
     "@tanstack/react-query": "catalog:",
     "class-variance-authority": "catalog:",
     "lucide-react": "catalog:",
@@ -28,14 +29,14 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
-    "@playwright/test": "catalog:",
     "@infrastructure/typescript-config": "workspace:*",
+    "@playwright/test": "catalog:",
+    "@tailwindcss/postcss": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
-    "@tailwindcss/postcss": "catalog:",
     "jsdom": "catalog:",
     "postcss": "catalog:",
     "tailwindcss": "catalog:",
