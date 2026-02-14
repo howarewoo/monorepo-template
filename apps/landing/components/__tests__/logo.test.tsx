@@ -1,6 +1,6 @@
+import { Logo } from "@/components/logo";
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Logo } from "./logo";
 
 describe("Logo", () => {
   it("renders an SVG element", () => {

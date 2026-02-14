@@ -59,16 +59,17 @@ export function Hero() {
               </div>
               <div className="mt-3 space-y-1.5 text-muted-foreground/70">
                 <div>
-                  <span className="text-muted-foreground">@repo/web</span>
-                  {"    "}dev → Next.js on{" "}
+                  <span className="text-muted-foreground">web</span>
+                  {"        "}dev → Next.js on{" "}
                   <span className="text-primary">http://localhost:3000</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">@repo/api</span>
-                  {"    "}dev → Hono on <span className="text-primary">http://localhost:3001</span>
+                  <span className="text-muted-foreground">api</span>
+                  {"        "}dev → Hono on{" "}
+                  <span className="text-primary">http://localhost:3001</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">@repo/mobile</span> dev → Expo on{" "}
+                  <span className="text-muted-foreground">mobile</span> dev → Expo on{" "}
                   <span className="text-primary">http://localhost:8081</span>
                 </div>
               </div>
