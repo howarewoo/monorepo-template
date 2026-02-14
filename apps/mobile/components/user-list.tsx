@@ -29,7 +29,7 @@ export function UserList() {
   }
 
   return (
-    <View className="space-y-4">
+    <View className="gap-4">
       {users.map((user) => (
         <View
           key={user.id}
