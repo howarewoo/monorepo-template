@@ -36,7 +36,7 @@ pnpm --filter @infrastructure/navigation test
 
 **Monorepo with three package types:**
 - **Apps** (`apps/*`): Deployable applications
-  - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui + Tailwind CSS (port 3000)
+  - `apps/web` — Next.js 16 (App Router) + React Compiler + shadcn/ui (Base UI) + Tailwind CSS (port 3000)
   - `apps/mobile` — Expo SDK 54 + React Native 0.81 + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
 - **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure
@@ -70,12 +70,13 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 
 ### Cross-Platform UI
 
-- **Web**: shadcn/ui components + Tailwind CSS
+- **Web**: shadcn/ui components (Base UI primitives, `base-vega` style) + Tailwind CSS
 - **Mobile**: react-native-reusables + UniWind
 - **Shared**: Design tokens and CSS utilities in `@infrastructure/ui`; both platforms consume the same theme
 - **Tailwind v4**: CSS-first config (no `tailwind.config.ts`); web uses `@tailwindcss/postcss`; mobile uses `uniwind/metro`
 - **Web CSS**: `apps/web/app/globals.css` imports from `@infrastructure/ui/globals.css` — single source of truth
 - **Mobile CSS**: `apps/mobile/global.css` hardcodes theme tokens (UniWind on RN doesn't support CSS `var()` indirection in `@theme` blocks); dark mode uses `@layer theme { :root { @variant dark {} } }`
+- **Adding components**: `pnpx shadcn@latest add <component>` from `apps/web/`; `components.json` configures style (`base-vega`), utils alias (`@infrastructure/ui`), and icon library (`lucide`)
 
 **Note**: Mobile web export is enabled — Expo SDK 54 ships with RN 0.81, satisfying UniWind's `react-native>=0.81.0` requirement.
 
