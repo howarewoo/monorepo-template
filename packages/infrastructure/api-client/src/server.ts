@@ -3,7 +3,7 @@ import { CreateUserSchema, GetUserSchema, MessageSchema, UserSchema } from "./co
 
 const pub = os.$context<{ requestId?: string }>();
 
-export const router = pub.router({
+export const router = {
   health: pub.output(MessageSchema).handler(() => {
     return { message: "OK" };
   }),
@@ -54,6 +54,6 @@ export const router = pub.router({
         };
       }),
   },
-});
+};
 
 export type Router = typeof router;

@@ -15,7 +15,7 @@ All code in feature packages must follow standardized naming conventions and dir
 Infrastructure packages provide shared utilities, UI components, and cross-cutting concerns; Prioritize using components from `@infrastructure/ui` for shared styles and utilities; Use `@infrastructure/api-client` for oRPC contracts, routers, and client configuration; Use `@infrastructure/utils` for cross-platform utilities; Use `@infrastructure/typescript-config` for shared TypeScript configuration.
 
 ### V. pnpm Catalog Protocol
-All dependencies must be managed through pnpm catalog to prevent version conflicts; Catalog definitions in `pnpm-workspace.yaml` ensure consistent dependency versions across the monorepo; No direct dependency declarations in individual `package.json` files.
+All dependencies must be managed through pnpm catalog to prevent version conflicts; Catalog definitions in `pnpm-workspace.yaml` ensure consistent dependency versions across the monorepo; No direct dependency declarations in individual `package.json` files; All versions in the catalog must be pinned to exact versions (no `^` or `~` prefixes) to ensure deterministic installs.
 
 ### VI. TypeScript Standardization
 All packages must use standardized TypeScript configuration from `@infrastructure/typescript-config`; Consistent typing, path mapping, and compiler options across all packages; Do not use `any` or `unknown`—prefer explicit, safely narrowed types, generics, and schema-driven types instead; Introduce shared helper types when needed to avoid unsafe fallbacks.
@@ -68,7 +68,7 @@ import { CreateUserSchema, UserSchema } from "./contract";
 
 const pub = os.$context<{ requestId?: string }>();
 
-export const router = pub.router({
+export const router = {
   users: {
     list: pub.output(UserSchema.array()).handler(() => {
       // return users
@@ -80,7 +80,7 @@ export const router = pub.router({
         // create and return user
       }),
   },
-});
+};
 
 export type Router = typeof router;
 ```
@@ -135,7 +135,7 @@ Feature packages must never import platform-specific routing (`next/navigation`,
 ## Development Workflow
 
 ### Package Management
-Use pnpm workspaces for all package operations (install, add, remove, run); Dependencies must use pnpm catalog protocol defined in `pnpm-workspace.yaml`; No direct dependency declarations in individual `package.json` files to prevent conflicts.
+Use pnpm workspaces for all package operations (install, add, remove, run); Dependencies must use pnpm catalog protocol defined in `pnpm-workspace.yaml`; No direct dependency declarations in individual `package.json` files to prevent conflicts; All catalog versions must be exact (e.g., `"4.11.9"`, not `"^4.11.9"`).
 
 ### Code Quality
 Biome configuration for linting and formatting through shared infrastructure packages; Consistent code style, import organization, and formatting rules across all packages; Automated checks in CI/CD pipeline replace ESLint and Prettier; Individual non-test source files must be 500 lines or fewer; Test files are exempt from this limit: files with `.test.ts`, `.test.tsx`, `.spec.ts`, `.spec.tsx` suffixes, and any files within `__tests__/` directories.

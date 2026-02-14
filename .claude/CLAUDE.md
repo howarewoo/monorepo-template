@@ -64,7 +64,9 @@ pnpm --filter mobile web
 
 ### oRPC (Type-Safe API)
 
-Contracts, router, and client live in `@infrastructure/api-client`. Apps consume via `createApiClient()` and `createOrpcUtils()`.
+Contracts, router, and client live in `@infrastructure/api-client`. Apps consume via `createApiClient()` and `createOrpcUtils()`. Query integration uses `@orpc/tanstack-query`.
+
+**Gotcha**: oRPC v1 routers are plain object literals — do not wrap with `.router()`. The `@orpc/react-query` package was renamed to `@orpc/tanstack-query`.
 
 ```typescript
 // In app code
@@ -107,7 +109,7 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 
 ### Dependencies
 
-Use pnpm catalog for shared dependency versions:
+Use pnpm catalog for shared dependency versions. All versions must be exact (no `^` or `~`):
 ```yaml
 # pnpm-workspace.yaml catalog:
 react: "19.1.0"
@@ -118,6 +120,8 @@ react: "19.1.0"
 ```
 
 **Gotcha**: React is pinned to exact `19.1.0` because React Native 0.81's bundled renderer (`react-native-renderer@19.1.0`) performs a strict equality check against the installed React version. Using `^19.2.0` causes a hard runtime crash on iOS.
+
+**Gotcha**: Zod v4 changed string validation methods: `z.string().email()` → `z.email()`, `z.string().datetime()` → `z.iso.datetime()`. Other APIs (`z.object()`, `z.string()`, `z.string().min()`, `z.infer<>`, `.array()`, `.nullable()`) are unchanged.
 
 **Gotcha**: `pnpm build` runs `pnpm self-update && turbo build` — this upgrades pnpm before building. If local builds behave differently from CI, check whether `pnpm --version` still matches the `packageManager` field in root `package.json`.
 
@@ -152,3 +156,5 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 - **Test locations**: colocated as `{filename}.test.ts` or in `__tests__/` directories
 - Run `pnpm test` before committing; new procedures require tests
 - Run per-app: `pnpm --filter web test`, `pnpm --filter landing test`, `pnpm --filter api test`, `pnpm --filter mobile test`
+
+**Gotcha**: Vitest 4 requires `function` expressions (not arrow functions) in `vi.fn()` when the mock is used as a constructor with `new`. Arrow functions are not constructable — use `vi.fn(function () { return { ... }; })`.
