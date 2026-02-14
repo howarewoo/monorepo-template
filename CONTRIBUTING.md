@@ -5,7 +5,7 @@ Thanks for your interest in contributing! This guide will get you up and running
 ## Prerequisites
 
 - **Node.js 22**
-- **pnpm 9.15.4** — install with `corepack enable && corepack prepare`
+- **pnpm 10.29.3** — install with `corepack enable && corepack prepare`
 
 ## Setup
 
