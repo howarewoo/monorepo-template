@@ -1,6 +1,6 @@
+import { UserList } from "@/components/user-list";
 import { Button } from "@infrastructure/ui-web";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@infrastructure/ui-web";
-import { UserList } from "@/components/user-list";
 
 export default function Home() {
   return (
