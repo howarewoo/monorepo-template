@@ -10,11 +10,11 @@ Review changes against ALL applicable principles:
 - **I. Monorepo Structure** - Three package types (Infrastructure, Features, Apps) with strict import boundaries
 - **II. Feature-Based Architecture** - Features as standalone packages, only importing from infrastructure
 - **III. Feature Package Naming** - Standardized naming and directory structure (actions/, queries/, mutations/, contracts/, routers/, components/, surfaces/, schemas/, layouts/)
-- **IV. Infrastructure Package Priority** - Prioritize @infrastructure/shadcn, @infrastructure/navigation, @infrastructure/supabase
+- **IV. Infrastructure Package Priority** - Prioritize shared infrastructure packages (@infrastructure/ui, @infrastructure/navigation, etc.)
 - **V. pnpm Catalog Protocol** - Dependencies via pnpm catalog, no direct declarations
 
 ### TypeScript & Routing
-- **VI. TypeScript Standardization** - Use @infrastructure/typescript-config, database types from supabase, no `any` or `unknown`
+- **VI. TypeScript Standardization** - Use @infrastructure/typescript-config, no `any` or `unknown`
 - **VII. Typesafe Routing** - Use @infrastructure/navigation (useTypedRouter, redirect, Link), never direct next/navigation
 
 ### Development Patterns
@@ -30,7 +30,7 @@ Review changes against ALL applicable principles:
 - **XIV. DataTable Component Priority** - Use @infrastructure/shadcn datatable
 - **XV. Next.js Server Components** - Pages as server components, client components only for interactivity
 - **XVI. Authentication Verification** - Auth in pages/layouts; RLS protection for server actions (no redundant getUser())
-- **XVII. Database Logic Centralization** - All DB logic in @infrastructure/supabase, JSON columns validated with zod
+- **XVII. Database Logic Centralization** - All DB logic in dedicated infrastructure packages, JSON columns validated with zod
 
 ### API Principles
 - **XVIII. oRPC API Procedures** - Unified mechanism for ALL server communication (queries + mutations), contract-first pattern, proper naming ({feature}Contract.ts, {feature}ORPCRouter.ts)

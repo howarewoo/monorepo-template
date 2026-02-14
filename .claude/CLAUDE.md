@@ -9,13 +9,13 @@ See [eng-constitution.md](../eng-constitution.md) for foundational rules. The co
 ## Prerequisites
 
 - **pnpm 9.15.4** (enforced via `packageManager` in root `package.json`)
-- **Node.js** (compatible with ES2022 target)
+- **Node.js 22** (CI pins v22; compatible with ES2022 target)
 
 ## Commands
 
 ```bash
 pnpm install          # Install dependencies
-pnpm dev              # Start all apps (web:3000, api:3001, landing:3002)
+pnpm dev              # Start all apps (web:3000, api:3001, landing:3002, mobile:8081)
 pnpm build            # Build all packages/apps via Turborepo
 pnpm test             # Run Vitest tests across all packages
 pnpm test:changed     # Run tests for packages changed since last commit
@@ -117,7 +117,7 @@ react: "19.1.0"
 
 **Gotcha**: React is pinned to exact `19.1.0` because React Native 0.81's bundled renderer (`react-native-renderer@19.1.0`) performs a strict equality check against the installed React version. Using `^19.2.0` causes a hard runtime crash on iOS.
 
-**Gotcha**: `pnpm build` runs `pnpm self-update` before Turborepo — this can silently upgrade pnpm beyond the version locked in `packageManager`. Be aware of this when debugging build differences between local and CI.
+**Gotcha**: `pnpm build` runs `pnpm self-update && turbo build` — this upgrades pnpm before building, which may drift from the version locked in `packageManager`. Be aware when debugging local vs CI differences.
 
 ## Conventions
 
@@ -130,6 +130,12 @@ react: "19.1.0"
 - TDD methodology (see constitution Principle VIII)
 - All user-facing components and procedures need JSDoc comments
 - React Compiler is enabled in `apps/web` and `apps/landing`
+
+## CI
+
+GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
+1. `biome ci` — lint + format check
+2. `pnpm test:changed` — tests for changed packages only
 
 ## Testing
 

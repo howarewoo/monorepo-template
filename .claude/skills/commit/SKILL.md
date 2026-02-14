@@ -130,7 +130,7 @@ Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
 ```
 
 **Type**: `feat`, `fix`, `refactor`, `docs`, `chore`, `test`, `style`, `perf`
-**Scope**: The affected package or area (e.g., `landing`, `web`, `orpc`, `supabase`, `blog`)
+**Scope**: The affected package or area (e.g., `landing`, `web`, `mobile`, `orpc`, `ui`)
 
 Create the commit:
 

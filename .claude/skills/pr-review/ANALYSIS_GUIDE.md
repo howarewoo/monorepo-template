@@ -441,27 +441,25 @@ N+1 query pattern detected. For each team, a separate query fetches members.
 With 100 teams, this results in 101 database queries instead of 2.
 
 EXAMPLE:
-const teams = await supabase.from('teams').select('*');
+const teams = await db.select().from(teamsTable);
 
 // N+1: One query per team
 const teamsWithMembers = await Promise.all(
   teams.map(async (team) => {
-    const members = await supabase
-      .from('team_members')
-      .select('*')
-      .eq('team_id', team.id);
+    const members = await db
+      .select()
+      .from(teamMembersTable)
+      .where(eq(teamMembersTable.teamId, team.id));
     return { ...team, members };
   })
 );
 
 SUGGESTION:
 // Single query with join:
-const { data: teams } = await supabase
-  .from('teams')
-  .select(`
-    *,
-    team_members (
-      id,
+const teamsWithMembers = await db
+  .select()
+  .from(teamsTable)
+  .leftJoin(teamMembersTable, eq(teamsTable.id, teamMembersTable.teamId));
       user_id,
       role,
       users (id, email, name)
