@@ -35,5 +35,8 @@ jobs:
       - name: Run Biome CI
         run: pnpx biome ci .
 
+      - name: Build
+        run: pnpm turbo build
+
       - name: Test
         run: pnpm test:changed
