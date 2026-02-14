@@ -10,8 +10,7 @@ import { describe, expect, it } from "vitest";
 function extractHslTokens(css: string): Map<string, string> {
   const tokens = new Map<string, string>();
   const regex = /--(color-[\w-]+|radius-[\w-]+):\s*(hsl\([^)]+\)|\d+px)/g;
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(css)) !== null) {
+  for (let match = regex.exec(css); match !== null; match = regex.exec(css)) {
     tokens.set(match[1], match[2]);
   }
   return tokens;
@@ -30,8 +29,7 @@ function extractSharedTokens(css: string, selector: ":root" | ".dark"): Map<stri
   const block = blockMatch[1];
   const rawTokens = new Map<string, string>();
   const regex = /--([\w-]+):\s*([^;]+);/g;
-  let match: RegExpExecArray | null;
-  while ((match = regex.exec(block)) !== null) {
+  for (let match = regex.exec(block); match !== null; match = regex.exec(block)) {
     rawTokens.set(match[1], match[2].trim());
   }
 
