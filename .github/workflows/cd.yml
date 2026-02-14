@@ -12,11 +12,11 @@ jobs:
   migrations:
     name: Push Migrations (${{ github.ref_name == 'main' && 'Production' || 'Staging' }})
     timeout-minutes: 15
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     environment:
-      name: ${{ github.ref_name == 'main' && 'Production' || 'Preview' }}
+      name: ${{ github.ref_name == 'main' && 'Production' || 'Staging' }}
     defaults:
       run:
         working-directory: packages/infrastructure/supabase
