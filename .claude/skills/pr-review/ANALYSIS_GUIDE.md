@@ -105,24 +105,24 @@ When duplicates found:
 - Missing or incorrect handler/surface/layout patterns (Principle XIII)
 - Incorrect component organization and file structure
 - Missing `contracts/` or `routers/` folders for oRPC features (Principle III)
-- Contract files not following `{feature}Contract.ts` naming (Principle XVIII)
-- Router files not following `{feature}ORPCRouter.ts` naming (Principle XVIII)
+- Contract files not following `{feature}Contract.ts` naming (Principle IX)
+- Router files not following `{feature}ORPCRouter.ts` naming (Principle IX)
 
-### 3. CONSTITUTION ALIGNMENT - All 19 Principles
+### 3. CONSTITUTION ALIGNMENT - All 14 Principles
 
-- Feature package boundaries and exports (Principle XIII)
+- Monorepo structure and import boundaries (Principles I, II)
+- Naming and code style conventions (Principle III)
 - Infrastructure component usage (Principle IV)
+- pnpm catalog protocol (Principle V)
 - TypeScript and type safety (Principle VI)
-- Typesafe routing (Principle VII)
-- Server actions architecture (Principle IX)
-- Shadcn UI component priority (Principle X)
-- Form validation patterns (Principle XI)
-- TanStack Query data fetching (Principle XII)
-- Next.js server components (Principle XV)
-- Authentication verification - distinguish page auth checks from RLS-based server action protection (Principle XVI)
-- Database logic centralization (Principle XVII)
-- **oRPC API Procedures (Principle XVIII)** - query-only usage, contract-first pattern, proper naming
-- **API Endpoint Stability (Principle XIX)** - no breaking URL changes, backward-compatible schemas
+- Cross-platform UI components (Principle VII)
+- Test-driven development (Principle VIII)
+- **oRPC API (Principle IX)** - contract-first pattern, proper naming
+- TanStack Query data fetching and mutations (Principle X)
+- Next.js server components (Principle XI)
+- Feature exposure patterns (Principle XII)
+- **API Endpoint Stability (Principle XIII)** - no breaking URL changes, backward-compatible schemas
+- Platform-agnostic navigation (Principle XIV)
 
 ### 4. CODE QUALITY ISSUES - Maintainability, Reliability, and Performance
 
@@ -163,18 +163,15 @@ When duplicates found:
 - Naming consistency (Principle III)
 - JSDoc documentation gaps
 
-### 6. oRPC AND API COMPLIANCE - Principles XVIII and XIX
+### 6. oRPC AND API COMPLIANCE - Principles IX and XIII
 
-**oRPC Usage Violations (Principle XVIII):**
-- oRPC procedures performing mutations (create, update, delete) - MUST use server actions
-- oRPC contracts not in `src/contracts/` folder
-- oRPC routers not in `src/routers/` folder
-- Contract files not named `{feature}Contract.ts`
-- Router files not named `{feature}ORPCRouter.ts`
-- Procedure names not using camelCase
-- Missing contract definition for implemented router
+**oRPC Usage Violations (Principle IX):**
+- oRPC contracts, router, and client not in `@infrastructure/api-client`
+- Missing contract-first pattern
+- Apps not consuming via `createApiClient()` and `createOrpcUtils()`
+- Missing proper error handling with `ORPCError`
 
-**API Endpoint Stability Violations (Principle XIX):**
+**API Endpoint Stability Violations (Principle XIII):**
 - Changing existing endpoint URLs (path changes)
 - Removing fields from input schemas
 - Renaming fields in input schemas
@@ -276,60 +273,50 @@ export async function actionFetchPersonaMetrics(personaId: string) {
 }
 ```
 
-### Example 4: oRPC Violation - Mutation in oRPC
+### Example 4: oRPC Violation - Missing Contract-First Pattern
 
 ```
 FINDING TYPE: constitution
-FILE: packages/features/teams/src/routers/teamsORPCRouter.ts
+FILE: packages/infrastructure/api-client/src/router.ts
 LINES: 25-32
-PRINCIPLE: Principle XVIII (oRPC API Procedures) - Query-Only Restriction
+PRINCIPLE: Principle IX (oRPC API) - Contract-First Pattern
 SEVERITY: high
 
 DESCRIPTION:
-oRPC procedure is performing a mutation (create operation). Per Principle XVIII, oRPC
-procedures are permitted ONLY for read operations (queries). All write operations
-(create, update, delete) MUST use server actions per Principle IX.
+oRPC route implemented without a corresponding contract definition. Per Principle IX,
+oRPC follows a contract-first pattern where contracts, router, and client all live
+in `@infrastructure/api-client`.
 
 EXAMPLE:
-// In teamsORPCRouter.ts
-const createTeamProcedure = os.createTeam
-  .use(authMiddleware)
-  .handler(({ input }) => actionCreateTeam(input.name));
-
-export const teamsORPCRouter = os.router({
-  createTeam: createTeamProcedure,  // VIOLATION: mutation via oRPC
-});
+// Router handler without contract
+router.get("/teams", (c) => { ... });
 
 SUGGESTION:
-// Remove from oRPC router - mutations should use server actions directly
-// In component, use useMutation with the server action:
-import { useMutation } from "@tanstack/react-query";
-import { actionCreateTeam } from "@features/teams";
-
-const mutation = useMutation({
-  mutationFn: (name: string) => actionCreateTeam(name),
+// Define contract first, then implement router handler
+// In @infrastructure/api-client
+const contract = oc.router({
+  teams: { list: oc.route({ method: "GET" }).output(z.array(TeamSchema)) },
 });
 ```
 
-### Example 5: oRPC Violation - Incorrect File Naming
+### Example 5: oRPC Violation - Direct API Call Instead of Typed Client
 
 ```
 FINDING TYPE: architecture
-FILE: packages/features/reports/src/api/reportsRouter.ts
+FILE: apps/web/app/teams/page.tsx
 LINES: 1-15
-PRINCIPLE: Principle XVIII (oRPC API Procedures) - Naming Conventions
+PRINCIPLE: Principle IX (oRPC API) - Typed Client Usage
 SEVERITY: medium
 
 DESCRIPTION:
-oRPC router file does not follow required naming convention. Per Principle XVIII,
-router files must be named `{feature}ORPCRouter.ts` and placed in `src/routers/` folder.
-Found: `src/api/reportsRouter.ts`
-Expected: `src/routers/reportsORPCRouter.ts`
+App code making direct fetch calls instead of using the typed oRPC client. Per Principle IX,
+apps should consume via `createApiClient()` and `createOrpcUtils()`.
 
 SUGGESTION:
-1. Rename file from `reportsRouter.ts` to `reportsORPCRouter.ts`
-2. Move from `src/api/` to `src/routers/`
-3. Update all imports referencing this file
+import { createApiClient, createOrpcUtils } from "@infrastructure/api-client";
+const client = createApiClient("http://localhost:3001/api");
+const orpc = createOrpcUtils(client);
+const { data } = useQuery(orpc.teams.list.queryOptions());
 ```
 
 ### Example 6: API Stability Violation - Breaking Schema Change
@@ -338,13 +325,13 @@ SUGGESTION:
 FINDING TYPE: constitution
 FILE: packages/features/teams/src/contracts/teamsContract.ts
 LINES: 18-25
-PRINCIPLE: Principle XIX (API Endpoint Stability)
+PRINCIPLE: Principle XIII (API Endpoint Stability)
 SEVERITY: critical
 
 DESCRIPTION:
 Breaking change detected in output schema. The `memberCount` field was renamed to
 `membersCount` and `createdAt` field type changed from `string` to `Date`. Per
-Principle XIX, output schemas may add fields but must not remove or change the
+Principle XIII, output schemas may add fields but must not remove or change the
 type of existing fields. This breaks backward compatibility for API consumers.
 
 EXAMPLE:
@@ -568,7 +555,7 @@ Found **[COUNT]** constitution issue(s):
 Found **[COUNT]** oRPC/API issue(s):
 
 ### Issue A: [Issue Title]
-[Same format - always include Principle XVIII or XIX reference]
+[Same format - always include Principle IX or XIX reference]
 
 ---
 
