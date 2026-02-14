@@ -19,7 +19,7 @@
     "@infrastructure/ui-web": "workspace:*",
     "@infrastructure/utils": "workspace:*",
     "@orpc/client": "catalog:",
-    "@orpc/react-query": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
     "next": "catalog:",
     "react": "catalog:",

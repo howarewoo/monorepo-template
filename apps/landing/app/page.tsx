@@ -135,18 +135,20 @@ export default function Home() {
           description="Hono server with oRPC for end-to-end type safety. Define contracts once, get typed clients for free. Zod validation at the boundary, TypeScript everywhere else."
           features={["Hono", "oRPC", "Zod Validation", "Type-Safe Client", "React Query"]}
           codeLabel="packages/infrastructure/api-client/src/contract.ts"
-          code={`import { oc } from "@orpc/contract";
+          code={`import { os } from "@orpc/server";
 import { z } from "zod";
 
-export const contract = oc.router({
+const pub = os.$context<{ requestId?: string }>();
+
+export const router = {
   users: {
-    list: oc.route({ method: "GET" })
-      .output(z.array(UserSchema)),
-    get: oc.route({ method: "GET" })
-      .input(z.object({ id: z.string() }))
-      .output(UserSchema),
+    list: pub.output(z.array(UserSchema))
+      .handler(() => { /* ... */ }),
+    get: pub.input(z.object({ id: z.string() }))
+      .output(UserSchema)
+      .handler(({ input }) => { /* ... */ }),
   },
-});`}
+};`}
         />
 
         <FeatureSection
