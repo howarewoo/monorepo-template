@@ -117,12 +117,13 @@ react: "19.1.0"
 
 **Gotcha**: React is pinned to exact `19.1.0` because React Native 0.81's bundled renderer (`react-native-renderer@19.1.0`) performs a strict equality check against the installed React version. Using `^19.2.0` causes a hard runtime crash on iOS.
 
-**Gotcha**: `pnpm build` runs `pnpm self-update && turbo build` — this upgrades pnpm before building, which may drift from the version locked in `packageManager`. Be aware when debugging local vs CI differences.
+**Gotcha**: `pnpm build` runs `pnpm self-update && turbo build` — this upgrades pnpm before building. If local builds behave differently from CI, check whether `pnpm --version` still matches the `packageManager` field in root `package.json`.
 
 ## Conventions
 
 - **Biome**: 100-char line width, double quotes, semicolons, ES5 trailing commas
 - **pnpm** exclusively (not npm/yarn); `pnpx` instead of `npx`
+- **Graphite** (`gt`) for branch management — use `gt create`, `gt modify`, `gt submit` instead of raw git branch/commit/push
 - `.ts` by default; `.tsx` only when file contains JSX
 - Infrastructure packages use **named exports**; feature packages use **default exports**
 - No `any` or `unknown` — use explicit, safely narrowed types
@@ -136,6 +137,10 @@ react: "19.1.0"
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 1. `biome ci` — lint + format check
 2. `pnpm test:changed` — tests for changed packages only
+
+**Dependabot** (`.github/dependabot.yml`) runs weekly scans for npm and GitHub Actions updates.
+
+**Community files**: Issue templates (bug report, feature request), PR template, and `CONTRIBUTING.md` guide new contributors.
 
 ## Testing
 
