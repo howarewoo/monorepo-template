@@ -1,5 +1,5 @@
 {
-  "name": "@repo/mobile",
+  "name": "mobile",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -10,7 +10,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "build": "expo export --platform ios --platform android --platform web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest"
   },
   "dependencies": {
     "@expo/metro-runtime": "catalog:",
@@ -45,8 +46,22 @@
     "@babel/core": "catalog:",
     "@babel/runtime": "catalog:",
     "@infrastructure/typescript-config": "workspace:*",
+    "@types/jest": "catalog:",
     "@types/react": "catalog:",
+    "@testing-library/react-native": "catalog:",
+    "jest": "catalog:",
+    "jest-expo": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:"
+  },
+  "jest": {
+    "preset": "jest-expo",
+    "setupFilesAfterEnv": ["./jest-setup.ts"],
+    "transformIgnorePatterns": [
+      "node_modules/(?!\\.pnpm|((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@infrastructure/.*|@tanstack/.*)"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   }
 }
