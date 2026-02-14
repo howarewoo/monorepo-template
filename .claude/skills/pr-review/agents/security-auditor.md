@@ -27,13 +27,6 @@ Analyze the provided code changes for these security concerns:
 - **Client-Side Secrets** - API keys or secrets exposed to browser
 - **Redirect Vulnerabilities** - Open redirects in navigation logic
 
-## RLS Consideration
-
-**Important**: Server actions that query Supabase tables with Row Level Security (RLS) do NOT require explicit `getUser()` checks. RLS enforcement is automatic. Only flag missing auth if:
-1. The table does NOT have RLS enabled
-2. The operation bypasses RLS (using service role client)
-3. Auth is needed for business logic (not just data protection)
-
 ## Input
 
 You will receive:
