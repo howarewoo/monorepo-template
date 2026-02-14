@@ -166,9 +166,11 @@ When duplicates found:
 ### 6. oRPC AND API COMPLIANCE - Principles IX and XIII
 
 **oRPC Usage Violations (Principle IX):**
-- oRPC contracts, router, and client not in `@infrastructure/api-client`
-- Missing contract-first pattern
-- Apps not consuming via `createApiClient()` and `createOrpcUtils()`
+- Feature contracts not in `contracts/` folder or not following `{feature}Contract.ts` naming
+- Feature routers not in `routers/` folder or not following `{feature}ORPCRouter.ts` naming
+- Routers not composed in `apps/api` master router
+- Inline schemas in routers instead of importing from contract files
+- Apps not consuming via `createApiClient()` and `createOrpcUtils()` with `Router` type from `apps/api`
 - Missing proper error handling with `ORPCError`
 
 **API Endpoint Stability Violations (Principle XIII):**
@@ -273,30 +275,37 @@ export async function actionFetchPersonaMetrics(personaId: string) {
 }
 ```
 
-### Example 4: oRPC Violation - Missing Contract-First Pattern
+### Example 4: oRPC Violation - Inline Schema Instead of Contract Import
 
 ```
 FINDING TYPE: constitution
-FILE: packages/infrastructure/api-client/src/router.ts
-LINES: 25-32
+FILE: packages/features/teams/src/routers/teamsORPCRouter.ts
+LINES: 8-15
 PRINCIPLE: Principle IX (oRPC API) - Contract-First Pattern
 SEVERITY: high
 
 DESCRIPTION:
-oRPC route implemented without a corresponding contract definition. Per Principle IX,
-oRPC follows a contract-first pattern where contracts, router, and client all live
-in `@infrastructure/api-client`.
+oRPC router defines schemas inline instead of importing from the feature's contract
+file. Per Principle IX, contracts must be defined in `contracts/{feature}Contract.ts`
+and imported by routers.
 
 EXAMPLE:
-// Router handler without contract
-router.get("/teams", (c) => { ... });
+// Inline schema in router — violates contract-first pattern
+export const teamsRouter = {
+  list: pub.output(z.array(z.object({ id: z.string(), name: z.string() }))).handler(() => {
+    // ...
+  }),
+};
 
 SUGGESTION:
-// Define contract first, then implement router handler
-// In @infrastructure/api-client
-const contract = oc.router({
-  teams: { list: oc.route({ method: "GET" }).output(z.array(TeamSchema)) },
-});
+// Import from contract file
+import { TeamSchema } from "../contracts/teamsContract";
+
+export const teamsRouter = {
+  list: pub.output(TeamSchema.array()).handler(() => {
+    // ...
+  }),
+};
 ```
 
 ### Example 5: oRPC Violation - Direct API Call Instead of Typed Client

@@ -11,8 +11,9 @@ oRPC is the unified mechanism for ALL server communication — both queries AND 
 
 #### Contract-First Pattern
 Verify proper contract-first development:
-- **Location**: Contracts, router, and client all live in `@infrastructure/api-client`
-- **Client Usage**: Apps consume via `createApiClient()` and `createOrpcUtils()`
+- **Location**: Feature packages define contracts in `contracts/` and routers in `routers/`; `apps/api` composes feature routers into the master router
+- **Client Utilities**: `@infrastructure/api-client` provides `createApiClient` and `createOrpcUtils`
+- **Client Usage**: Apps import `Router` type from `apps/api` and consume via `createApiClient()` and `createOrpcUtils()`
 - **Error Handling**: Use `ORPCError` for errors
 
 #### Usage Patterns
@@ -49,8 +50,11 @@ Flag any changes that break backward compatibility:
 ### Infrastructure Locations
 
 Verify correct import paths:
-- oRPC contracts, router, client: `@infrastructure/api-client`
-- Apps consume via `createApiClient()` and `createOrpcUtils()`
+- Feature contracts: `packages/features/<feature>/src/contracts/{feature}Contract.ts`
+- Feature routers: `packages/features/<feature>/src/routers/{feature}ORPCRouter.ts`
+- Router composition: `apps/api/src/router.ts`
+- Client utilities: `@infrastructure/api-client` (`createApiClient`, `createOrpcUtils`)
+- Apps consume via `createApiClient()` and `createOrpcUtils()` with `Router` type from `apps/api`
 
 ## Input
 
@@ -104,7 +108,7 @@ FINDINGS_COUNT: 0
 ## Severity Guidelines
 
 - **HIGH**: Breaking schema changes, breaking URL changes, bypassing oRPC for API calls
-- **MEDIUM**: Contract not in `@infrastructure/api-client`, direct fetch instead of typed client
+- **MEDIUM**: Contract not in feature `contracts/` folder, direct fetch instead of typed client
 - **LOW**: Minor naming inconsistencies, import path suggestions
 
 ## Examples
@@ -136,9 +140,9 @@ const { data } = useQuery(orpc.teams.list.queryOptions());
 }))
 ```
 
-### Contract Not in api-client Package (MEDIUM - Principle IX)
+### Contract Naming Convention Violation (MEDIUM - Principle IX)
 ```typescript
-// VIOLATION: Contract defined outside @infrastructure/api-client
-// Found at: packages/features/teams/src/contracts/teamsContract.ts
-// Should be: packages/infrastructure/api-client/src/contracts/
+// VIOLATION: Contract file not following {feature}Contract.ts naming
+// Found at: packages/features/teams/src/contracts/schemas.ts
+// Should be: packages/features/teams/src/contracts/teamsContract.ts
 ```

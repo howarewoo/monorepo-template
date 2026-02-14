@@ -12,7 +12,7 @@ Every feature is implemented as a standalone package with clear boundaries; Feat
 All code in feature packages must follow standardized naming conventions and directory structure (excluding infrastructure packages and apps); Components must use PascalCase (UpperCamelCase) with one default export per file; Helper functions must use camelCase; Custom hooks must use camelCase with "use" prefix (e.g., `useHookName`); Constants must use UPPER_SNAKE_CASE; TypeScript types and interfaces must use PascalCase; Schemas must use PascalCase; Procedure files must use camelCase names describing the operation (e.g., `createUser`, `fetchUsers`) and be located in the `procedures/` folder; oRPC contracts must use `{feature}Contract.ts` naming (e.g., `usersContract.ts`) in the `contracts/` folder; oRPC routers must use `{feature}ORPCRouter.ts` naming (e.g., `usersORPCRouter.ts`) in the `routers/` folder; oRPC procedure names must use camelCase (e.g., `listUsers`, `createUser`); File organization must use dedicated folders: `procedures/`, `contracts/`, `routers/`, `components/`, `surfaces/`, `schemas/`, and `layouts/`; Use `.ts` file extension by default and only use `.tsx` when the file contains JSX; Prioritize using default exports over named exports for feature packages (infrastructure packages should use named exports for better discoverability and tree-shaking); Consistent naming, code organization, and file structure across all feature packages ensures maintainability, readability, and scalability.
 
 ### IV. Infrastructure Package Priority
-Infrastructure packages provide shared utilities, UI components, and cross-cutting concerns; Prioritize using components from `@infrastructure/ui` for shared styles and utilities; Use `@infrastructure/api-client` for oRPC contracts, routers, and client configuration; Use `@infrastructure/utils` for cross-platform utilities; Use `@infrastructure/typescript-config` for shared TypeScript configuration.
+Infrastructure packages provide shared utilities, UI components, and cross-cutting concerns; Prioritize using components from `@infrastructure/ui` for shared styles and utilities; Use `@infrastructure/api-client` for oRPC client utilities (`createApiClient`, `createOrpcUtils`) and shared base schemas; Use `@infrastructure/utils` for cross-platform utilities; Use `@infrastructure/typescript-config` for shared TypeScript configuration.
 
 ### V. pnpm Catalog Protocol
 All dependencies must be managed through pnpm catalog to prevent version conflicts; Catalog definitions in `pnpm-workspace.yaml` ensure consistent dependency versions across the monorepo; No direct dependency declarations in individual `package.json` files; All versions in the catalog must be pinned to exact versions (no `^` or `~` prefixes) to ensure deterministic installs.
@@ -52,34 +52,46 @@ All tests must use Vitest, except React Native apps which use Jest (via `jest-ex
 A feature is NOT considered complete until all tests pass. Implementation without passing tests is incomplete work.
 
 ### IX. oRPC API
-oRPC provides type-safe end-to-end API communication between apps (web, mobile) and the API server (Hono). Schemas, routers, and client configuration live in `@infrastructure/api-client`.
+oRPC provides type-safe end-to-end API communication between apps (web, mobile) and the API server (Hono). Feature packages own their contracts and routers; `@infrastructure/api-client` provides generic client utilities (`createApiClient`, `createOrpcUtils`) and shared base schemas.
 
 **Structure:**
-- Contracts (schemas): `@infrastructure/api-client/src/contract.ts` — zod schemas defining inputs and outputs
-- Router: `@infrastructure/api-client/src/server.ts` — oRPC router with handlers implementing business logic
-- Client: `@infrastructure/api-client/src/client.ts` — typed oRPC client for consuming apps
-- API server: `apps/api/src/index.ts` — Hono server mounting the oRPC handler
+- Feature contracts: `packages/features/<feature>/src/contracts/{feature}Contract.ts` — Zod schemas defining inputs and outputs
+- Feature routers: `packages/features/<feature>/src/routers/{feature}ORPCRouter.ts` — oRPC router with handlers
+- Feature procedures: `packages/features/<feature>/src/procedures/` — business logic called by router handlers
+- API composition: `apps/api/src/router.ts` — imports feature routers, composes the master router, exports `Router` type
+- Client utilities: `@infrastructure/api-client` — `createApiClient`, `createOrpcUtils`, shared base schemas
 
 **Router Pattern:**
 ```typescript
-// @infrastructure/api-client/src/server.ts
+// packages/features/users/src/contracts/usersContract.ts
+import { z } from "zod";
+
+export const UserSchema = z.object({ id: z.string(), name: z.string() });
+export const CreateUserSchema = z.object({ name: z.string().min(1) });
+
+// packages/features/users/src/routers/usersORPCRouter.ts
 import { os } from "@orpc/server";
-import { CreateUserSchema, UserSchema } from "./contract";
+import { UserSchema, CreateUserSchema } from "../contracts/usersContract";
 
 const pub = os.$context<{ requestId?: string }>();
 
-export const router = {
-  users: {
-    list: pub.output(UserSchema.array()).handler(() => {
-      // return users
+export const usersRouter = {
+  list: pub.output(UserSchema.array()).handler(() => {
+    // return users
+  }),
+  create: pub
+    .input(CreateUserSchema)
+    .output(UserSchema)
+    .handler(({ input }) => {
+      // create and return user
     }),
-    create: pub
-      .input(CreateUserSchema)
-      .output(UserSchema)
-      .handler(({ input }) => {
-        // create and return user
-      }),
-  },
+};
+
+// apps/api/src/router.ts
+import { usersRouter } from "@features/users/src/routers/usersORPCRouter";
+
+export const router = {
+  users: usersRouter,
 };
 
 export type Router = typeof router;
@@ -87,10 +99,11 @@ export type Router = typeof router;
 
 **Client Usage Pattern:**
 ```typescript
-// In consuming apps
-import { createApiClient } from "@infrastructure/api-client";
+// In consuming apps (web, mobile)
+import type { Router } from "api/router";
+import { createApiClient, createOrpcUtils } from "@infrastructure/api-client";
 
-const client = createApiClient("http://localhost:3001/api");
+const client = createApiClient<Router>("http://localhost:3001/api");
 const users = await client.users.list();
 ```
 
@@ -117,7 +130,7 @@ All pages in Next.js applications must be implemented as server components; Serv
 ### XII. Feature Exposure Patterns
 Features must expose their public API through strictly defined patterns; Feature UI components accessed through "Surface" components in the `surfaces/` folder with "Surface" suffix; Feature Layout UI accessed through components in the `layouts/` folder with "Layout" suffix; No other files or folders from the feature package may be imported or accessed by consuming applications.
 
-**Exemptions**: Infrastructure packages (`packages/infrastructure/**`) are designed to be consumed directly; exports are intentionally public and reusable across all packages.
+**Exemptions**: Infrastructure packages (`packages/infrastructure/**`) are designed to be consumed directly; exports are intentionally public and reusable across all packages. `apps/api` may import feature internal paths (contracts, routers) for router composition — this is the only app-level exemption to the Surfaces/Layouts export rule.
 
 ### XIII. API Stability
 All HTTP API endpoints must maintain backward compatibility within a major version.

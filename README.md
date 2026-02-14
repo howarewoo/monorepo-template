@@ -96,9 +96,9 @@ monorepo-template/
 │   ├── mobile/        Expo SDK 54 — iOS, Android, Web
 │   └── api/           Hono + oRPC — Type-safe API server
 ├── packages/
-│   ├── features/      Business logic (scaffold)
+│   ├── features/      Business logic — contracts, routers, procedures
 │   └── infrastructure/
-│       ├── api-client        oRPC contracts, router, typed client
+│       ├── api-client        oRPC client utilities, shared schemas
 │       ├── navigation        Platform-agnostic Link + useNavigation
 │       ├── ui                Design tokens, cn(), theme CSS
 │       ├── ui-web            Shared shadcn/ui components
@@ -134,15 +134,19 @@ Three-tier dependency flow:
 
 ## Key Patterns
 
-**Type-safe API** — define a contract, get a typed client everywhere:
+**Type-safe API** — features own contracts, the API app composes routers, and every client is fully typed:
 
 ```typescript
-// Define once
-const contract = oc.router({
-  users: { list: oc.route({ method: "GET" }).output(z.array(UserSchema)) },
-});
+// Feature defines contract + router
+// packages/features/users/src/contracts/usersContract.ts
+const UserSchema = z.object({ id: z.string(), name: z.string() });
 
-// Use anywhere
+// apps/api composes feature routers
+import { usersRouter } from "@features/users/src/routers/usersORPCRouter";
+export const router = { users: usersRouter };
+export type Router = typeof router;
+
+// Use anywhere with full type safety
 const { data } = useQuery(orpc.users.list.queryOptions());
 ```
 

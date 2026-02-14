@@ -52,9 +52,9 @@ pnpm --filter mobile web
   - `apps/landing` — Next.js 16 marketing/landing page consuming shared UI components (port 3002)
   - `apps/mobile` — Expo SDK 54 + React Native 0.81 + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
-- **Features** (`packages/features/*`): Standalone business feature packages; can only import from infrastructure (currently empty — scaffold for new features)
+- **Features** (`packages/features/*`): Standalone business feature packages; own their contracts (`contracts/`), routers (`routers/`), and procedures (`procedures/`); can only import from infrastructure
 - **Infrastructure** (`packages/infrastructure/*`): Shared utilities; can be used anywhere
-  - `@infrastructure/api-client` — oRPC contracts, router, and typed client
+  - `@infrastructure/api-client` — oRPC client utilities (`createApiClient`, `createOrpcUtils`) and shared base schemas
   - `@infrastructure/navigation` — Platform-agnostic navigation (Link, useNavigation, NavigationProvider)
   - `@infrastructure/ui` — Shared design tokens, CSS utilities (`cn()`, `tokens`)
   - `@infrastructure/ui-web` — Shared shadcn/ui components (Button, Card, etc.) for web apps
@@ -65,14 +65,32 @@ pnpm --filter mobile web
 
 ### oRPC (Type-Safe API)
 
-Contracts, router, and client live in `@infrastructure/api-client`. Apps consume via `createApiClient()` and `createOrpcUtils()`. Query integration uses `@orpc/tanstack-query`.
+Feature packages own their contracts (`contracts/`) and routers (`routers/`). `apps/api` imports feature routers and composes the master router, exporting `Router` type. `@infrastructure/api-client` provides generic client utilities (`createApiClient`, `createOrpcUtils`) and shared base schemas. Apps (web, mobile) import `Router` type from `apps/api` and pass it to client utilities for fully typed clients. Query integration uses `@orpc/tanstack-query`.
 
 **Gotcha**: oRPC v1 routers are plain object literals — do not wrap with `.router()`. The `@orpc/react-query` package was renamed to `@orpc/tanstack-query`.
 
 ```typescript
-// In app code
+// Feature package: packages/features/users/src/contracts/usersContract.ts
+import { z } from "zod";
+export const UserSchema = z.object({ id: z.string(), name: z.string() });
+
+// Feature package: packages/features/users/src/routers/usersORPCRouter.ts
+import { os } from "@orpc/server";
+import { UserSchema } from "../contracts/usersContract";
+const pub = os.$context<{ requestId?: string }>();
+export const usersRouter = {
+  list: pub.output(UserSchema.array()).handler(() => { /* ... */ }),
+};
+
+// API app: apps/api/src/router.ts
+import { usersRouter } from "@features/users/src/routers/usersORPCRouter";
+export const router = { users: usersRouter };
+export type Router = typeof router;
+
+// Consuming app (web/mobile)
+import type { Router } from "api/router";
 import { createApiClient, createOrpcUtils } from "@infrastructure/api-client";
-const client = createApiClient("http://localhost:3001/api");
+const client = createApiClient<Router>("http://localhost:3001/api");
 const orpc = createOrpcUtils(client);
 const { data } = useQuery(orpc.users.list.queryOptions());
 ```
