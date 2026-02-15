@@ -6,7 +6,7 @@ vi.mock("@hono/node-server", () => ({
 }));
 
 // Mock the router
-vi.mock("@infrastructure/api-client/server", () => ({
+vi.mock("../router", () => ({
   router: {},
 }));
 
