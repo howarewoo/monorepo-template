@@ -1,5 +1,5 @@
 {
-  "name": "@infrastructure/api-client",
+  "name": "@features/users",
   "version": "0.0.0",
   "private": true,
   "license": "MIT",
@@ -9,6 +9,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./router": {
+      "types": "./src/routers/usersORPCRouter.ts",
+      "default": "./src/routers/usersORPCRouter.ts"
     }
   },
   "scripts": {
@@ -16,10 +20,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@orpc/client": "catalog:",
-    "@orpc/tanstack-query": "catalog:",
     "@orpc/server": "catalog:",
-    "@tanstack/react-query": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

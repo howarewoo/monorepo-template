@@ -1,8 +1,8 @@
-import { router } from "@infrastructure/api-client/server";
 import { RPCHandler } from "@orpc/server/fetch";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { handle } from "hono/vercel";
+import { router } from "../src/router";
 
 const app = new Hono().basePath("/api");
 
