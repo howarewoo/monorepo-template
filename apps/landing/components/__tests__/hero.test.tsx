@@ -32,15 +32,13 @@ describe("Hero", () => {
     expect(screen.getAllByText("View on GitHub").length).toBeGreaterThan(0);
   });
 
-  it("renders terminal command", () => {
+  it("renders browser frame content", () => {
     render(<Hero />);
-    expect(screen.getByText("pnpm dev")).toBeTruthy();
+    expect(screen.getByText("localhost:3000")).toBeTruthy();
   });
 
-  it("renders terminal port URLs", () => {
+  it("renders phone frame content", () => {
     render(<Hero />);
-    expect(screen.getByText(/http:\/\/localhost:3000/)).toBeTruthy();
-    expect(screen.getByText(/http:\/\/localhost:3001/)).toBeTruthy();
-    expect(screen.getByText(/http:\/\/localhost:8081/)).toBeTruthy();
+    expect(screen.getAllByText("Monorepo Template").length).toBeGreaterThanOrEqual(1);
   });
 });

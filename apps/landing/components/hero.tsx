@@ -1,11 +1,13 @@
 import { Button } from "@infrastructure/ui-web";
+import { BrowserFrame } from "./browser-frame";
+import { PhoneFrame } from "./phone-frame";
 
 const DOT_GRID_STYLE = {
   backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
   backgroundSize: "24px 24px",
 } as const;
 
-/** Hero section with headline, subtitle, and a stylized terminal visual. */
+/** Hero section with headline, subtitle, and responsive device frame previews. */
 export function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-border/40">
@@ -42,41 +44,13 @@ export function Hero() {
           </Button>
         </div>
 
-        {/* Terminal visual */}
-        <div className="mx-auto mt-16 max-w-2xl">
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/30 shadow-sm">
-            {/* Terminal header */}
-            <div className="flex items-center gap-2 border-b border-border/40 px-4 py-3">
-              <span className="size-2.5 rounded-full bg-border" />
-              <span className="size-2.5 rounded-full bg-border" />
-              <span className="size-2.5 rounded-full bg-border" />
-              <span className="ml-3 text-xs text-muted-foreground">~/monorepo-template</span>
-            </div>
-            {/* Terminal body */}
-            <div className="p-5 font-mono text-[13px] leading-relaxed">
-              <div className="text-muted-foreground">
-                <span className="text-primary">$</span> pnpm dev
-              </div>
-              <div className="mt-3 space-y-1.5 text-muted-foreground/70">
-                <div>
-                  <span className="text-muted-foreground">web</span>
-                  {"        "}dev → Next.js on{" "}
-                  <span className="text-primary">http://localhost:3000</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">api</span>
-                  {"        "}dev → Hono on{" "}
-                  <span className="text-primary">http://localhost:3001</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">mobile</span> dev → Expo on{" "}
-                  <span className="text-primary">http://localhost:8081</span>
-                </div>
-              </div>
-              <div className="mt-3 text-muted-foreground">
-                <span className="text-primary">$</span> <span className="animate-pulse">▌</span>
-              </div>
-            </div>
+        {/* Responsive device frames */}
+        <div className="mx-auto mt-16 max-w-3xl">
+          <div className="hidden md:block">
+            <BrowserFrame />
+          </div>
+          <div className="block md:hidden">
+            <PhoneFrame />
           </div>
         </div>
       </div>
