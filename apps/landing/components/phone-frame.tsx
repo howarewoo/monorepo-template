@@ -1,10 +1,13 @@
+const PERSPECTIVE_STYLE = { perspective: "1200px" } as const;
+const PHONE_TRANSFORM_STYLE = { transform: "rotateX(2deg)" } as const;
+
 /** Phone bezel mockup showing a miniature mobile app. */
 export function PhoneFrame() {
   return (
-    <div className="flex justify-center" style={{ perspective: "1200px" }}>
+    <div className="flex justify-center" style={PERSPECTIVE_STYLE}>
       <div
         className="w-full max-w-[260px] rounded-[2.5rem] border-[3px] border-foreground/10 bg-foreground/5 p-2"
-        style={{ transform: "rotateX(2deg)" }}
+        style={PHONE_TRANSFORM_STYLE}
       >
         {/* Screen — iPhone 15/16 aspect ratio (9:19.5) */}
         <div className="flex flex-col overflow-hidden rounded-[2rem] bg-background aspect-[9/19.5]">
@@ -15,6 +18,7 @@ export function PhoneFrame() {
 
           {/* Status bar */}
           <div className="flex items-center justify-between px-6 pt-1 pb-2">
+            {/* iOS default marketing screenshot time */}
             <span className="text-[9px] font-medium text-foreground">9:41</span>
             <div className="flex items-center gap-1">
               <div className="flex gap-0.5 items-end">
