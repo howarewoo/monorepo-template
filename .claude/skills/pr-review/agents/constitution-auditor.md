@@ -32,14 +32,16 @@ Review changes against ALL applicable principles:
 
 ### oRPC Compliance (Principle IX)
 - oRPC is the unified mechanism for ALL server communication (queries AND mutations)
-- Contracts, router, and client live in `@infrastructure/api-client`
-- Apps consume via `createApiClient()` and `createOrpcUtils()`
+- Feature packages define contracts in `contracts/` and routers in `routers/`
+- `apps/api` composes feature routers into the master router and exports `Router` type
+- Client utilities (`createApiClient`, `createOrpcUtils`) live in `@infrastructure/api-client`
+- Apps consume via `createApiClient()` and `createOrpcUtils()` with `Router` type from `apps/api`
 - Throw `ORPCError` for errors
 
 ### Data Fetching Compliance (Principle X)
 - Uses TanStack Query hooks (useQuery, useMutation)
 - NO useEffect for data loading
-- Query options in dedicated files
+- Query and mutation options accessed via `createOrpcUtils()` (no separate `queries/` or `mutations/` folders)
 
 ### Navigation Compliance (Principle XIV)
 - Uses @infrastructure/navigation imports

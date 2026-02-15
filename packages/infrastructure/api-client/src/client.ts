@@ -2,20 +2,17 @@ import { createORPCClient } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import type { Router } from "./server";
 
-export type Client = RouterClient<Router>;
-
-export function createApiClient(baseUrl: string): Client {
+export function createApiClient<TRouter extends Record<string, any>>(
+  baseUrl: string
+): RouterClient<TRouter> {
   const link = new RPCLink({
     url: baseUrl,
   });
 
-  return createORPCClient<Client>(link);
+  return createORPCClient(link);
 }
 
-export type ApiClient = ReturnType<typeof createApiClient>;
-
-export function createOrpcUtils(client: Client) {
+export function createOrpcUtils<TClient extends Record<string, any>>(client: TClient) {
   return createTanstackQueryUtils(client);
 }

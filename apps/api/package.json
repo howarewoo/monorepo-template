@@ -4,6 +4,12 @@
   "private": true,
   "license": "MIT",
   "type": "module",
+  "exports": {
+    "./router": {
+      "types": "./src/router.ts",
+      "default": "./src/router.ts"
+    }
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -14,6 +20,7 @@
   "dependencies": {
     "@hono/node-server": "1.19.9",
     "@orpc/server": "catalog:",
+    "@features/users": "workspace:*",
     "@infrastructure/api-client": "workspace:*",
     "hono": "catalog:",
     "zod": "catalog:"

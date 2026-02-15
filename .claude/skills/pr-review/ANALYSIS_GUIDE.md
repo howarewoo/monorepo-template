@@ -166,9 +166,11 @@ When duplicates found:
 ### 6. oRPC AND API COMPLIANCE - Principles IX and XIII
 
 **oRPC Usage Violations (Principle IX):**
-- oRPC contracts, router, and client not in `@infrastructure/api-client`
-- Missing contract-first pattern
-- Apps not consuming via `createApiClient()` and `createOrpcUtils()`
+- Feature contracts not in `contracts/` folder or not following `{feature}Contract.ts` naming
+- Feature routers not in `routers/` folder or not following `{feature}ORPCRouter.ts` naming
+- Routers not composed in `apps/api` master router
+- Inline schemas in routers instead of importing from contract files
+- Apps not consuming via `createApiClient()` and `createOrpcUtils()` with `Router` type from `apps/api`
 - Missing proper error handling with `ORPCError`
 
 **API Endpoint Stability Violations (Principle XIII):**
@@ -194,7 +196,7 @@ When duplicates found:
 
 ```
 FINDING TYPE: critical
-FILE: packages/features/dashboard/src/actions/actionUpdateTeamSelection.ts
+FILE: packages/features/dashboard/src/procedures/updateTeamSelection.ts
 LINES: 34-48
 SEVERITY: high
 
@@ -244,19 +246,19 @@ import { VisibilityMetricSurface } from '@features/visibility';
 // Or move shared component to @infrastructure/shadcn
 ```
 
-### Example 3: Constitution Violation - Server Action Pattern
+### Example 3: Constitution Violation - Procedure Pattern
 
 ```
 FINDING TYPE: constitution
 FILE: packages/features/personas/src/utils/personaHelpers.ts
 LINES: 8-25
-PRINCIPLE: Principle IX (Server Actions Architecture)
+PRINCIPLE: Principle IX (oRPC API) - Procedure Pattern
 SEVERITY: high
 
 DESCRIPTION:
-Business logic is implemented in a utility function rather than as a proper server
-action. Per Principle IX, all business logic must be in server actions with "action"
-prefix, located in the actions folder.
+Business logic is implemented in a utility function rather than as a proper procedure.
+Per Principle IX, business logic called by router handlers must be in the `procedures/`
+folder with camelCase naming.
 
 EXAMPLE:
 export async function getPersonaMetrics(personaId: string) {
@@ -265,38 +267,44 @@ export async function getPersonaMetrics(personaId: string) {
 }
 
 SUGGESTION:
-// File: packages/features/personas/src/actions/actionFetchPersonaMetrics.ts
-export async function actionFetchPersonaMetrics(personaId: string) {
-  'use server';
+// File: packages/features/personas/src/procedures/fetchPersonaMetrics.ts
+export default async function fetchPersonaMetrics(personaId: string) {
   const persona = await db.personas.findById(personaId);
-  return { success: true, data: { ...persona, metrics: calculateMetrics(persona.data) } };
+  return { ...persona, metrics: calculateMetrics(persona.data) };
 }
 ```
 
-### Example 4: oRPC Violation - Missing Contract-First Pattern
+### Example 4: oRPC Violation - Inline Schema Instead of Contract Import
 
 ```
 FINDING TYPE: constitution
-FILE: packages/infrastructure/api-client/src/router.ts
-LINES: 25-32
+FILE: packages/features/teams/src/routers/teamsORPCRouter.ts
+LINES: 8-15
 PRINCIPLE: Principle IX (oRPC API) - Contract-First Pattern
 SEVERITY: high
 
 DESCRIPTION:
-oRPC route implemented without a corresponding contract definition. Per Principle IX,
-oRPC follows a contract-first pattern where contracts, router, and client all live
-in `@infrastructure/api-client`.
+oRPC router defines schemas inline instead of importing from the feature's contract
+file. Per Principle IX, contracts must be defined in `contracts/{feature}Contract.ts`
+and imported by routers.
 
 EXAMPLE:
-// Router handler without contract
-router.get("/teams", (c) => { ... });
+// Inline schema in router — violates contract-first pattern
+export const teamsRouter = {
+  list: pub.output(z.array(z.object({ id: z.string(), name: z.string() }))).handler(() => {
+    // ...
+  }),
+};
 
 SUGGESTION:
-// Define contract first, then implement router handler
-// In @infrastructure/api-client
-const contract = oc.router({
-  teams: { list: oc.route({ method: "GET" }).output(z.array(TeamSchema)) },
-});
+// Import from contract file
+import { TeamSchema } from "../contracts/teamsContract";
+
+export const teamsRouter = {
+  list: pub.output(TeamSchema.array()).handler(() => {
+    // ...
+  }),
+};
 ```
 
 ### Example 5: oRPC Violation - Direct API Call Instead of Typed Client
@@ -367,7 +375,7 @@ SUGGESTION:
 
 ```
 FINDING TYPE: quality
-FILE: packages/features/reports/src/actions/actionGenerateReport.ts
+FILE: packages/features/reports/src/procedures/generateReport.ts
 LINES: 45-120
 SEVERITY: medium
 
@@ -377,7 +385,7 @@ the code difficult to test and maintain. Consider breaking into smaller, focused
 functions.
 
 EXAMPLE:
-export async function actionGenerateReport(params: ReportParams) {
+export default async function generateReport(params: ReportParams) {
   if (params.type === 'daily') {
     if (params.includeMetrics) {
       if (params.format === 'pdf') { /* ... */ }
@@ -407,7 +415,7 @@ const formatters = {
   json: formatAsJson,
 };
 
-export async function actionGenerateReport(params: ReportParams) {
+export default async function generateReport(params: ReportParams) {
   const strategy = reportStrategies[params.type];
   const formatter = formatters[params.format];
   const data = await strategy(params);
@@ -419,7 +427,7 @@ export async function actionGenerateReport(params: ReportParams) {
 
 ```
 FINDING TYPE: quality
-FILE: packages/features/teams/src/actions/actionFetchTeamsWithMembers.ts
+FILE: packages/features/teams/src/procedures/fetchTeamsWithMembers.ts
 LINES: 12-25
 SEVERITY: high
 
