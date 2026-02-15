@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -11,7 +12,11 @@ function extractHslTokens(css: string): Map<string, string> {
   const tokens = new Map<string, string>();
   const regex = /--(color-[\w-]+|radius-[\w-]+):\s*(hsl\([^)]+\)|\d+px)/g;
   for (let match = regex.exec(css); match !== null; match = regex.exec(css)) {
-    tokens.set(match[1], match[2]);
+    const name = match[1];
+    const value = match[2];
+    if (name && value) {
+      tokens.set(name, value);
+    }
   }
   return tokens;
 }
@@ -24,13 +29,17 @@ function extractSharedTokens(css: string, selector: ":root" | ".dark"): Map<stri
   const selectorPattern = selector === ":root" ? /:root\s*\{([^}]+)\}/ : /\.dark\s*\{([^}]+)\}/;
 
   const blockMatch = css.match(selectorPattern);
-  if (!blockMatch) return new Map();
+  if (!blockMatch?.[1]) return new Map();
 
   const block = blockMatch[1];
   const rawTokens = new Map<string, string>();
   const regex = /--([\w-]+):\s*([^;]+);/g;
   for (let match = regex.exec(block); match !== null; match = regex.exec(block)) {
-    rawTokens.set(match[1], match[2].trim());
+    const name = match[1];
+    const value = match[2];
+    if (name && value) {
+      rawTokens.set(name, value.trim());
+    }
   }
 
   // Map of theme mapping names used in @theme block: --color-X: hsl(var(--X))
@@ -76,17 +85,18 @@ function extractMobileTokens(css: string, mode: "light" | "dark"): Map<string, s
   if (mode === "light") {
     // Extract from @variant light { ... } block inside @layer theme
     const lightMatch = css.match(/@variant light\s*\{([\s\S]*?)\n\s*\}/);
-    block = lightMatch ? lightMatch[1] : "";
+    block = lightMatch?.[1] ?? "";
   } else {
     // Extract from @variant dark { ... } block
     const darkMatch = css.match(/@variant dark\s*\{([\s\S]*?)\n\s*\}/);
-    block = darkMatch ? darkMatch[1] : "";
+    block = darkMatch?.[1] ?? "";
   }
   return extractHslTokens(block);
 }
 
-const SHARED_CSS_PATH = resolve(__dirname, "../../src/globals.css");
-const MOBILE_CSS_PATH = resolve(__dirname, "../../../../../apps/mobile/global.css");
+const currentDir = dirname(fileURLToPath(import.meta.url));
+const SHARED_CSS_PATH = resolve(currentDir, "../../src/globals.css");
+const MOBILE_CSS_PATH = resolve(currentDir, "../../../../../apps/mobile/global.css");
 
 const sharedCSS = readFileSync(SHARED_CSS_PATH, "utf-8");
 const mobileCSS = readFileSync(MOBILE_CSS_PATH, "utf-8");
