@@ -555,6 +555,9 @@ importers:
       '@infrastructure/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.2.3
       tailwindcss:
         specifier: 'catalog:'
         version: 4.1.18
