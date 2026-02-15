@@ -63,6 +63,8 @@ You will receive:
 2. **PR Diff** - The actual changes being made
 
 Focus on files in:
+- Feature `contracts/` and `routers/` folders
+- `apps/api` router composition
 - `@infrastructure/api-client` package
 - Any file importing from `@infrastructure/api-client`
 - Any file with oRPC-related patterns

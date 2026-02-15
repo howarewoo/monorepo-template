@@ -137,16 +137,17 @@ Three-tier dependency flow:
 **Type-safe API** — features own contracts, the API app composes routers, and every client is fully typed:
 
 ```typescript
-// Feature defines contract + router
-// packages/features/users/src/contracts/usersContract.ts
-const UserSchema = z.object({ id: z.string(), name: z.string() });
-
-// apps/api composes feature routers
+// 1. Feature defines contract (packages/features/users/src/contracts/usersContract.ts)
+export const UserSchema = z.object({ id: z.string(), name: z.string() });
+```
+```typescript
+// 2. API app composes feature routers (apps/api/src/router.ts)
 import { usersRouter } from "@features/users/src/routers/usersORPCRouter";
 export const router = { users: usersRouter };
 export type Router = typeof router;
-
-// Use anywhere with full type safety
+```
+```typescript
+// 3. Use anywhere with full type safety
 const { data } = useQuery(orpc.users.list.queryOptions());
 ```
 
