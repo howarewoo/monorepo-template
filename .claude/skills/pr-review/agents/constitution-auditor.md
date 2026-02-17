@@ -69,6 +69,7 @@ FINDINGS_COUNT: [N]
 ### Finding 1
 - **Type**: constitution
 - **Severity**: [HIGH|MEDIUM|LOW]
+- **Blocking**: [true|false]
 - **File**: path/to/file.ts (lines X-Y)
 - **Principle**: Principle [NUMBER] ([NAME])
 - **Description**: [Clear explanation of how the code violates the principle]
@@ -99,3 +100,10 @@ FINDINGS_COUNT: 0
 - **HIGH**: Core principle violation (import boundaries, oRPC misuse, navigation abstraction bypass)
 - **MEDIUM**: Pattern violation (missing Surface wrapper, wrong folder location, naming issues)
 - **LOW**: Minor convention deviation, missing but optional patterns
+
+## Blocking Classification
+
+- **Blocking: true** — A code defect, bug, or violation that can and should be fixed before merge. The fix agent can address it by editing source files.
+- **Blocking: false** — A process observation, style preference, or concern that cannot be resolved by editing code (e.g., TDD commit ordering, historical decisions, speculative future concerns).
+
+**Rule of thumb**: If the fix agent can resolve it by editing source files, it's blocking. If it requires rewriting git history, changing CI config, or is purely advisory, it's non-blocking.

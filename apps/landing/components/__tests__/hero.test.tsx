@@ -1,10 +1,9 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@infrastructure/ui-web", () => ({
-  Button: ({ children }: { children: React.ReactNode }) => (
-    <button type="button">{children}</button>
-  ),
+  Button: ({ children }: { children: ReactNode }) => <button type="button">{children}</button>,
 }));
 
 import { Hero } from "@/components/hero";
@@ -28,19 +27,17 @@ describe("Hero", () => {
 
   it("renders CTA buttons", () => {
     render(<Hero />);
-    expect(screen.getAllByText("Get Started").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("View on GitHub").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Get Started")).toHaveLength(1);
+    expect(screen.getAllByText("View on GitHub")).toHaveLength(1);
   });
 
-  it("renders terminal command", () => {
+  it("renders browser frame content", () => {
     render(<Hero />);
-    expect(screen.getByText("pnpm dev")).toBeTruthy();
+    expect(screen.getByText("localhost:3000")).toBeTruthy();
   });
 
-  it("renders terminal port URLs", () => {
+  it("renders phone frame content", () => {
     render(<Hero />);
-    expect(screen.getByText(/http:\/\/localhost:3000/)).toBeTruthy();
-    expect(screen.getByText(/http:\/\/localhost:3001/)).toBeTruthy();
-    expect(screen.getByText(/http:\/\/localhost:8081/)).toBeTruthy();
+    expect(screen.getAllByText("Monorepo Template")).toHaveLength(3);
   });
 });

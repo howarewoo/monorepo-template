@@ -47,7 +47,9 @@ describe("UserList", () => {
   });
 
   it("renders user name, email, and ID", async () => {
-    mockedList.mockResolvedValue([{ id: 1, name: "Alice", email: "alice@example.com" }]);
+    mockedList.mockResolvedValue([
+      { id: "1", name: "Alice", email: "alice@example.com", createdAt: "2024-01-01T00:00:00Z" },
+    ]);
     render(<UserList />, { wrapper: createWrapper() });
     expect(await screen.findByText("Alice")).toBeDefined();
     expect(screen.getByText("alice@example.com")).toBeDefined();
@@ -56,9 +58,9 @@ describe("UserList", () => {
 
   it("renders correct number of user cards", async () => {
     mockedList.mockResolvedValue([
-      { id: 1, name: "Alice", email: "alice@example.com" },
-      { id: 2, name: "Bob", email: "bob@example.com" },
-      { id: 3, name: "Charlie", email: "charlie@example.com" },
+      { id: "1", name: "Alice", email: "alice@example.com", createdAt: "2024-01-01T00:00:00Z" },
+      { id: "2", name: "Bob", email: "bob@example.com", createdAt: "2024-01-02T00:00:00Z" },
+      { id: "3", name: "Charlie", email: "charlie@example.com", createdAt: "2024-01-03T00:00:00Z" },
     ]);
     render(<UserList />, { wrapper: createWrapper() });
     await screen.findByText("Alice");

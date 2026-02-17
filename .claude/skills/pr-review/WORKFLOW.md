@@ -1,6 +1,6 @@
 # PR Review Workflow
 
-This document details the workflow for performing AI-driven code reviews with **parallel specialized auditors**. Both modes execute all 8 numbered tasks; in local mode, Task 2's GitHub posting step is skipped.
+This document details the workflow for performing AI-driven code reviews with **parallel specialized auditors**. Standard and local modes execute all 8 numbered tasks (in local mode, Task 2 is skipped). Loop mode wraps Tasks 3-6 in an iteration loop with a new Task 9 (fix findings) and routes post-loop output through Tasks 7-8.
 
 ## IMPORTANT: Autonomous Execution Mode
 
@@ -9,7 +9,7 @@ This document details the workflow for performing AI-driven code reviews with **
 - **Do NOT ask for confirmation** before executing any task or command
 - **Do NOT pause** between tasks to await user approval
 - **Proceed immediately** from one task to the next
-- **Complete all 8 tasks** in sequence without stopping (in local mode, Task 2's posting step is skipped)
+- **Complete all tasks** in sequence without stopping (local mode skips Task 2; loop mode iterates Tasks 3-6 + Task 9)
 
 **Standard mode (default):**
 - **Do NOT ask** before posting comments or updating the PR
@@ -19,6 +19,14 @@ This document details the workflow for performing AI-driven code reviews with **
 - **Do NOT post** any comments or updates to GitHub
 - **Create a task list** using TaskCreate for each finding that needs to be fixed
 - Use this mode when the user wants to fix issues locally before posting a review
+
+**Loop mode (`--loop` flag):**
+- **Do NOT post** any comments or updates to GitHub during the loop
+- **Fix all findings** automatically using a sub-agent between iterations
+- **Re-run** the full 5-auditor review after each fix pass
+- **Stop** when 0 blocking findings (approved), same blocking count as previous iteration (stalled), or max 5 iterations
+- **On approval**: Post to GitHub automatically (standard mode behavior)
+- **On stall/max iterations**: Create local task list of remaining findings
 
 Only halt execution if a **critical error** occurs:
 - `gh` CLI is not authenticated or unavailable
@@ -31,18 +39,24 @@ Only halt execution if a **critical error** occurs:
 $ARGUMENTS
 ```
 
-## Detecting Local Mode
+## Detecting Execution Mode
 
-Parse `$ARGUMENTS` to detect if `--local` flag is present:
+Parse `$ARGUMENTS` to detect the execution mode:
+- If `--loop` is present: Run in loop mode (iterative review-fix-review cycle)
 - If `--local` is present: Run in local mode (create task list, skip GitHub posting)
+- If both `--loop` and `--local` are present: **ERROR** — output "Error: --loop and --local are mutually exclusive. Use --loop for iterative auto-fix, or --local for a one-time local review." and halt.
 - Otherwise: Run in standard mode (post to GitHub)
 
 Examples:
+- `--loop` → loop mode, current branch PR
+- `123 --loop` → loop mode, PR #123
+- `--loop 123` → loop mode, PR #123
 - `--local` → local mode, current branch PR
 - `123 --local` → local mode, PR #123
 - `--local 123` → local mode, PR #123
 - `123` → standard mode, PR #123
 - (empty) → standard mode, current branch PR
+- `--loop --local` → ERROR, mutually exclusive
 
 ## Important: Bash Execution Guidelines
 
@@ -52,7 +66,7 @@ Examples:
 
 ## Review Workflow Tasks
 
-> **Note:** Tasks 1, 3-6 execute identically in both modes. Tasks 2, 7, and 8 have mode-specific behavior (Task 2 is skipped in local mode).
+> **Note:** Tasks 1, 3-6 execute identically in all modes. Tasks 2, 7, and 8 have mode-specific behavior. In loop mode, Tasks 3-6 are wrapped in an iteration loop with Task 9 (fix findings) between iterations.
 
 ### Task 1: Validate Prerequisites and Gather PR Metadata
 
@@ -104,6 +118,69 @@ Review findings will be posted shortly once all auditors complete their analysis
 **Success Criteria**:
 - Standard mode: Starting comment is posted to PR
 - Local mode: Task skipped, proceed to Task 3
+
+---
+
+### Loop Mode: Iteration Wrapper (Loop Mode Only)
+
+**In standard or local mode, skip this section — proceed directly through Tasks 3-8 as before.**
+
+In loop mode, Tasks 3-6 are wrapped in an iteration loop. The loop runs up to 5 iterations.
+
+**Initialize tracking state:**
+- `iteration = 1`
+- `max_iterations = 5`
+- `previous_finding_count = -1` (sentinel for first iteration)
+- `iteration_log = []` (array of `{iteration, finding_count, blocking_count, nonblocking_count, fixed_count, skipped_count}`)
+
+**For each iteration (1 through max_iterations):**
+
+1. Execute **Task 3** (Prepare Shared Context) — re-read all changed files
+2. Execute **Task 4** (Launch 5 Parallel Auditors)
+3. Execute **Task 5** (Collect Agent Results)
+4. Execute **Task 6** (Aggregate & Generate Review)
+5. Count findings from aggregated results:
+   - `current_finding_count` = total findings
+   - `blocking_count` = count of findings where `Blocking: true`
+   - `nonblocking_count` = count of findings where `Blocking: false`
+
+**Evaluate exit conditions (in order):**
+
+1. **Approved**: If `blocking_count == 0`:
+   - Append `{iteration, finding_count: current_finding_count, blocking_count: 0, nonblocking_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
+   - Set `loop_result = "approved"`
+   - Exit loop → proceed to Post-Loop
+
+2. **Stalled**: If `blocking_count == previous_finding_count`:
+   - Append `{iteration, finding_count: current_finding_count, blocking_count, nonblocking_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
+   - Set `loop_result = "stalled"`
+   - Exit loop → proceed to Post-Loop
+
+3. **Max iterations**: If `iteration == max_iterations`:
+   - Append `{iteration, finding_count: current_finding_count, blocking_count, nonblocking_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
+   - Set `loop_result = "max_iterations"`
+   - Exit loop → proceed to Post-Loop
+
+4. **Continue**: Execute **Task 9** (Fix All Findings) — pass only **blocking** findings
+   - Collect `fixed_count` and `skipped_count` from Task 9 output
+   - Append `{iteration, finding_count: current_finding_count, blocking_count, nonblocking_count, fixed_count, skipped_count}` to `iteration_log`
+   - Set `previous_finding_count = blocking_count`
+   - Increment `iteration`
+   - Loop back to step 1
+
+---
+
+### Loop Mode: Post-Loop Routing
+
+After exiting the loop, route to the appropriate Task 7/8 variant:
+
+| `loop_result` | Task 7 | Task 8 |
+|---------------|--------|--------|
+| `approved` | Task 7A (post to GitHub) | Task 8C (loop approved summary) |
+| `stalled` | Task 7B (create task list) | Task 8D (loop stalled summary) |
+| `max_iterations` | Task 7B (create task list) | Task 8D (loop max iterations summary) |
+
+**Important:** When routing to Task 7A after loop approval, the review comment should reflect a clean bill of health (0 blocking findings). Include any non-blocking findings as informational notes. When routing to Task 7B after stall/max, the task list contains only the remaining **blocking** findings from the final iteration.
 
 ---
 
@@ -296,6 +373,8 @@ Combine all agent findings into the final review output.
    - oRPC/API Compliance (api findings)
 3. **Deduplicate** similar findings across agents
 4. **Sort** within each category by severity (HIGH → MEDIUM → LOW)
+5. **Separate** findings into blocking and non-blocking lists based on the `Blocking` field
+6. **Count** `blocking_count` and `nonblocking_count` for the iteration log
 
 #### Step 6.2: Generate PR Title and Description
 
@@ -544,6 +623,147 @@ Include:
 
 ---
 
+#### Task 8C: Loop Mode Approved Summary
+
+Display a final summary showing the loop converged to 0 findings.
+
+**Example summary format:**
+
+~~~
+## AI-Driven PR Review Complete (Loop Mode - Approved)
+
+**PR**: #568 - feat(auth): add login validation
+**Author**: username
+**Branch**: feature-branch -> main
+**Status**: OPEN
+
+### Iteration History
+| Iteration | Blocking | Non-blocking | Fixed | Skipped |
+|-----------|----------|--------------|-------|---------|
+| 1 | 12 | 0 | 12 | 0 |
+| 2 | 4 | 1 | 4 | 0 |
+| 3 | 0 | 1 | - | - |
+
+### Result: APPROVED (0 blocking findings)
+
+### Notes (non-blocking observations)
+| # | Auditor | Severity | Description |
+|---|---------|----------|-------------|
+| 1 | Constitution | LOW | TDD commit ordering |
+
+*These observations are informational and do not block merge.*
+
+### Actions Completed
+1. Ran iterative review-fix loop (3 iterations)
+2. Auto-fixed all findings across iterations
+3. Updated PR title with conventional commit format
+4. Updated PR description with comprehensive summary
+5. Posted clean review comment to GitHub
+
+*Reviewed and auto-fixed in 3 iterations (12 → 4 → 0 blocking findings)*
+~~~
+
+**Success Criteria**: Summary displayed with iteration history and convergence trajectory.
+
+---
+
+#### Task 8D: Loop Mode Stalled/Max Iterations Summary
+
+Display a final summary showing the loop did not converge.
+
+**Example summary format:**
+
+~~~
+## AI-Driven PR Review Complete (Loop Mode - Stopped)
+
+**PR**: #568 - feat(auth): add login validation
+**Author**: username
+**Branch**: feature-branch -> main
+**Status**: OPEN
+
+### Iteration History
+| Iteration | Blocking | Non-blocking | Fixed | Skipped |
+|-----------|----------|--------------|-------|---------|
+| 1 | 12 | 0 | 10 | 2 |
+| 2 | 8 | 1 | 6 | 2 |
+| 3 | 8 | 1 | - | - |
+
+### Result: STALLED (blocking findings not converging)
+
+### Remaining Findings
+- 2 HIGH severity tasks
+- 4 MEDIUM severity tasks
+- 2 LOW severity tasks
+- 1 Summary task
+- **Total**: 9 tasks
+
+*Remaining findings listed above are blocking only. Non-blocking observations were excluded from the fix loop.*
+
+### Next Steps
+1. Review the task list
+2. Address remaining findings manually
+3. Run `/pr-review --loop` to retry the auto-fix loop
+4. Run `/pr-review` to post the current state to GitHub
+~~~
+
+**Success Criteria**: Summary displayed with iteration history, remaining finding counts, and actionable next steps.
+
+---
+
+### Task 9: Fix All Findings (Loop Mode Only)
+
+**This task only runs in loop mode, between iterations when findings exist.**
+
+Launch a **single** `general-purpose` sub-agent to fix all **blocking** findings from the current iteration. Non-blocking findings are not passed to the fix agent.
+
+**Agent prompt structure:**
+
+~~~
+Task tool call:
+- subagent_type: "general-purpose"
+- description: "Fix PR review findings"
+- prompt: |
+    You are a code fix agent. Apply all the following review findings to the codebase.
+
+    ## Rules
+    1. Group fixes by file — process one file at a time
+    2. Read each file before editing (never blind-edit)
+    3. Apply fixes from bottom-to-top within each file (to preserve line numbers)
+    4. If a suggested fix cannot be applied (code has changed, suggestion is ambiguous, or would break other code), log it as SKIPPED with a reason
+    5. After all fixes are applied, run: `pnpm lint:fix` then `pnpm typecheck`
+    6. If typecheck fails, attempt to fix the type errors. If you cannot, log them as SKIPPED.
+    7. Do NOT commit any changes
+
+    ## Findings to Fix (blocking only)
+    [Include only findings where Blocking: true from Task 6, with file paths, line numbers, descriptions, and suggested fixes]
+
+    Note: Non-blocking findings (process observations, advisory notes) have been excluded. Only fix the findings listed above.
+
+    ## Output Format
+    When done, output a summary in this exact format:
+
+    ---FIX_RESULTS---
+    FIXED_COUNT: [N]
+    SKIPPED_COUNT: [N]
+
+    ### Fixed
+    1. [file:line] - Brief description of what was fixed
+    2. ...
+
+    ### Skipped
+    1. [file:line] - Brief description + reason skipped
+    2. ...
+    ---END_FIX_RESULTS---
+~~~
+
+**Parsing the results:**
+
+Extract `FIXED_COUNT` and `SKIPPED_COUNT` from the `---FIX_RESULTS---` block. Pass these to the iteration log.
+
+**Success Criteria**: All applicable findings are fixed. Fix results summary collected with counts.
+
+---
+
 ## Workflow Diagram
 
 ### Standard Mode
@@ -594,4 +814,40 @@ flowchart TD
     T5 --> T6[Task 6: Aggregate & Generate]
     T6 --> T7B[Task 7B: Create Task List]
     T7B --> T8B[Task 8B: Local Summary]
+```
+
+### Loop Mode (`--loop`)
+
+```mermaid
+flowchart TD
+    T1[Task 1: Prerequisites & Metadata] --> LOOP_START{Iteration ≤ 5?}
+    LOOP_START -->|Yes| T3[Task 3: Prepare Shared Context]
+    T3 --> T4[Task 4: Launch 5 Parallel Auditors]
+
+    T4 --> A1[Security Auditor]
+    T4 --> A2[Architecture Auditor]
+    T4 --> A3[Constitution Auditor]
+    T4 --> A4[Code Quality Auditor]
+    T4 --> A5[API Stability Auditor]
+
+    A1 --> T5[Task 5: Collect Results]
+    A2 --> T5
+    A3 --> T5
+    A4 --> T5
+    A5 --> T5
+
+    T5 --> T6[Task 6: Aggregate & Generate]
+    T6 --> CHECK{0 blocking findings?}
+    CHECK -->|Yes| T7A[Task 7A: Post to GitHub]
+    T7A --> T8C[Task 8C: Loop Approved Summary]
+
+    CHECK -->|No| STALL{Stalled?}
+    STALL -->|Yes| T7B[Task 7B: Create Task List]
+    T7B --> T8D[Task 8D: Loop Stopped Summary]
+
+    STALL -->|No| T9[Task 9: Fix All Findings]
+    T9 --> LOOP_START
+
+    LOOP_START -->|No: max iterations| T7B2[Task 7B: Create Task List]
+    T7B2 --> T8D2[Task 8D: Loop Stopped Summary]
 ```

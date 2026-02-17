@@ -22,6 +22,7 @@
   },
   "devDependencies": {
     "@infrastructure/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
     "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
