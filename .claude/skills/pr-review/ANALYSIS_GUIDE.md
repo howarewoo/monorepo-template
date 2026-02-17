@@ -629,6 +629,46 @@ The code changes look good.
 
 ---
 
+### Loop Mode Templates
+
+#### Iteration History Table
+
+When posting the review after loop mode approval, include the iteration history in the PR description:
+
+```markdown
+### Review Iteration History
+
+*Reviewed and auto-fixed in [N] iterations*
+
+| Iteration | Findings | Fixed | Skipped |
+|-----------|----------|-------|---------|
+| 1 | [N] | [N] | [N] |
+| 2 | [N] | [N] | [N] |
+| ... | ... | ... | ... |
+| [Final] | 0 | - | - |
+```
+
+#### Fix Results Format
+
+Each Task 9 (fix agent) invocation returns results in this format:
+
+```
+---FIX_RESULTS---
+FIXED_COUNT: [N]
+SKIPPED_COUNT: [N]
+
+### Fixed
+1. [file:line] - Brief description of what was fixed
+2. ...
+
+### Skipped
+1. [file:line] - Brief description + reason skipped
+2. ...
+---END_FIX_RESULTS---
+```
+
+---
+
 ## Mermaid Diagram Guidelines
 
 ### When to Include
