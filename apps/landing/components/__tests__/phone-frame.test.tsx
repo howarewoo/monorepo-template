@@ -6,7 +6,7 @@ import { PhoneFrame } from "@/components/phone-frame";
 describe("PhoneFrame", () => {
   it("renders app header", () => {
     render(<PhoneFrame />);
-    expect(screen.getAllByText("Monorepo Template").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Monorepo Template")).toHaveLength(2);
   });
 
   it("renders three stacked cards", () => {

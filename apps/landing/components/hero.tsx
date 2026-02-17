@@ -2,6 +2,7 @@ import { Button } from "@infrastructure/ui-web";
 import { BrowserFrame } from "./browser-frame";
 import { PhoneFrame } from "./phone-frame";
 
+/** Subtle dot-grid background pattern for the hero section. */
 const DOT_GRID_STYLE = {
   backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
   backgroundSize: "24px 24px",
@@ -12,7 +13,11 @@ export function Hero() {
   return (
     <section className="relative overflow-hidden border-b border-border/40">
       {/* Subtle dot grid background */}
-      <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={DOT_GRID_STYLE} />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        aria-hidden="true"
+        style={DOT_GRID_STYLE}
+      />
 
       <div className="relative mx-auto max-w-6xl px-6 pb-20 pt-24 md:pb-28 md:pt-32">
         {/* Announcement badge */}
