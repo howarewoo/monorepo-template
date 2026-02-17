@@ -1,5 +1,6 @@
 import { PERSPECTIVE_STYLE } from "./shared-styles";
 
+/** Slight perspective tilt to suggest depth in the browser chrome mockup. */
 const BROWSER_TRANSFORM_STYLE = { transform: "rotateX(2deg) rotateY(-1deg)" } as const;
 
 /**
@@ -54,6 +55,7 @@ export function BrowserFrame() {
               localhost:3000
             </div>
           </div>
+          {/* Spacer: balances the traffic-light dots (3 x 10px + 2 x 6px gap) + ml-3 (12px) on the left */}
           <div className="w-[62px]" />
         </div>
 

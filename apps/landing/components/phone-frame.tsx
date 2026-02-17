@@ -1,5 +1,6 @@
 import { PERSPECTIVE_STYLE } from "./shared-styles";
 
+/** Slight forward tilt for the phone bezel mockup. */
 const PHONE_TRANSFORM_STYLE = { transform: "rotateX(2deg)" } as const;
 
 /** The canonical time shown in Apple marketing screenshots. */
