@@ -24,7 +24,7 @@ This document details the workflow for performing AI-driven code reviews with **
 - **Do NOT post** any comments or updates to GitHub during the loop
 - **Fix all findings** automatically using a sub-agent between iterations
 - **Re-run** the full 5-auditor review after each fix pass
-- **Stop** when 0 findings (approved), same count as previous iteration (stalled), or max 5 iterations
+- **Stop** when 0 blocking findings (approved), same blocking count as previous iteration (stalled), or max 5 iterations
 - **On approval**: Post to GitHub automatically (standard mode behavior)
 - **On stall/max iterations**: Create local task list of remaining findings
 
@@ -131,7 +131,7 @@ In loop mode, Tasks 3-6 are wrapped in an iteration loop. The loop runs up to 5 
 - `iteration = 1`
 - `max_iterations = 5`
 - `previous_finding_count = -1` (sentinel for first iteration)
-- `iteration_log = []` (array of `{iteration, finding_count, fixed_count, skipped_count}`)
+- `iteration_log = []` (array of `{iteration, finding_count, blocking_count, nonblocking_count, fixed_count, skipped_count}`)
 
 **For each iteration (1 through max_iterations):**
 
@@ -139,29 +139,32 @@ In loop mode, Tasks 3-6 are wrapped in an iteration loop. The loop runs up to 5 
 2. Execute **Task 4** (Launch 5 Parallel Auditors)
 3. Execute **Task 5** (Collect Agent Results)
 4. Execute **Task 6** (Aggregate & Generate Review)
-5. Count total findings from aggregated results → `current_finding_count`
+5. Count findings from aggregated results:
+   - `current_finding_count` = total findings
+   - `blocking_count` = count of findings where `Blocking: true`
+   - `nonblocking_count` = count of findings where `Blocking: false`
 
 **Evaluate exit conditions (in order):**
 
-1. **Approved**: If `current_finding_count == 0`:
-   - Append `{iteration, finding_count: 0, fixed_count: 0, skipped_count: 0}` to `iteration_log`
+1. **Approved**: If `blocking_count == 0`:
+   - Append `{iteration, finding_count: current_finding_count, blocking_count: 0, nonblocking_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
    - Set `loop_result = "approved"`
    - Exit loop → proceed to Post-Loop
 
-2. **Stalled**: If `current_finding_count == previous_finding_count`:
-   - Append `{iteration, finding_count: current_finding_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
+2. **Stalled**: If `blocking_count == previous_finding_count`:
+   - Append `{iteration, finding_count: current_finding_count, blocking_count, nonblocking_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
    - Set `loop_result = "stalled"`
    - Exit loop → proceed to Post-Loop
 
 3. **Max iterations**: If `iteration == max_iterations`:
-   - Append `{iteration, finding_count: current_finding_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
+   - Append `{iteration, finding_count: current_finding_count, blocking_count, nonblocking_count, fixed_count: 0, skipped_count: 0}` to `iteration_log`
    - Set `loop_result = "max_iterations"`
    - Exit loop → proceed to Post-Loop
 
-4. **Continue**: Execute **Task 9** (Fix All Findings)
+4. **Continue**: Execute **Task 9** (Fix All Findings) — pass only **blocking** findings
    - Collect `fixed_count` and `skipped_count` from Task 9 output
-   - Append `{iteration, finding_count: current_finding_count, fixed_count, skipped_count}` to `iteration_log`
-   - Set `previous_finding_count = current_finding_count`
+   - Append `{iteration, finding_count: current_finding_count, blocking_count, nonblocking_count, fixed_count, skipped_count}` to `iteration_log`
+   - Set `previous_finding_count = blocking_count`
    - Increment `iteration`
    - Loop back to step 1
 
@@ -177,7 +180,7 @@ After exiting the loop, route to the appropriate Task 7/8 variant:
 | `stalled` | Task 7B (create task list) | Task 8D (loop stalled summary) |
 | `max_iterations` | Task 7B (create task list) | Task 8D (loop max iterations summary) |
 
-**Important:** When routing to Task 7A after loop approval, the review comment should reflect a clean bill of health. When routing to Task 7B after stall/max, the task list contains only the remaining findings from the final iteration.
+**Important:** When routing to Task 7A after loop approval, the review comment should reflect a clean bill of health (0 blocking findings). Include any non-blocking findings as informational notes. When routing to Task 7B after stall/max, the task list contains only the remaining **blocking** findings from the final iteration.
 
 ---
 
@@ -370,6 +373,8 @@ Combine all agent findings into the final review output.
    - oRPC/API Compliance (api findings)
 3. **Deduplicate** similar findings across agents
 4. **Sort** within each category by severity (HIGH → MEDIUM → LOW)
+5. **Separate** findings into blocking and non-blocking lists based on the `Blocking` field
+6. **Count** `blocking_count` and `nonblocking_count` for the iteration log
 
 #### Step 6.2: Generate PR Title and Description
 
@@ -633,13 +638,20 @@ Display a final summary showing the loop converged to 0 findings.
 **Status**: OPEN
 
 ### Iteration History
-| Iteration | Findings | Fixed | Skipped |
-|-----------|----------|-------|---------|
-| 1 | 12 | 12 | 0 |
-| 2 | 4 | 4 | 0 |
-| 3 | 0 | - | - |
+| Iteration | Blocking | Non-blocking | Fixed | Skipped |
+|-----------|----------|--------------|-------|---------|
+| 1 | 12 | 0 | 12 | 0 |
+| 2 | 4 | 1 | 4 | 0 |
+| 3 | 0 | 1 | - | - |
 
-### Result: APPROVED (0 findings)
+### Result: APPROVED (0 blocking findings)
+
+### Notes (non-blocking observations)
+| # | Auditor | Severity | Description |
+|---|---------|----------|-------------|
+| 1 | Constitution | LOW | TDD commit ordering |
+
+*These observations are informational and do not block merge.*
 
 ### Actions Completed
 1. Ran iterative review-fix loop (3 iterations)
@@ -648,7 +660,7 @@ Display a final summary showing the loop converged to 0 findings.
 4. Updated PR description with comprehensive summary
 5. Posted clean review comment to GitHub
 
-*Reviewed and auto-fixed in 3 iterations (12 → 4 → 0 findings)*
+*Reviewed and auto-fixed in 3 iterations (12 → 4 → 0 blocking findings)*
 ~~~
 
 **Success Criteria**: Summary displayed with iteration history and convergence trajectory.
@@ -670,13 +682,13 @@ Display a final summary showing the loop did not converge.
 **Status**: OPEN
 
 ### Iteration History
-| Iteration | Findings | Fixed | Skipped |
-|-----------|----------|-------|---------|
-| 1 | 12 | 10 | 2 |
-| 2 | 8 | 6 | 2 |
-| 3 | 8 | - | - |
+| Iteration | Blocking | Non-blocking | Fixed | Skipped |
+|-----------|----------|--------------|-------|---------|
+| 1 | 12 | 0 | 10 | 2 |
+| 2 | 8 | 1 | 6 | 2 |
+| 3 | 8 | 1 | - | - |
 
-### Result: STALLED (findings not converging)
+### Result: STALLED (blocking findings not converging)
 
 ### Remaining Findings
 - 2 HIGH severity tasks
@@ -684,6 +696,8 @@ Display a final summary showing the loop did not converge.
 - 2 LOW severity tasks
 - 1 Summary task
 - **Total**: 9 tasks
+
+*Remaining findings listed above are blocking only. Non-blocking observations were excluded from the fix loop.*
 
 ### Next Steps
 1. Review the task list
@@ -700,7 +714,7 @@ Display a final summary showing the loop did not converge.
 
 **This task only runs in loop mode, between iterations when findings exist.**
 
-Launch a **single** `general-purpose` sub-agent to fix all findings from the current iteration.
+Launch a **single** `general-purpose` sub-agent to fix all **blocking** findings from the current iteration. Non-blocking findings are not passed to the fix agent.
 
 **Agent prompt structure:**
 
@@ -720,8 +734,10 @@ Task tool call:
     6. If typecheck fails, attempt to fix the type errors. If you cannot, log them as SKIPPED.
     7. Do NOT commit any changes
 
-    ## Findings to Fix
-    [Include all aggregated findings from Task 6 with file paths, line numbers, descriptions, and suggested fixes]
+    ## Findings to Fix (blocking only)
+    [Include only findings where Blocking: true from Task 6, with file paths, line numbers, descriptions, and suggested fixes]
+
+    Note: Non-blocking findings (process observations, advisory notes) have been excluded. Only fix the findings listed above.
 
     ## Output Format
     When done, output a summary in this exact format:
@@ -821,7 +837,7 @@ flowchart TD
     A5 --> T5
 
     T5 --> T6[Task 6: Aggregate & Generate]
-    T6 --> CHECK{0 findings?}
+    T6 --> CHECK{0 blocking findings?}
     CHECK -->|Yes| T7A[Task 7A: Post to GitHub]
     T7A --> T8C[Task 8C: Loop Approved Summary]
 

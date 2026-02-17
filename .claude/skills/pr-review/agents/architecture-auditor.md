@@ -60,6 +60,7 @@ FINDINGS_COUNT: [N]
 ### Finding 1
 - **Type**: architecture
 - **Severity**: [HIGH|MEDIUM|LOW]
+- **Blocking**: [true|false]
 - **File**: path/to/file.ts (lines X-Y)
 - **Principle**: [Principle I|II|III|IV|XIII]
 - **Description**: [Clear explanation of the architectural violation]
@@ -90,3 +91,10 @@ FINDINGS_COUNT: 0
 - **HIGH**: Import boundary violation, feature-to-feature import, missing required folder structure
 - **MEDIUM**: Naming convention violation, misplaced files, missing Surface/Handler wrappers
 - **LOW**: File extension misuse, minor organizational improvements
+
+## Blocking Classification
+
+- **Blocking: true** — A code defect, bug, or violation that can and should be fixed before merge. The fix agent can address it by editing source files.
+- **Blocking: false** — A process observation, style preference, or concern that cannot be resolved by editing code (e.g., TDD commit ordering, historical decisions, speculative future concerns).
+
+**Rule of thumb**: If the fix agent can resolve it by editing source files, it's blocking. If it requires rewriting git history, changing CI config, or is purely advisory, it's non-blocking.
