@@ -1,10 +1,9 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@infrastructure/ui-web", () => ({
-  Button: ({ children }: { children: React.ReactNode }) => (
-    <button type="button">{children}</button>
-  ),
+  Button: ({ children }: { children: ReactNode }) => <button type="button">{children}</button>,
 }));
 
 import { Hero } from "@/components/hero";
@@ -28,8 +27,8 @@ describe("Hero", () => {
 
   it("renders CTA buttons", () => {
     render(<Hero />);
-    expect(screen.getAllByText("Get Started").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("View on GitHub").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Get Started")).toHaveLength(1);
+    expect(screen.getAllByText("View on GitHub")).toHaveLength(1);
   });
 
   it("renders browser frame content", () => {
@@ -39,6 +38,6 @@ describe("Hero", () => {
 
   it("renders phone frame content", () => {
     render(<Hero />);
-    expect(screen.getAllByText("Monorepo Template").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Monorepo Template")).toHaveLength(3);
   });
 });

@@ -1,5 +1,9 @@
-const PERSPECTIVE_STYLE = { perspective: "1200px" } as const;
+import { PERSPECTIVE_STYLE } from "./shared-styles";
+
 const PHONE_TRANSFORM_STYLE = { transform: "rotateX(2deg)" } as const;
+
+/** The canonical time shown in Apple marketing screenshots. */
+const IOS_MARKETING_TIME = "9:41" as const;
 
 /** Phone bezel mockup showing a miniature mobile app. */
 export function PhoneFrame() {
@@ -12,15 +16,15 @@ export function PhoneFrame() {
         {/* Screen — iPhone 15/16 aspect ratio (9:19.5) */}
         <div className="flex flex-col overflow-hidden rounded-[2rem] bg-background aspect-[9/19.5]">
           {/* Dynamic Island */}
-          <div className="flex justify-center pt-2.5">
+          <div className="flex justify-center pt-2.5" aria-hidden="true">
             <div className="h-5 w-24 rounded-full bg-foreground/10" />
           </div>
 
           {/* Status bar */}
           <div className="flex items-center justify-between px-6 pt-1 pb-2">
             {/* iOS default marketing screenshot time */}
-            <span className="text-[9px] font-medium text-foreground">9:41</span>
-            <div className="flex items-center gap-1">
+            <span className="text-[9px] font-medium text-foreground">{IOS_MARKETING_TIME}</span>
+            <div className="flex items-center gap-1" aria-hidden="true">
               <div className="flex gap-0.5 items-end">
                 <div className="h-1.5 w-0.5 rounded-sm bg-foreground/40" />
                 <div className="h-2 w-0.5 rounded-sm bg-foreground/40" />
@@ -49,7 +53,7 @@ export function PhoneFrame() {
             </div>
 
             {/* Stacked cards */}
-            <div className="space-y-2">
+            <div className="flex flex-col gap-2">
               <PhoneCard title="Next.js" subtitle="Web application" />
               <PhoneCard title="Expo" subtitle="Mobile application" />
               <PhoneCard title="Hono + oRPC" subtitle="Type-safe API" />
@@ -57,7 +61,7 @@ export function PhoneFrame() {
           </div>
 
           {/* Home indicator */}
-          <div className="mt-auto flex justify-center pb-2 pt-3">
+          <div className="mt-auto flex justify-center pb-2 pt-3" aria-hidden="true">
             <div className="h-1 w-24 rounded-full bg-foreground/15" />
           </div>
         </div>
@@ -66,7 +70,13 @@ export function PhoneFrame() {
   );
 }
 
-function PhoneCard({ title, subtitle }: { title: string; subtitle: string }) {
+interface PhoneCardProps {
+  title: string;
+  subtitle: string;
+}
+
+/** Renders a single stacked card within the phone frame. */
+function PhoneCard({ title, subtitle }: PhoneCardProps) {
   return (
     <div className="rounded-lg border border-border/60 bg-card px-3 py-2">
       <div className="text-[10px] font-semibold text-foreground">{title}</div>
