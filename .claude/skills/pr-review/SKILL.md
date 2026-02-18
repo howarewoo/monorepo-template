@@ -1,7 +1,7 @@
 ---
 name: pr-review
-description: AI-driven deep code review of pull requests with intelligent bug detection, architecture analysis, constitution compliance checking, and mermaid logic flow diagrams. Supports standard mode (post to GitHub) and local mode (create task list). Use when reviewing PRs, analyzing code changes, or checking architecture compliance.
-allowed-tools: Bash(gh:*), Bash(git:*), Read, Task, TaskOutput, TaskCreate, TaskUpdate
+description: AI-driven deep code review of pull requests with intelligent bug detection, architecture analysis, constitution compliance checking, and mermaid logic flow diagrams. Supports standard mode (post to GitHub), local mode (create task list), and loop mode (iterative review + auto-fix). Use when reviewing PRs, analyzing code changes, or checking architecture compliance.
+allowed-tools: Bash(gh:*), Bash(git:*), Bash(gt:*), Bash(pnpm:*), Read, Edit, Write, Glob, Grep, Task, TaskOutput, TaskCreate, TaskUpdate
 ---
 
 # PR Review Skill
@@ -35,6 +35,21 @@ Use local mode when you want to:
 - Fix issues before requesting a formal review
 - Self-review changes before pushing
 - Iterate on fixes without cluttering PR comments
+
+### Loop Mode (`--loop`)
+Iteratively reviews, auto-fixes all findings, and re-reviews until 0 findings or max 5 iterations:
+- `/pr-review --loop` or `/pr-review 123 --loop`
+
+Use loop mode when you want to:
+- Auto-fix all review findings without manual intervention
+- Iterate until the PR is clean before posting to GitHub
+- Get a fully automated review-fix-review cycle
+
+On approval (0 findings), fixes are committed and the review is automatically posted to GitHub.
+On max iterations or stall, fixes are committed and a local task list of remaining findings is created.
+If no fixes were applied (all findings skipped), the commit is skipped.
+
+**Note:** `--loop` and `--local` are mutually exclusive. If both are passed, the skill errors out.
 
 ## Quick Start
 
