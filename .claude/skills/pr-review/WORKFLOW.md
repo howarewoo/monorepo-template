@@ -1,6 +1,6 @@
 # PR Review Workflow
 
-This document details the workflow for performing AI-driven code reviews with **parallel specialized auditors**. Standard and local modes execute all 8 numbered tasks (in local mode, Task 2 is skipped). Loop mode wraps Tasks 3-6 in an iteration loop with a new Task 9 (fix findings) and routes post-loop output through Tasks 7-8.
+This document details the workflow for performing AI-driven code reviews with **parallel specialized auditors**. Standard and local modes execute all 8 numbered tasks (in local mode, Task 2 is skipped). Loop mode wraps Tasks 3-6 in an iteration loop with Task 9 (fix findings), commits fixes via Task 10, and routes post-loop output through Tasks 7-8.
 
 ## IMPORTANT: Autonomous Execution Mode
 
@@ -9,7 +9,7 @@ This document details the workflow for performing AI-driven code reviews with **
 - **Do NOT ask for confirmation** before executing any task or command
 - **Do NOT pause** between tasks to await user approval
 - **Proceed immediately** from one task to the next
-- **Complete all tasks** in sequence without stopping (local mode skips Task 2; loop mode iterates Tasks 3-6 + Task 9)
+- **Complete all 8 tasks** in sequence without stopping (in local mode, Task 2's posting step is skipped)
 
 **Standard mode (default):**
 - **Do NOT ask** before posting comments or updating the PR
@@ -19,14 +19,6 @@ This document details the workflow for performing AI-driven code reviews with **
 - **Do NOT post** any comments or updates to GitHub
 - **Create a task list** using TaskCreate for each finding that needs to be fixed
 - Use this mode when the user wants to fix issues locally before posting a review
-
-**Loop mode (`--loop` flag):**
-- **Do NOT post** any comments or updates to GitHub during the loop
-- **Fix all findings** automatically using a sub-agent between iterations
-- **Re-run** the full 5-auditor review after each fix pass
-- **Stop** when 0 blocking findings (approved), same blocking count as previous iteration (stalled), or max 5 iterations
-- **On approval**: Post to GitHub automatically (standard mode behavior)
-- **On stall/max iterations**: Create local task list of remaining findings
 
 Only halt execution if a **critical error** occurs:
 - `gh` CLI is not authenticated or unavailable
@@ -39,24 +31,18 @@ Only halt execution if a **critical error** occurs:
 $ARGUMENTS
 ```
 
-## Detecting Execution Mode
+## Detecting Local Mode
 
-Parse `$ARGUMENTS` to detect the execution mode:
-- If `--loop` is present: Run in loop mode (iterative review-fix-review cycle)
+Parse `$ARGUMENTS` to detect if `--local` flag is present:
 - If `--local` is present: Run in local mode (create task list, skip GitHub posting)
-- If both `--loop` and `--local` are present: **ERROR** — output "Error: --loop and --local are mutually exclusive. Use --loop for iterative auto-fix, or --local for a one-time local review." and halt.
 - Otherwise: Run in standard mode (post to GitHub)
 
 Examples:
-- `--loop` → loop mode, current branch PR
-- `123 --loop` → loop mode, PR #123
-- `--loop 123` → loop mode, PR #123
 - `--local` → local mode, current branch PR
 - `123 --local` → local mode, PR #123
 - `--local 123` → local mode, PR #123
 - `123` → standard mode, PR #123
 - (empty) → standard mode, current branch PR
-- `--loop --local` → ERROR, mutually exclusive
 
 ## Important: Bash Execution Guidelines
 
@@ -66,7 +52,7 @@ Examples:
 
 ## Review Workflow Tasks
 
-> **Note:** Tasks 1, 3-6 execute identically in all modes. Tasks 2, 7, and 8 have mode-specific behavior. In loop mode, Tasks 3-6 are wrapped in an iteration loop with Task 9 (fix findings) between iterations.
+> **Note:** Tasks 1, 3-6 execute identically in both modes. Tasks 2, 7, and 8 have mode-specific behavior (Task 2 is skipped in local mode).
 
 ### Task 1: Validate Prerequisites and Gather PR Metadata
 
@@ -172,13 +158,13 @@ In loop mode, Tasks 3-6 are wrapped in an iteration loop. The loop runs up to 5 
 
 ### Loop Mode: Post-Loop Routing
 
-After exiting the loop, route to the appropriate Task 7/8 variant:
+After exiting the loop, execute **Task 10** (commit fixes), then route to the appropriate Task 7/8 variant:
 
-| `loop_result` | Task 7 | Task 8 |
-|---------------|--------|--------|
-| `approved` | Task 7A (post to GitHub) | Task 8C (loop approved summary) |
-| `stalled` | Task 7B (create task list) | Task 8D (loop stalled summary) |
-| `max_iterations` | Task 7B (create task list) | Task 8D (loop max iterations summary) |
+| `loop_result` | Task 10 | Task 7 | Task 8 |
+|---------------|---------|--------|--------|
+| `approved` | Commit fixes (if any) | Task 7A (post to GitHub) | Task 8C (loop approved summary) |
+| `stalled` | Commit fixes (if any) | Task 7B (create task list) | Task 8D (loop stalled summary) |
+| `max_iterations` | Commit fixes (if any) | Task 7B (create task list) | Task 8D (loop max iterations summary) |
 
 **Important:** When routing to Task 7A after loop approval, the review comment should reflect a clean bill of health (0 blocking findings). Include any non-blocking findings as informational notes. When routing to Task 7B after stall/max, the task list contains only the remaining **blocking** findings from the final iteration.
 
@@ -373,8 +359,6 @@ Combine all agent findings into the final review output.
    - oRPC/API Compliance (api findings)
 3. **Deduplicate** similar findings across agents
 4. **Sort** within each category by severity (HIGH → MEDIUM → LOW)
-5. **Separate** findings into blocking and non-blocking lists based on the `Blocking` field
-6. **Count** `blocking_count` and `nonblocking_count` for the iteration log
 
 #### Step 6.2: Generate PR Title and Description
 
@@ -656,9 +640,10 @@ Display a final summary showing the loop converged to 0 findings.
 ### Actions Completed
 1. Ran iterative review-fix loop (3 iterations)
 2. Auto-fixed all findings across iterations
-3. Updated PR title with conventional commit format
-4. Updated PR description with comprehensive summary
-5. Posted clean review comment to GitHub
+3. Committed fixes via `gt modify`
+4. Updated PR title with conventional commit format
+5. Updated PR description with comprehensive summary
+6. Posted clean review comment to GitHub
 
 *Reviewed and auto-fixed in 3 iterations (12 → 4 → 0 blocking findings)*
 ~~~
@@ -698,6 +683,9 @@ Display a final summary showing the loop did not converge.
 - **Total**: 9 tasks
 
 *Remaining findings listed above are blocking only. Non-blocking observations were excluded from the fix loop.*
+
+### Commit
+Fixes from completed iterations have been committed via `gt modify`.
 
 ### Next Steps
 1. Review the task list
@@ -761,6 +749,32 @@ Task tool call:
 Extract `FIXED_COUNT` and `SKIPPED_COUNT` from the `---FIX_RESULTS---` block. Pass these to the iteration log.
 
 **Success Criteria**: All applicable findings are fixed. Fix results summary collected with counts.
+
+---
+
+### Task 10: Commit Fixes (Loop Mode Only)
+
+**This task runs once after the loop exits, before post-loop routing to Tasks 7/8. It runs for all exit conditions (approved, stalled, max_iterations).**
+
+#### Step 10.1: Check if any fixes were applied
+
+Sum `fixed_count` across all entries in `iteration_log`. If the cumulative total is 0 (no files were changed across any iteration), **skip this task entirely** and proceed to post-loop routing.
+
+#### Step 10.2: Stage and commit
+
+If cumulative `fixed_count > 0`, run these commands individually:
+
+**Stage all changes:**
+```bash
+git add -A
+```
+
+**Commit via Graphite:**
+```bash
+gt modify --message "fix: address PR review findings"
+```
+
+**Success Criteria**: If fixes were applied, all changes are staged and committed via `gt modify`. If no fixes were applied, task is skipped. In both cases, proceed to post-loop routing (Tasks 7/8).
 
 ---
 
@@ -838,16 +852,19 @@ flowchart TD
 
     T5 --> T6[Task 6: Aggregate & Generate]
     T6 --> CHECK{0 blocking findings?}
-    CHECK -->|Yes| T7A[Task 7A: Post to GitHub]
+    CHECK -->|Yes| T10A[Task 10: Commit Fixes]
+    T10A --> T7A[Task 7A: Post to GitHub]
     T7A --> T8C[Task 8C: Loop Approved Summary]
 
     CHECK -->|No| STALL{Stalled?}
-    STALL -->|Yes| T7B[Task 7B: Create Task List]
+    STALL -->|Yes| T10B[Task 10: Commit Fixes]
+    T10B --> T7B[Task 7B: Create Task List]
     T7B --> T8D[Task 8D: Loop Stopped Summary]
 
     STALL -->|No| T9[Task 9: Fix All Findings]
     T9 --> LOOP_START
 
-    LOOP_START -->|No: max iterations| T7B2[Task 7B: Create Task List]
+    LOOP_START -->|No: max iterations| T10C[Task 10: Commit Fixes]
+    T10C --> T7B2[Task 7B: Create Task List]
     T7B2 --> T8D2[Task 8D: Loop Stopped Summary]
 ```

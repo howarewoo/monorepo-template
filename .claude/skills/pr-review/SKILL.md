@@ -1,7 +1,7 @@
 ---
 name: pr-review
 description: AI-driven deep code review of pull requests with intelligent bug detection, architecture analysis, constitution compliance checking, and mermaid logic flow diagrams. Supports standard mode (post to GitHub), local mode (create task list), and loop mode (iterative review + auto-fix). Use when reviewing PRs, analyzing code changes, or checking architecture compliance.
-allowed-tools: Bash(gh:*), Bash(git:*), Bash(pnpm:*), Read, Edit, Write, Glob, Grep, Task, TaskOutput, TaskCreate, TaskUpdate
+allowed-tools: Bash(gh:*), Bash(git:*), Bash(gt:*), Bash(pnpm:*), Read, Edit, Write, Glob, Grep, Task, TaskOutput, TaskCreate, TaskUpdate
 ---
 
 # PR Review Skill
@@ -20,7 +20,6 @@ This skill provides comprehensive pull request analysis with deep semantic under
 3. **PR Metadata Updates** - Automatically updates PR title and description (never just recommends)
 4. **Logic Flow Visualization** - Mermaid diagrams for complex workflows
 5. **Local Mode** - Create task list for local fixes instead of posting to GitHub
-6. **Loop Mode** - Iterative review-fix-review cycle until clean or max iterations
 
 ## Usage Modes
 
@@ -46,8 +45,9 @@ Use loop mode when you want to:
 - Iterate until the PR is clean before posting to GitHub
 - Get a fully automated review-fix-review cycle
 
-On approval (0 findings), the review is automatically posted to GitHub.
-On max iterations or stall, a local task list of remaining findings is created.
+On approval (0 findings), fixes are committed and the review is automatically posted to GitHub.
+On max iterations or stall, fixes are committed and a local task list of remaining findings is created.
+If no fixes were applied (all findings skipped), the commit is skipped.
 
 **Note:** `--loop` and `--local` are mutually exclusive. If both are passed, the skill errors out.
 
@@ -73,7 +73,6 @@ This skill runs **fully autonomously** without user interaction. When invoked:
 Execute the entire workflow from start to finish:
 - **Standard mode**: Posts review to GitHub automatically
 - **Local mode**: Creates task list for local fixes (no GitHub posting)
-- **Loop mode**: Iteratively reviews and fixes until clean, then posts to GitHub
 
 ## Operating Constraints
 
