@@ -47,6 +47,7 @@ FINDINGS_COUNT: [N]
 ### Finding 1
 - **Type**: critical
 - **Severity**: [HIGH|MEDIUM|LOW]
+- **Blocking**: [true|false]
 - **File**: path/to/file.ts (lines X-Y)
 - **Description**: [Clear explanation of the security risk and potential impact]
 - **Code**:
@@ -76,3 +77,10 @@ FINDINGS_COUNT: 0
 - **HIGH**: Exploitable vulnerability, data breach risk, auth bypass
 - **MEDIUM**: Potential vulnerability requiring specific conditions
 - **LOW**: Security best practice violation, defense-in-depth improvement
+
+## Blocking Classification
+
+- **Blocking: true** — A code defect, bug, or violation that can and should be fixed before merge. The fix agent can address it by editing source files.
+- **Blocking: false** — A process observation, style preference, or concern that cannot be resolved by editing code (e.g., TDD commit ordering, historical decisions, speculative future concerns).
+
+**Rule of thumb**: If the fix agent can resolve it by editing source files, it's blocking. If it requires rewriting git history, changing CI config, or is purely advisory, it's non-blocking.
