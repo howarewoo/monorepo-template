@@ -4,12 +4,7 @@
   "private": true,
   "license": "MIT",
   "type": "module",
-  "exports": {
-    "./router": {
-      "types": "./src/router.ts",
-      "default": "./src/router.ts"
-    }
-  },
+  "exports": {},
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",

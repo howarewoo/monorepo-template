@@ -5,9 +5,9 @@ vi.mock("@orpc/client", () => ({
 }));
 
 vi.mock("@orpc/client/fetch", () => ({
-  RPCLink: vi.fn(function (this: { options: { url: string } }, options: { url: string }) {
-    this.options = options;
-  }),
+  RPCLink: class {
+    constructor(public options: { url: string }) {}
+  },
 }));
 
 vi.mock("@orpc/tanstack-query", () => ({
