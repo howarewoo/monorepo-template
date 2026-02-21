@@ -105,7 +105,7 @@ export function formatTypeString(typeStr: string): string {
       if (currentLine.trim()) {
         lines.push(currentLine.trimEnd());
       }
-      currentLine = INDENT.repeat(indent) + "}";
+      currentLine = `${INDENT.repeat(indent)}}`;
     } else if (char === ";") {
       if (indent > 0) {
         currentLine += ";";
