@@ -1,14 +1,11 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as ts from "typescript";
-import { formatTypeString, replaceAbsolutePaths } from "./gencode-utils";
+import { formatTypeString, qualifyBareWorkspaceTypes, replaceAbsolutePaths } from "./gencode-utils";
 
 const API_ROOT = path.resolve(import.meta.dirname, "..");
 const ROUTER_FILE = path.join(API_ROOT, "src/router.ts");
-const OUTPUT_DIR = path.resolve(
-  API_ROOT,
-  "../../packages/infrastructure/api-client/src/generated",
-);
+const OUTPUT_DIR = path.resolve(API_ROOT, "../../packages/infrastructure/api-client/src/generated");
 const OUTPUT_FILE = path.join(OUTPUT_DIR, "router-types.d.ts");
 
 // Load tsconfig for the api project
@@ -53,17 +50,19 @@ const typeString = checker.typeToString(
   sourceFile,
   ts.TypeFormatFlags.NoTruncation |
     ts.TypeFormatFlags.MultilineObjectLiterals |
-    ts.TypeFormatFlags.InTypeAlias,
+    ts.TypeFormatFlags.InTypeAlias
 );
 
-const processedTypeString = formatTypeString(replaceAbsolutePaths(typeString));
+const processedTypeString = formatTypeString(
+  qualifyBareWorkspaceTypes(replaceAbsolutePaths(typeString))
+);
 
 // Validate: reject if the output references @features packages
 if (processedTypeString.includes("@features/")) {
   throw new Error(
     "Generated type references @features/* — the type was not fully expanded. " +
       "This likely means a named type from a feature package leaked through. " +
-      "Check that all feature types resolve to structural types.",
+      "Check that all feature types resolve to structural types."
   );
 }
 

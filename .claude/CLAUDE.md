@@ -28,7 +28,7 @@ pnpm format:unsafe    # Format + apply unsafe fixes (used by pre-commit)
 pnpm pre-commit       # Install, format, typecheck, and test changed files
 pnpm clean            # Remove build artifacts and node_modules
 pnpm reset            # Deep clean: node_modules, .next, dist, .turbo, untracked files
-pnpm gencode          # Generate Router types from apps/api into @infrastructure/api-client
+pnpm gencode          # Generate Router types + Supabase DB types (requires local Supabase for DB types)
 
 # Run a single package
 pnpm --filter web dev
@@ -42,6 +42,11 @@ pnpm --filter landing dev
 pnpm --filter mobile ios
 pnpm --filter mobile android
 pnpm --filter mobile web
+
+# Supabase (requires Docker)
+pnpm --filter supabase-db start   # Start local Supabase
+pnpm --filter supabase-db stop    # Stop local Supabase
+pnpm --filter supabase-db reset   # Reset DB (reapply migrations + seed)
 ```
 
 ## Architecture
@@ -52,6 +57,7 @@ pnpm --filter mobile web
   - `apps/landing` — Next.js 16 marketing/landing page consuming shared UI components (port 3002)
   - `apps/mobile` — Expo SDK 54 + React Native 0.81 + UniWind + react-native-reusables
   - `apps/api` — Hono + oRPC API server (port 3001)
+  - `apps/supabase` — Supabase CLI project (config, migrations, seed data; local dev via Docker)
 - **Features** (`packages/features/*`): Standalone business feature packages; own their contracts (`contracts/`), routers (`routers/`), and procedures (`procedures/`); can only import from infrastructure
 - **Infrastructure** (`packages/infrastructure/*`): Shared utilities; can be used anywhere
   - `@infrastructure/api-client` — oRPC client utilities (`createApiClient`, `createTypedApiClient`), generated Router type, and shared base schemas
@@ -59,6 +65,7 @@ pnpm --filter mobile web
   - `@infrastructure/ui` — Shared design tokens, CSS utilities (`cn()`, `tokens`)
   - `@infrastructure/ui-web` — Shared shadcn/ui components (Button, Card, etc.) for web apps
   - `@infrastructure/utils` — Cross-platform utility functions
+  - `@infrastructure/supabase` — Supabase clients (server, browser, SSR), auth hooks/context (AuthProvider, useAuth, useUser), storage utilities, Hono/Next.js middleware, generated DB types
   - `@infrastructure/typescript-config` — Shared TypeScript configs (base, library, nextjs, react-native)
 
 ## Key Patterns
@@ -100,6 +107,32 @@ Feature packages must never import `next/navigation` or `expo-router` directly. 
 - `<Link href="/path">` for declarative navigation
 - `useNavigation()` for imperative (`navigate`, `replace`, `back`)
 - Each app provides its adapter via `NavigationProvider` (see `apps/web/lib/navigation.tsx`, `apps/mobile/lib/navigation.tsx`)
+
+### Supabase (Auth + Database + Storage)
+
+`apps/supabase` holds the Supabase CLI project (config.toml, migrations, seed.sql). Run `pnpm --filter supabase-db start` to spin up local Supabase via Docker.
+
+`@infrastructure/supabase` provides everything apps need:
+- **Clients**: `createServerClient()`, `createBrowserClient()`, `createSSRServerClient()`, `createSSRBrowserClient()`
+- **Auth**: `AuthProvider`, `useAuth()`, `useUser()` (React context pattern like NavigationProvider)
+- **Storage**: `createStorageClient()` for upload/download/getPublicUrl
+- **Middleware**: `supabaseMiddleware` (Hono — JWT validation, requires `supabaseUrl`+`supabaseSecretKey`+`supabasePublishableKey`), `createSupabaseMiddleware` (Next.js — session refresh)
+- **Types**: Auto-generated `Database` type + helpers (`Tables`, `TablesInsert`, `TablesUpdate`, `Enums`, `SupabaseUser`, `TypedSupabaseClient`)
+
+Feature procedures access `context.user` (authenticated user or `undefined`) and `context.supabase` (RLS-scoped client) via oRPC context. Unauthenticated requests get a publishable-key client (respects RLS, no elevated privileges). The API client supports dynamic token injection via `getToken` option:
+
+```typescript
+const client = createTypedApiClient("http://localhost:3001/api", {
+  getToken: async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.access_token;
+  },
+});
+```
+
+**Gotcha**: After changing migrations, run `pnpm --filter supabase-db reset` then `pnpm gencode` to regenerate DB types.
+
+**Gotcha**: The `gen-types` script requires local Supabase to be running (`pnpm --filter supabase-db start`). If Supabase isn't running, `pnpm gencode` gracefully skips DB type generation.
 
 ### Cross-Platform UI
 
@@ -147,6 +180,20 @@ react: "19.1.0"
 
 **Gotcha**: After changing any feature router or `apps/api/src/router.ts`, run `pnpm gencode` to regenerate the Router type in `@infrastructure/api-client`. The generated file (`packages/infrastructure/api-client/src/generated/router-types.d.ts`) must be committed — it is not regenerated during build or CI.
 
+### Environment Variables
+
+Each app has an env example file (`.env.example` for `api`/`mobile`, `.env.local.example` for `web`). Copy and fill in values from `pnpm --filter supabase-db start` output:
+
+| App | Variable | Description |
+|-----|----------|-------------|
+| `apps/api` | `SUPABASE_URL` | Supabase API URL (default: `http://127.0.0.1:54321`) |
+| `apps/api` | `SUPABASE_SECRET_KEY` | Secret key for JWT validation |
+| `apps/api` | `SUPABASE_PUBLISHABLE_KEY` | Publishable key for unauthenticated RLS-scoped requests |
+| `apps/web` | `NEXT_PUBLIC_SUPABASE_URL` | Supabase API URL (public, embedded in client bundle) |
+| `apps/web` | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (public, embedded in client bundle) |
+| `apps/mobile` | `EXPO_PUBLIC_SUPABASE_URL` | Supabase API URL (public, embedded in app bundle) |
+| `apps/mobile` | `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key (public, embedded in app bundle) |
+
 ## Conventions
 
 - **Never commit directly to `main` or `staging`** — all new code must go on a feature branch targeting `staging` via PR. Use `gt create` to start a new branch from `staging`.
@@ -183,7 +230,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 ## Testing
 
 - **Framework**: Vitest (unit/integration), Jest via `jest-expo` (mobile/React Native), Playwright (E2E)
-- **Test locations**: colocated as `{filename}.test.ts` or in `__tests__/` directories
+- **Test locations**: in sibling `__tests__/` directories (e.g., `src/auth/__tests__/useAuth.test.ts`)
 - Run `pnpm test` before committing; new procedures require tests
 - Run per-app: `pnpm --filter web test`, `pnpm --filter landing test`, `pnpm --filter api test`, `pnpm --filter mobile test`
 
