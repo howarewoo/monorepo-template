@@ -149,10 +149,11 @@ react: "19.1.0"
 
 ## Conventions
 
+- **Never commit directly to `main` or `staging`** — all new code must go on a feature branch targeting `staging` via PR. Use `gt create` to start a new branch from `staging`.
 - **Graphite** (`gt`) is the primary Git CLI — always prefer `gt` over raw `git` for branch and commit operations:
   - `gt create -m "msg"` instead of `git checkout -b` + `git commit`
   - `gt modify -m "msg"` instead of `git commit --amend`
-  - `gt submit` instead of `git push`
+  - `gt submit` instead of `git push` (creates PR targeting `staging`)
   - `gt log` instead of `git log` (shows stack context)
   - Only use raw `git` for operations `gt` doesn't cover (e.g., `git status`, `git diff`, `git stash`)
 - **Biome**: 100-char line width, double quotes, semicolons, ES5 trailing commas
