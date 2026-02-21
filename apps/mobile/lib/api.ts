@@ -1,8 +1,7 @@
-import { createApiClient, createOrpcUtils } from "@infrastructure/api-client";
-import type { Router } from "api/router";
+import { createTypedApiClient, createTypedOrpcUtils } from "@infrastructure/api-client";
 import Constants from "expo-constants";
 
 const API_URL = Constants.expoConfig?.extra?.apiUrl || "http://localhost:3001/api";
 
-export const apiClient = createApiClient<Router>(API_URL);
-export const orpc = createOrpcUtils(apiClient);
+export const apiClient = createTypedApiClient(API_URL);
+export const orpc = createTypedOrpcUtils(apiClient);

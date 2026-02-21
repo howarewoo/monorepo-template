@@ -3,7 +3,7 @@
 ## Core Principles
 
 ### I. Monorepo Structure
-Three package types with strict import boundaries: Infrastructure (`packages/infrastructure/*`, can be used anywhere), Features (`packages/features/*`, only in apps), Apps (`apps/*`, compose infrastructure and features); Use pnpm for package management; Maintain clear separation of concerns.
+Three package types with strict import boundaries: Infrastructure (`packages/infrastructure/*`, can be used anywhere), Features (`packages/features/*`, only in apps), Apps (`apps/*`, compose infrastructure and features); Use pnpm for package management; Maintain clear separation of concerns. Apps must never depend on other apps; type sharing between apps flows through infrastructure packages via code generation (`pnpm gencode`).
 
 ### II. Feature-Based Architecture
 Every feature is implemented as a standalone package with clear boundaries; Features can only import from infrastructure packages; Clear separation between features, infrastructure, and apps ensures maintainability and scalability.
@@ -100,12 +100,14 @@ export type Router = typeof router;
 **Client Usage Pattern:**
 ```typescript
 // In consuming apps (web, mobile)
-import type { Router } from "api/router";
-import { createApiClient, createOrpcUtils } from "@infrastructure/api-client";
+import { createTypedApiClient, createTypedOrpcUtils } from "@infrastructure/api-client";
 
-const client = createApiClient<Router>("http://localhost:3001/api");
+const client = createTypedApiClient("http://localhost:3001/api");
+const orpc = createTypedOrpcUtils(client);
 const users = await client.users.list();
 ```
+
+Apps import pre-typed client utilities from `@infrastructure/api-client` — they never import types from `apps/api` directly. The `Router` type is generated into `@infrastructure/api-client` via `pnpm gencode` (see `apps/api/scripts/generate-router-types.ts`). After changing any router or contract, run `pnpm gencode` and commit the generated file.
 
 ### X. TanStack Query Data Fetching and Mutations
 All client-side data fetching and mutations must use TanStack Query (React Query) with oRPC; Query and mutation options are accessed directly via `createOrpcUtils()` — no separate `queries/` or `mutations/` folders are needed.

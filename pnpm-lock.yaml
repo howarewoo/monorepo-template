@@ -24,6 +24,9 @@ catalogs:
     '@orpc/client':
       specifier: 1.13.5
       version: 1.13.5
+    '@orpc/contract':
+      specifier: 1.13.5
+      version: 1.13.5
     '@orpc/server':
       specifier: 1.13.5
       version: 1.13.5
@@ -298,9 +301,6 @@ importers:
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.21(react@19.1.0)
-      api:
-        specifier: workspace:*
-        version: link:../api
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
@@ -410,9 +410,6 @@ importers:
       '@tanstack/react-query':
         specifier: 'catalog:'
         version: 5.90.21(react@19.1.0)
-      api:
-        specifier: workspace:*
-        version: link:../api
       next:
         specifier: 'catalog:'
         version: 16.1.6(@babel/core@7.29.0)(@playwright/test@1.58.2)(babel-plugin-react-compiler@1.0.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
@@ -488,6 +485,9 @@ importers:
   packages/infrastructure/api-client:
     dependencies:
       '@orpc/client':
+        specifier: 'catalog:'
+        version: 1.13.5
+      '@orpc/contract':
         specifier: 'catalog:'
         version: 1.13.5
       '@orpc/server':

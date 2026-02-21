@@ -25,10 +25,10 @@ pnpm lint             # Lint via Biome
 pnpm lint:fix         # Auto-fix linting issues
 pnpm format           # Format via Biome + sort package.json
 pnpm format:unsafe    # Format + apply unsafe fixes (used by pre-commit)
-pnpm pre-commit       # Install, format, and test changed files
+pnpm pre-commit       # Install, format, typecheck, and test changed files
 pnpm clean            # Remove build artifacts and node_modules
 pnpm reset            # Deep clean: node_modules, .next, dist, .turbo, untracked files
-pnpm gencode          # Run code generation tasks via Turborepo
+pnpm gencode          # Generate Router types from apps/api into @infrastructure/api-client
 
 # Run a single package
 pnpm --filter web dev
@@ -54,7 +54,7 @@ pnpm --filter mobile web
   - `apps/api` — Hono + oRPC API server (port 3001)
 - **Features** (`packages/features/*`): Standalone business feature packages; own their contracts (`contracts/`), routers (`routers/`), and procedures (`procedures/`); can only import from infrastructure
 - **Infrastructure** (`packages/infrastructure/*`): Shared utilities; can be used anywhere
-  - `@infrastructure/api-client` — oRPC client utilities (`createApiClient`, `createOrpcUtils`) and shared base schemas
+  - `@infrastructure/api-client` — oRPC client utilities (`createApiClient`, `createTypedApiClient`), generated Router type, and shared base schemas
   - `@infrastructure/navigation` — Platform-agnostic navigation (Link, useNavigation, NavigationProvider)
   - `@infrastructure/ui` — Shared design tokens, CSS utilities (`cn()`, `tokens`)
   - `@infrastructure/ui-web` — Shared shadcn/ui components (Button, Card, etc.) for web apps
@@ -65,7 +65,7 @@ pnpm --filter mobile web
 
 ### oRPC (Type-Safe API)
 
-Feature packages own their contracts (`contracts/`) and routers (`routers/`). `apps/api` imports feature routers and composes the master router, exporting `Router` type. `@infrastructure/api-client` provides generic client utilities (`createApiClient`, `createOrpcUtils`) and shared base schemas. Apps (web, mobile) import `Router` type from `apps/api` and pass it to client utilities for fully typed clients. Query integration uses `@orpc/tanstack-query`.
+Feature packages own their contracts (`contracts/`) and routers (`routers/`). `apps/api` imports feature routers and composes the master router. `@infrastructure/api-client` provides both generic client utilities and pre-typed wrappers using a generated `Router` type. Apps import from `@infrastructure/api-client` — they never depend on `apps/api` directly. The `Router` type is generated via `pnpm gencode`. Query integration uses `@orpc/tanstack-query`.
 
 **Gotcha**: oRPC v1 routers are plain object literals — do not wrap with `.router()`. The `@orpc/react-query` package was renamed to `@orpc/tanstack-query`.
 
@@ -88,10 +88,9 @@ export const router = { users: usersRouter };
 export type Router = typeof router;
 
 // Consuming app (web/mobile)
-import type { Router } from "api/router";
-import { createApiClient, createOrpcUtils } from "@infrastructure/api-client";
-const client = createApiClient<Router>("http://localhost:3001/api");
-const orpc = createOrpcUtils(client);
+import { createTypedApiClient, createTypedOrpcUtils } from "@infrastructure/api-client";
+const client = createTypedApiClient("http://localhost:3001/api");
+const orpc = createTypedOrpcUtils(client);
 const { data } = useQuery(orpc.users.list.queryOptions());
 ```
 
@@ -146,11 +145,19 @@ react: "19.1.0"
 
 **Gotcha**: pnpm 10 disables dependency lifecycle scripts by default. If a new dependency has a `postinstall` script (e.g., `esbuild`, `prisma`, native modules), add it to `pnpm.onlyBuiltDependencies` in the root `package.json` or it will silently fail to build.
 
+**Gotcha**: After changing any feature router or `apps/api/src/router.ts`, run `pnpm gencode` to regenerate the Router type in `@infrastructure/api-client`. The generated file (`packages/infrastructure/api-client/src/generated/router-types.d.ts`) must be committed — it is not regenerated during build or CI.
+
 ## Conventions
 
+- **Never commit directly to `main` or `staging`** — all new code must go on a feature branch targeting `staging` via PR. Use `gt create` to start a new branch from `staging`.
+- **Graphite** (`gt`) is the primary Git CLI — always prefer `gt` over raw `git` for branch and commit operations:
+  - `gt create -m "msg"` instead of `git checkout -b` + `git commit`
+  - `gt modify -m "msg"` instead of `git commit --amend`
+  - `gt submit` instead of `git push` (creates PR targeting `staging`)
+  - `gt log` instead of `git log` (shows stack context)
+  - Only use raw `git` for operations `gt` doesn't cover (e.g., `git status`, `git diff`, `git stash`)
 - **Biome**: 100-char line width, double quotes, semicolons, ES5 trailing commas
 - **pnpm** exclusively (not npm/yarn); `pnpx` instead of `npx`
-- **Graphite** (`gt`) for branch management — use `gt create`, `gt modify`, `gt submit` instead of raw git branch/commit/push
 - `.ts` by default; `.tsx` only when file contains JSX
 - Infrastructure packages use **named exports**; feature packages use **default exports**
 - No `any` or `unknown` — use explicit, safely narrowed types
@@ -164,7 +171,8 @@ react: "19.1.0"
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 1. `biome ci` — lint + format check
 2. `pnpm turbo build` — build all packages
-3. `pnpm test:changed` — tests for changed packages only
+3. Verify generated code is up to date (`pnpm gencode` + `git diff --exit-code`)
+4. `pnpm test:changed` — tests for changed packages only
 
 **Note**: CI does not run `typecheck` — run `pnpm typecheck` locally before pushing.
 

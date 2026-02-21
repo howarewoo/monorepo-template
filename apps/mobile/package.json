@@ -19,7 +19,6 @@
     "@orpc/client": "catalog:",
     "@orpc/tanstack-query": "catalog:",
     "@react-navigation/native": "catalog:",
-    "api": "workspace:*",
     "@infrastructure/api-client": "workspace:*",
     "@infrastructure/navigation": "workspace:*",
     "@infrastructure/ui": "workspace:*",

@@ -24,6 +24,10 @@
     },
     "clean": {
       "cache": false
+    },
+    "gencode": {
+      "cache": false,
+      "dependsOn": ["^build"]
     }
   }
 }
