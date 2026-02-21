@@ -149,9 +149,14 @@ react: "19.1.0"
 
 ## Conventions
 
+- **Graphite** (`gt`) is the primary Git CLI — always prefer `gt` over raw `git` for branch and commit operations:
+  - `gt create -m "msg"` instead of `git checkout -b` + `git commit`
+  - `gt modify -m "msg"` instead of `git commit --amend`
+  - `gt submit` instead of `git push`
+  - `gt log` instead of `git log` (shows stack context)
+  - Only use raw `git` for operations `gt` doesn't cover (e.g., `git status`, `git diff`, `git stash`)
 - **Biome**: 100-char line width, double quotes, semicolons, ES5 trailing commas
 - **pnpm** exclusively (not npm/yarn); `pnpx` instead of `npx`
-- **Graphite** (`gt`) for branch management — use `gt create`, `gt modify`, `gt submit` instead of raw git branch/commit/push
 - `.ts` by default; `.tsx` only when file contains JSX
 - Infrastructure packages use **named exports**; feature packages use **default exports**
 - No `any` or `unknown` — use explicit, safely narrowed types
