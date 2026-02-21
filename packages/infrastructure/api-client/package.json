@@ -17,8 +17,9 @@
   },
   "dependencies": {
     "@orpc/client": "catalog:",
-    "@orpc/tanstack-query": "catalog:",
+    "@orpc/contract": "catalog:",
     "@orpc/server": "catalog:",
+    "@orpc/tanstack-query": "catalog:",
     "@tanstack/react-query": "catalog:",
     "zod": "catalog:"
   },

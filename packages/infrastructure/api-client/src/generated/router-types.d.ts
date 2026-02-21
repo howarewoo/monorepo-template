@@ -10,7 +10,7 @@ export type Router = {
     requestId?: string;
   }, import("@orpc/contract").Schema<unknown, unknown>, import("zod").ZodObject<{
     message: import("zod").ZodString;
-  }, import("zod/v4/core/schemas").$strip>, Record<never, never>, Record<never, never>>;
+  }, import("zod/v4/core").$strip>, Record<never, never>, Record<never, never>>;
   users: {
     list: import("@orpc/server").DecoratedProcedure<{
       requestId?: string;
@@ -21,19 +21,19 @@ export type Router = {
       name: import("zod").ZodString;
       email: import("zod").ZodEmail;
       createdAt: import("zod").ZodISODateTime;
-    }, import("zod/v4/core/schemas").$strip>>, Record<never, never>, Record<never, never>>;
+    }, import("zod/v4/core").$strip>>, Record<never, never>, Record<never, never>>;
     get: import("@orpc/server").DecoratedProcedure<{
       requestId?: string;
     } & Record<never, never>, {
       requestId?: string;
     }, import("zod").ZodObject<{
       id: import("zod").ZodString;
-    }, import("zod/v4/core/schemas").$strip>, import("zod").ZodNullable<import("zod").ZodObject<{
+    }, import("zod/v4/core").$strip>, import("zod").ZodNullable<import("zod").ZodObject<{
       id: import("zod").ZodString;
       name: import("zod").ZodString;
       email: import("zod").ZodEmail;
       createdAt: import("zod").ZodISODateTime;
-    }, import("zod/v4/core/schemas").$strip>>, Record<never, never>, Record<never, never>>;
+    }, import("zod/v4/core").$strip>>, Record<never, never>, Record<never, never>>;
     create: import("@orpc/server").DecoratedProcedure<{
       requestId?: string;
     } & Record<never, never>, {
@@ -41,11 +41,11 @@ export type Router = {
     }, import("zod").ZodObject<{
       name: import("zod").ZodString;
       email: import("zod").ZodEmail;
-    }, import("zod/v4/core/schemas").$strip>, import("zod").ZodObject<{
+    }, import("zod/v4/core").$strip>, import("zod").ZodObject<{
       id: import("zod").ZodString;
       name: import("zod").ZodString;
       email: import("zod").ZodEmail;
       createdAt: import("zod").ZodISODateTime;
-    }, import("zod/v4/core/schemas").$strip>, Record<never, never>, Record<never, never>>;
+    }, import("zod/v4/core").$strip>, Record<never, never>, Record<never, never>>;
   };
 };

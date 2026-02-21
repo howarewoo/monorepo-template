@@ -24,6 +24,9 @@ catalogs:
     '@orpc/client':
       specifier: 1.13.5
       version: 1.13.5
+    '@orpc/contract':
+      specifier: 1.13.5
+      version: 1.13.5
     '@orpc/server':
       specifier: 1.13.5
       version: 1.13.5
@@ -482,6 +485,9 @@ importers:
   packages/infrastructure/api-client:
     dependencies:
       '@orpc/client':
+        specifier: 'catalog:'
+        version: 1.13.5
+      '@orpc/contract':
         specifier: 'catalog:'
         version: 1.13.5
       '@orpc/server':

@@ -26,7 +26,8 @@
       "cache": false
     },
     "gencode": {
-      "cache": false
+      "cache": false,
+      "dependsOn": ["^build"]
     }
   }
 }

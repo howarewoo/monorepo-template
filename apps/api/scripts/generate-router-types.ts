@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as ts from "typescript";
+import { formatTypeString, replaceAbsolutePaths } from "./gencode-utils";
 
 const API_ROOT = path.resolve(import.meta.dirname, "..");
 const ROUTER_FILE = path.join(API_ROOT, "src/router.ts");
@@ -16,6 +17,10 @@ if (!configPath) {
   throw new Error("Could not find apps/api/tsconfig.json");
 }
 const configFile = ts.readConfigFile(configPath, ts.sys.readFile);
+if (configFile.error) {
+  const message = ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n");
+  throw new Error(`Failed to parse apps/api/tsconfig.json: ${message}`);
+}
 const parsedConfig = ts.parseJsonConfigFileContent(configFile.config, ts.sys, API_ROOT);
 
 // Create TypeScript program and type checker
@@ -50,84 +55,6 @@ const typeString = checker.typeToString(
     ts.TypeFormatFlags.MultilineObjectLiterals |
     ts.TypeFormatFlags.InTypeAlias,
 );
-
-// Post-process: replace absolute pnpm store paths with package specifiers
-function replaceAbsolutePaths(typeStr: string): string {
-  return typeStr.replace(
-    /import\("([^"]+)"\)/g,
-    (_match: string, importPath: string) => {
-      const marker = "node_modules/";
-      const lastIndex = importPath.lastIndexOf(marker);
-      if (lastIndex === -1) return _match;
-
-      const packagePath = importPath.substring(lastIndex + marker.length);
-
-      // Extract package name (handle scoped @scope/name packages)
-      let packageName: string;
-      let subPath: string;
-
-      if (packagePath.startsWith("@")) {
-        const parts = packagePath.split("/");
-        packageName = `${parts[0]}/${parts[1]}`;
-        subPath = parts.slice(2).join("/");
-      } else {
-        const parts = packagePath.split("/");
-        packageName = parts[0] as string;
-        subPath = parts.slice(1).join("/");
-      }
-
-      // Strip common entry points — use bare package specifier
-      if (
-        !subPath ||
-        subPath === "index" ||
-        subPath === "dist/index" ||
-        subPath === "src/index"
-      ) {
-        return `import("${packageName}")`;
-      }
-
-      return `import("${packageName}/${subPath}")`;
-    },
-  );
-}
-
-// Post-process: format the type string with indentation
-function formatTypeString(typeStr: string): string {
-  let result = "";
-  let indent = 0;
-  const INDENT = "  ";
-
-  for (let i = 0; i < typeStr.length; i++) {
-    const char = typeStr[i] as string;
-
-    if (char === "{") {
-      indent++;
-      result += `{\n${INDENT.repeat(indent)}`;
-    } else if (char === "}") {
-      indent--;
-      // Trim trailing whitespace/newlines before closing brace
-      result = result.replace(/\s+$/, "");
-      result += `\n${INDENT.repeat(indent)}}`;
-    } else if (char === ";") {
-      if (indent > 0) {
-        result += `;\n${INDENT.repeat(indent)}`;
-      } else {
-        result += ";";
-      }
-    } else if (char === " " && result.endsWith("\n" + INDENT.repeat(indent))) {
-      // Skip leading spaces after our indentation
-      continue;
-    } else {
-      result += char;
-    }
-  }
-
-  // Clean up any trailing whitespace on lines
-  return result
-    .split("\n")
-    .map((line) => line.trimEnd())
-    .join("\n");
-}
 
 const processedTypeString = formatTypeString(replaceAbsolutePaths(typeString));
 
