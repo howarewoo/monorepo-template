@@ -25,7 +25,7 @@ pnpm lint             # Lint via Biome
 pnpm lint:fix         # Auto-fix linting issues
 pnpm format           # Format via Biome + sort package.json
 pnpm format:unsafe    # Format + apply unsafe fixes (used by pre-commit)
-pnpm pre-commit       # Install, format, and test changed files
+pnpm pre-commit       # Install, format, typecheck, and test changed files
 pnpm clean            # Remove build artifacts and node_modules
 pnpm reset            # Deep clean: node_modules, .next, dist, .turbo, untracked files
 pnpm gencode          # Generate Router types from apps/api into @infrastructure/api-client
@@ -165,7 +165,8 @@ react: "19.1.0"
 GitHub Actions (`.github/workflows/ci.yml`) runs on every PR:
 1. `biome ci` — lint + format check
 2. `pnpm turbo build` — build all packages
-3. `pnpm test:changed` — tests for changed packages only
+3. Verify generated code is up to date (`pnpm gencode` + `git diff --exit-code`)
+4. `pnpm test:changed` — tests for changed packages only
 
 **Note**: CI does not run `typecheck` — run `pnpm typecheck` locally before pushing.
 
