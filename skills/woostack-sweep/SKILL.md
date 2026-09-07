@@ -70,7 +70,7 @@ After every Address or restack head transition, re-read and re-bind canonical Gi
 2. **Review once.** Count each invoked Review → Address sequence as one round for this PR. Before
    invoking Review, halt as blocked when the number of completed rounds has reached the bound
    `review_sweep.max_rounds`; report the current head and the exact safe resume boundary instead of
-   spending another round. Otherwise invoke exactly one canonical multi-angle
+   spending another round. Otherwise invoke exactly one canonical risk-proportional
    [`woostack-review <PR#>`](../woostack-review/SKILL.md) pass for this current head that posts all
    blockers and nits. Do not reuse a result from another head or substitute self-review. Record all
    posted blocking findings and nits.

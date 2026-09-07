@@ -3,23 +3,9 @@
 Every technology choice must follow the user's project goals and constraints. Run this protocol
 before creating or scaffolding files; woostack supplies no built-in stack defaults.
 
-## Dynamic stack selection protocol
-
-1. **Submit the goal:** The user initiates bootstrap with a goal, for example
-   `/woostack-bootstrap <goal>`.
-2. **Gather requirements:** Ask one or two targeted rounds covering the relevant scale, traffic,
-   hosting, data, identity, compliance, integration, budget, and team constraints.
-3. **Research current named options:** Find the current production-ready languages, frameworks,
-   libraries, databases, services, and deployment choices that fit those requirements. Resolve
-   versions live from authoritative registries (`npm view <pkg> version` or the selected ecosystem's
-   equivalent) and use current authoritative sources for operational claims.
-4. **Present two or three cohesive options:** Name the technologies in each option and compare
-   developer experience, complexity, performance, scaling, portability or lock-in, production
-   readiness, and estimated operating cost.
-5. **Get explicit approval:** The user must select or customize one complete option. Do not scaffold
-   a technology or architectural decision the user has not approved.
-6. **Record the stack:** At handoff, write the selected technologies, live-resolved versions, and
-   material architectural decisions into the project's root `README.md`.
+The canonical sequence and complete-design approval gate live in
+[`../SKILL.md#procedure`](../SKILL.md#procedure). This reference guides the questions and design
+presentation, not target access or write admission.
 
 ## Requirements questionnaire
 
@@ -31,15 +17,16 @@ Ask only questions that discriminate among viable options. A concise prompt may 
 4. Authentication, authorization, privacy, and compliance requirements.
 5. External integrations, observability, budget, and team familiarity.
 
-Do not suggest a default before the research. If the user has already selected part of the stack,
-treat it as a constraint and research compatible choices for the undecided parts.
+Validate a supplied stack against the requirements and current authoritative sources; research
+compatible choices for undecided parts. Present the coherent design when that stack is viable.
+Compare alternatives only where a material tradeoff remains unresolved.
 
-## Option presentation format
+## Design presentation
 
-Use a scannable comparison grounded in the live research:
+Ground the complete architecture and initial scope in live research. Include:
 
 ```markdown
-### Option <n>: <descriptive architecture>
+### Proposed architecture
 - **Components:** <named language, frameworks, data, identity, hosting, and observability choices>
 - **Fit:** <requirements this option satisfies>
 - **Trade-offs:** <complexity, performance, scaling, portability or lock-in>

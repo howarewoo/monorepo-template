@@ -38,8 +38,6 @@ host — no spawn-time auth probe exists; switch manually by promoting an entry 
   returned by each dispatch; `reviewerCredentialContextId` is
   `cursor:composer:<subagent-id>`. Feed both into
   [Review's bound-validator sequence](../../../woostack-review/SKILL.md).
-- **woostack-execute:** use the session's configured `fast` implementation model
-  before dispatch; per-call model pinning remains unavailable.
 - **woostack-eval (comparative dispatch):** submit the two isolated workers for each
   candidate/baseline inseparable pair together through Composer's parallel-subagent primitive.
   Cursor exposes no concrete per-call model pin; `session-default` is provable only when the

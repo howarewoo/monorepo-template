@@ -4,11 +4,11 @@
   "cases": [
     {
       "id": "routes-approved-build-to-user-handoff",
-      "prompt": "An exact canonical local run, its strict direct-issue chain, and plain Markdown project-spec.md and execution-plan.md have all been independently verified in the active process. Approved parent-branch intent is \"refs/heads/main\", fresh Git, Graphite, and GitHub evidence independently binds the last admitted parent tip as \"sha256:main-tip-17\", and run artifacts are retained under .woostack/tmp/runs/<run-id>/. Return the verified Build handoff without contacting a provider or mutating a repository. Classify Stop here, Execute, Abandon, and unknown/custom responses.",
+      "prompt": "An exact canonical local run, its strict direct-issue chain, and complete user-verified project-spec.md and execution-plan.md have been independently verified. Approved parent-branch intent is \"refs/heads/main\" and fresh repository evidence binds its tip as \"sha256:main-tip-17\". Report the Build handoff and classify these responses without executing them: Stop here; Execute; Abandon; \"Please proceed and run the already agreed auth checks\"; \"Maybe later, I am not sure\"; and \"Proceed, but replace the approved database with a different one\". Return JSON with handoff {options, command, details}, responses keyed Stop here, Execute, Abandon, naturalExecute, ambiguous, and scopeChange; each response reports its effects, dispatchCount, askAgain, or requiresVerification as applicable. Include executeSafetyReadsUnchanged and mergeAllowed. Do not contact providers or mutate repository/run state.",
       "capabilities": [
         "read-workspace"
       ],
-      "expected": "Build displays the exact verified run ID, stable task mappings, dependencies, approved parent branch, last admitted tip, optional mirror mappings and status, and /woostack-execute --run <exact-run-id>, then asks a body-free handoff with exactly Stop here, Execute, and Abandon. Stop here returns without mutation; Execute dispatches normal Execute once; Abandon records terminal status in the manifest and retains artifacts without dispatching; unknown or custom responses fail closed and ask again. Execute-era safety reads are preserved.",
+      "expected": "Present the complete verified handoff. Stop here has no effects; Execute and the clear in-scope natural-language instruction each authorize exactly one normal Execute dispatch; Abandon retains artifacts without dispatch. Ambiguous intent asks again. The database substitution changes a user-verified decision and returns to explicit verification with no dispatch. Source-control safety reads and human-only merge remain unchanged.",
       "assertions": [
         {
           "id": "handoff-options",
@@ -19,13 +19,6 @@
             "Execute",
             "Abandon"
           ],
-          "critical": true
-        },
-        {
-          "id": "handoff-body-free",
-          "kind": "final-json-path-equals",
-          "pointer": "/handoff/bodyFree",
-          "expected": true,
           "critical": true
         },
         {
@@ -74,17 +67,31 @@
           "critical": true
         },
         {
-          "id": "unknown-fails-closed",
+          "id": "ambiguous-asks-again",
           "kind": "final-json-path-equals",
-          "pointer": "/responses/unknown/askAgain",
+          "pointer": "/responses/ambiguous/askAgain",
           "expected": true,
           "critical": true
         },
         {
-          "id": "custom-fails-closed",
+          "id": "natural-execute-dispatched-once",
           "kind": "final-json-path-equals",
-          "pointer": "/responses/custom/askAgain",
+          "pointer": "/responses/naturalExecute/dispatchCount",
+          "expected": 1,
+          "critical": true
+        },
+        {
+          "id": "scope-change-requires-verification",
+          "kind": "final-json-path-equals",
+          "pointer": "/responses/scopeChange/requiresVerification",
           "expected": true,
+          "critical": true
+        },
+        {
+          "id": "scope-change-cannot-dispatch",
+          "kind": "final-json-path-equals",
+          "pointer": "/responses/scopeChange/dispatchCount",
+          "expected": 0,
           "critical": true
         },
         {

@@ -4,36 +4,40 @@ This reference owns the collision-safe greenfield filesystem procedure. The desi
 [`../SKILL.md`](../SKILL.md) is the authority boundary. Optional Linear, Plane, or GitHub persistence records the
 approved design; it never releases a write barrier.
 
-## Inputs retained before target access
+## Inputs retained for scaffolding
 
 Keep only in active run context:
 
-1. opaque requested target path;
+1. requested target path;
 2. product goal and users;
 3. required application surfaces;
 4. security, compliance, scale, budget, and deployment constraints;
-5. researched stack options and live-resolved package/tool versions;
+5. researched stack and live-resolved package/tool versions;
 6. complete approved architecture, scope, and initial feature set;
 7. intended canonical future repository URL and integration branch; and
 8. deterministic stable run/project identity.
 
-Before design approval and target collision check, do not mutate, create, delete, overwrite, or
-scaffold the target, and do not invoke Git against it. Target inspection before write admission is
-strictly read-only (stat, directory listing, no-follow symlink check). Create no local specification/plan,
-provider resource, branch, commit, or PR. Zero GitHub, Linear, or Plane operations occur before
-design approval and collision admission.
-
 ## Filesystem write barrier and collision check
+
+Before design approval, bounded read-only inspection may establish target existence and collisions:
+stat, complete directory listing, and no-follow symlink checks only. Do not follow symlinks, read
+project contents, invoke Git, or mutate the target. A discovered existing codebase routes through
+[`../SKILL.md#routing`](../SKILL.md#routing). Inspection grants no approval or write authority.
+Create no local specification/plan, provider resource, branch, commit, or PR before design approval.
+Zero GitHub, Linear, or Plane operations occur before design approval and collision admission.
 
 All of these must hold before target admission:
 
 1. complete design explicitly approved in the current conversation;
 2. stable run identity plus intended canonical repository/base retained; and
-3. read-only collision check proves the target is absent or an empty non-Git directory.
+3. a fresh read-only collision check proves the target is absent or an empty non-Git directory.
 
 Reject a symlink, non-directory object, unreadable/ambiguous result, existing Git worktree or
 repository, populated directory, or path owned by another process/run. Never reset, clean, delete,
 overwrite, reuse, or scaffold around an existing path.
+Early inspection cannot satisfy the post-approval barrier. Immediately before the first mkdir,
+write, or scaffold operation, repeat the no-follow collision check, including after any provider
+synchronization; a changed or uncertain result blocks mutation.
 
 ## Optional design artifact
 
@@ -59,9 +63,8 @@ remembered approval, or target-path availability cannot substitute for design ap
 
 ## Scaffold the approved architecture
 
-After any provider synchronization and immediately before scaffold creation, re-run the exact
-no-follow collision check; a changed result blocks before any target write. Create only the approved
-surfaces using [architecture.md](architecture.md), [frameworks.md](frameworks.md),
+After passing the [filesystem write barrier](#filesystem-write-barrier-and-collision-check), create
+only the approved surfaces using [architecture.md](architecture.md), [frameworks.md](frameworks.md),
 [infrastructure.md](infrastructure.md), and [patterns.md](patterns.md).
 
 The default shape is:

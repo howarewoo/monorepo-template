@@ -63,7 +63,7 @@
           "id": "project-dispatch",
           "kind": "final-json-path-equals",
           "pointer": "/nextBoundary",
-          "expected": "dispatch-fast-model",
+          "expected": "implement",
           "critical": true
         },
         {
@@ -1572,7 +1572,7 @@
           "id": "failed-checks-dispatch",
           "kind": "final-json-path-equals",
           "pointer": "/nextBoundary",
-          "expected": "dispatch-fast-model",
+          "expected": "implement",
           "critical": true
         }
       ]
@@ -1623,14 +1623,14 @@
           "id": "pending-checks-dispatch",
           "kind": "final-json-path-equals",
           "pointer": "/nextBoundary",
-          "expected": "dispatch-fast-model",
+          "expected": "implement",
           "critical": true
         }
       ]
     },
     {
       "id": "unchanged-planning-tip-proceeds",
-      "prompt": "In local run mode, an exact fresh read proves the canonical integration parent branch is unchanged and its current tip equals the planning tip recorded in the manifest. Proceed without asking or changing the manifest first. Return exactly one JSON object with keys status, planningTip, currentTip, questionAsked, and nextBoundary. Set status to \"proceed\", planningTip to \"tip-001\", currentTip to \"tip-001\", questionAsked to false, and nextBoundary to \"dispatch-fast-model\".",
+      "prompt": "In local run mode, an exact fresh read proves the canonical integration parent branch is unchanged and its current tip equals the planning tip recorded in the manifest: both are tip-001. Evaluate this base-change boundary without running commands or mutating anything. Return exactly one JSON object with keys status, planningTip, currentTip, questionAsked, and nextBoundary (implement, prompt-user, or stop).",
       "capabilities": [
         "read-workspace"
       ],
@@ -1668,7 +1668,7 @@
           "id": "unchanged-tip-dispatch",
           "kind": "final-json-path-equals",
           "pointer": "/nextBoundary",
-          "expected": "dispatch-fast-model",
+          "expected": "implement",
           "critical": true
         }
       ]
@@ -2102,7 +2102,7 @@
           "id": "plane-blocked-recovery-boundary",
           "kind": "final-json-path-equals",
           "pointer": "/nextBoundary",
-          "expected": "dispatch-fast-model",
+          "expected": "implement",
           "critical": true
         }
       ]
@@ -2155,6 +2155,57 @@
           "kind": "final-json-path-equals",
           "pointer": "/repositoryMutationCount",
           "expected": 0,
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "adaptive-implementation-preserves-independent-gates",
+      "prompt": "Classify four independent Execute scenarios without running tools or mutating anything. Each has one admitted increment, exact isolated worktree/branch/parent identity, and satisfied lifecycle/ancestry gates. inline-small: a bounded one-file correction adds no useful delegation boundary; OMP has no implementation worker available, but a fresh authenticated independent read-only validator is available. delegated-context: a substantial multi-file integration has a useful isolated implementation context; OMP exposes woostack-standard and a separate woostack-deep validator, no woostack-fast, and host-owned role routing. missing-validator: inline implementation and focused smoke are complete, but the controller and implementer are the only available reviewers. unknown-worker: a previously dispatched writer timed out and its process state is unproved; the controller proposes editing that same worktree inline now. Return JSON keyed by those four scenario IDs. For the first two report implementationMode (inline or delegated), workerSelector (null or exact selector), and independentValidationRequired. For missing-validator report deliveryAllowed and worktreeRetained. For unknown-worker report inlineTakeoverAllowed and worktreeRetained.",
+      "fixtures": [],
+      "capabilities": [],
+      "expected": "Inline work needs no implementation worker; useful isolated integration uses the available appropriate standard role rather than requiring fast. Both need independent validation. Self-validation cannot authorize delivery, and an unknown worker cannot be bypassed by an inline duplicate writer.",
+      "assertions": [
+        {
+          "id": "inline-without-worker",
+          "kind": "final-json-path-equals",
+          "pointer": "/inline-small",
+          "expected": {
+            "implementationMode": "inline",
+            "workerSelector": null,
+            "independentValidationRequired": true
+          },
+          "critical": true
+        },
+        {
+          "id": "appropriate-host-owned-worker",
+          "kind": "final-json-path-equals",
+          "pointer": "/delegated-context",
+          "expected": {
+            "implementationMode": "delegated",
+            "workerSelector": "woostack-standard",
+            "independentValidationRequired": true
+          },
+          "critical": true
+        },
+        {
+          "id": "self-validation-cannot-deliver",
+          "kind": "final-json-path-equals",
+          "pointer": "/missing-validator",
+          "expected": {
+            "deliveryAllowed": false,
+            "worktreeRetained": true
+          },
+          "critical": true
+        },
+        {
+          "id": "unknown-writer-prevents-takeover",
+          "kind": "final-json-path-equals",
+          "pointer": "/unknown-worker",
+          "expected": {
+            "inlineTakeoverAllowed": false,
+            "worktreeRetained": true
+          },
           "critical": true
         }
       ]

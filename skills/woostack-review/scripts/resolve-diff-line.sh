@@ -8,8 +8,8 @@
 # does not correspond to a `+` (added) or ` ` (context) line on the RIGHT side
 # of the diff. Findings posted with raw source-file lines that fall in a
 # deletion-only region, or outside any hunk, return HTTP 422 "Line could not
-# be resolved." Sub-agents call this helper before writing the `line` field on
-# each finding; the merge step also runs a final-pass safety check.
+# be resolved." Deterministic finalization calls this helper after adjudication
+# and preserves accepted findings without inline locations as general comments.
 #
 # Usage:
 #   bash resolve-diff-line.sh --file <path> --line <N> [--end <N>]

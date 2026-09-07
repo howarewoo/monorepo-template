@@ -22,8 +22,7 @@ transport or fallback tokens. Artifact operations follow the canonical
 
 ## Tier routing
 
-**Per-call routing.** Resolve the effective tier — a forced tier if set, else the prompt's
-own `tier:` frontmatter — through the active provider's column in
+**Per-call routing.** Resolve the caller's effective tier through the active provider's column in
 [`../model-tiers.md`](../model-tiers.md) plus its override precedence, and **pass everything
 the resolved tier specifies on every spawn** (the pass-or-inherit law lives in the
 dispatching skill).
@@ -41,8 +40,6 @@ to entry 0, or re-run after editing config).
 
 - **woostack-execute (dispatch):** the no-per-call-cwd case — prompt pin + self-pin guard —
   is the normal path here.
-- **woostack-execute:** route the implementation worker at the `fast` tier per
-  call; the controller retains project admission, verification, and delivery boundaries.
 - **woostack-commit (fast drafting):** route the drafting subagent at the `fast` tier
   per-call.
 - **woostack-review (local swarm):** dispatch every active angle task via `Task`, letting the host

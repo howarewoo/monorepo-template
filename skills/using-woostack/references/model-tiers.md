@@ -2,14 +2,14 @@
 
 Canonical tier→model mapping for the woostack collection. `woostack-review` (angle workers +
 validator), `woostack-audit` (audit workers), and other consumers resolve tiers through this file.
-Normal [`woostack-execute`](../../woostack-execute/SKILL.md) implementation workers are always
-bound to the `fast` tier. Each consumer keeps only its own **runtime bindings** (env vars, config
-paths, dispatch calls) and points at the precedence rules below — there is no second
-copy of this table.
+Each consumer keeps only its own **runtime bindings** (env vars, config paths, dispatch calls)
+and points at the precedence rules below — there is no second copy of this table. Execute's
+[implementation driver](../../woostack-execute/references/subagent-driver.md) selects when
+delegation is useful and which tier fits the work.
 
-Tiers are `fast | standard | deep`. A prompt or template declares a `tier:` in frontmatter; the
-runtime either resolves that tier to a concrete model or maps it to a host-owned role, according
-to the current host's capability class. The context/summary helper subagent is implicitly `fast`.
+Tiers are `fast | standard | deep`. The caller selects an effective tier or uses a prompt's `tier:`
+frontmatter; the runtime resolves it to a concrete model or host-owned role according to the
+current host's capability class. The context/summary helper subagent is implicitly `fast`.
 
 | Tier | Use for | Anthropic | OpenAI (Codex) | Google (Gemini) | OpenRouter |
 |---|---|---|---|---|---|

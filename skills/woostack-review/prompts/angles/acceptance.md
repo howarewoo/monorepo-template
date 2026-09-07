@@ -37,6 +37,6 @@ read the assigned diff and every `## SOURCE:` section in `intent.md`.
 - **MEDIUM / blocking:** another explicit acceptance criterion or checked implementation step is demonstrably unmet, or a stale artifact claim would materially mislead execution/review.
 - **LOW / non-blocking:** a narrow stale reference or claim that does not alter delivered behavior but should be corrected for an accurate implementation record.
 
-**Anchors.** Findings must anchor to a relevant RIGHT-side line in the PR diff, never to `intent.md` (which may be unchanged). Validate the line with `resolve-diff-line.sh`; if no relevant right-side line is anchorable, drop the finding rather than guessing.
+**Locations.** Identify the relevant changed-file location, never anchor to `intent.md` merely because it carries the contract. Follow `_worker-header.md`; deterministic finalization decides inline versus general delivery.
 
 **Output.** Write a JSON array to `$OUTDIR/findings.acceptance.json` using `_worker-header.md`'s schema. Set `"angle": "acceptance"`, `rule_quote: null`, and `deferred_to: null`; the evidence adjudicator alone may populate `deferred_to`. Use `fix_type: "prose"` unless a safe single-file replacement of at most ten lines is genuinely available.

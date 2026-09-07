@@ -104,6 +104,8 @@ The effective label set is the union of existing and configured labels, preservi
 label. Preflight label capabilities and resolution before project mutation, apply missing labels in at
 most one write, and independently read back the complete set. Missing capability or incomplete
 read-back fails closed at that provider boundary.
+<a id="canonical-issue-references-nullable-parents-and-graph-write-preflight"></a>
+
 ## Canonical issue references and graph safety
 
 Each provider profile defines separate canonical caller-facing, readable, native, and external
@@ -148,34 +150,70 @@ membership. After the canonical Fix project is admitted, the sole supported sour
 is one direct project link followed by exact membership read-back. A source already linked to a
 different project blocks. Without `--issue`, Fix creates no source resource.
 
+<a id="plain-markdown-artifacts-and-minimal-run-manifest"></a>
+
 ## Owner-only local run store
 
-Resolve the repository root first and require one exact directory:
-`<repo-root>/.woostack/tmp/runs/<exact-run-id>/`. Prove `.woostack/tmp/` is Git-ignored, reject path
-traversal, and open every ancestor and file in order with no-follow semantics. The run directory and
-lock are owned by the current effective user; the directory mode is exactly `0700`. Admitted files are
-regular, owner-only `0600` files on the same filesystem and are never symlinks.
+Use the installed [`scripts/run-store.py`](../scripts/run-store.py) for all run filesystem access.
+It requires Python 3 on POSIX and Git; it uses no Python dependencies. Invoke it as:
 
-The persistent entries are:
+```text
+python3 <init-skill>/scripts/run-store.py --repo <canonical-repo-root> --run <exact-run-id> <command>
+```
 
-- `manifest.json` — minimal recovery and execution state;
-- `project-spec.md` — the complete plain specification or Fix record;
-- `execution-plan.md` — the complete ordered plan, increment contracts, and dependencies; and
-- `.lock` — exclusive run serialization.
+The helper admits only `<repo-root>/.woostack/tmp/runs/<exact-run-id>/`, after proving that the
+canonical Git worktree ignores `.woostack/tmp/` and has no tracked files beneath it. Run IDs are
+single components matching `[A-Za-z0-9][A-Za-z0-9_.-]*`. Repository traversal and symlinks in any
+ancestor are rejected rather than resolved. New directories are `0700`; existing shared `.woostack`,
+`tmp`, and `runs` ancestors must be current-user-owned and not group/world-writable. The run directory
+is always current-user-owned, exactly `0700`, and on the repository filesystem. Admitted files are
+same-filesystem, single-link regular files owned by the current user with mode exactly `0600`.
+Unsafe permissions, symlinks, non-regular files, foreign ownership, and unexpected entries fail closed;
+the helper never silently repairs them.
 
-Write `project-spec.md` exactly once, only after its complete final Markdown is known. Write
-`execution-plan.md` exactly once, only after its complete final Markdown is known. For each file,
-create one owner-only temporary regular file in the run directory with exclusive creation, write the
-complete bytes, flush the file, atomically rename it to the final path, and flush the directory. If
-any step fails, remove only the uncommitted temporary file and block. Never patch, replace, regenerate,
-or rewrite either final artifact in that run.
+Every operation holds the same exclusive `.lock`. Mutations use exclusive owner-only temporary
+files, complete-byte writes, file flush, atomic rename, and directory flush. Before use and after
+mutation the helper independently reopens the directory, lock, manifest, and existing plain artifacts
+no-follow, revalidates containment and identity, and returns independently read bytes on stdout.
 
-The manifest records only what recovery and strict sequential execution need: schema version, exact
-run ID, status, canonical repository, planning parent branch and tip, artifact paths, ordered stable
-task keys, dependencies, `stableTaskMappings`, `taskExecutions`, `mirror`, and manifest revision.
-It does not duplicate artifact prose. Create it through the same owner-only atomic sequence. Later
-checkpoint updates use exclusive temporary creation, file flush, atomic replacement, directory flush,
-and a compare-and-swap on the independently reopened manifest revision.
+<a id="readable-plain-artifact-writing"></a>
+
+| Command | Complete stdin | Outcome |
+| --- | --- | --- |
+| `init` | Existing-schema manifest JSON | Creates `manifest.json` only in a run without artifacts; returns the persisted manifest. |
+| `read` | None | Returns the current manifest without changing it. |
+| `read --artifact spec` / `read --artifact plan` | None | Returns exact `project-spec.md` / `execution-plan.md` bytes; a missing artifact blocks. |
+| `update --expected-revision N` | Complete replacement manifest JSON with `manifestRevision: N+1` | Reopens the locked manifest, requires revision `N` and unchanged run/repository identity, replaces it atomically, and returns the checkpoint. |
+| `write-spec` / `write-plan` | Complete final UTF-8 Markdown | Writes the corresponding plain artifact exactly once and returns it. |
+
+Write final files only after the owning workflow admits their complete final content. Never patch, replace,
+regenerate, or rewrite them in that run, even with identical bytes. Revised artifacts require a new
+run; retain the prior run. Final writes do not invent or update manifest fields. Each checkpoint
+supplies the complete current manifest, including retained workflow/provider fields, rather than a
+partial patch.
+
+A nonzero result blocks continuation. A failed or unknown rename/flush/read-back can already have
+committed: retain the last independently read state, use `read` on the same run, and reconcile exact
+bytes and revision before another mutation. Never blindly replay a write or allocate another run to
+hide uncertainty. The helper removes only its own uncommitted temporary file on a handled failure;
+process-loss leftovers are retained and unexpected entries block for explicit recovery. Completed,
+abandoned, and blocked runs retain `manifest.json`, both final artifacts when written, and `.lock`.
+
+## Minimal resumable manifest schema
+
+Keep the published `manifestVersion: 1` shape. The helper checks that version, nonnegative integer
+`manifestRevision`, exact `runId`, and canonical `repoRoot`. An update preserves those identity
+fields, `workflow`, and `canonicalRepository` when present; it changes the revision only by one.
+It preserves caller-supplied JSON without adding workflow authority or migrating schemas.
+
+The owning workflow still admits `workflow`, `status`, `planningParentBranch`, `planningParentTip`,
+draft specification and `draft.unresolvedQuestions`, artifact paths, ordered stable task keys,
+dependencies, `stableTaskMappings`, `taskExecutions`, and `mirror`. Retain their existing shapes.
+Artifact paths must identify only the fixed plain files above; the helper never follows arbitrary
+manifest-supplied paths. Workflow admission validates the complete draft/task/dependency references
+and content, while the manifest remains recovery state rather than a substitute for final artifact
+prose. Storage success is not specification approval, a resolved question, task admission, provider
+acceptance, or Git/Graphite/GitHub delivery evidence.
 
 The `mirror` structure persists provider-neutral mappings and mutation state:
 - `provider` — selected provider name, or `"local"`;
@@ -213,10 +251,10 @@ Bind-once and recovery rules:
    resource read-back and binding are persisted.
 7. After relation creation and independent read-back, bind its native identity into
    `mirror.relations` through manifest CAS.
-Hold `.lock` for every manifest change. Before use and after each replacement, independently reopen the
-run directory, manifest, lock, and referenced artifact files no-follow and revalidate owner, mode,
-regular-file type, repository containment, run identity, and internal task/dependency references.
-Failed or unknown replacement retains the last independently read manifest and blocks.
+Persist each binding through the helper's `update --expected-revision N` and compare its independent
+read-back with the complete intended checkpoint. The owning workflow must still validate internal
+task/dependency references and independently establish provider and source-control facts; storage
+read-back cannot supply those facts.
 
 A legacy run whose manifest uses an earlier unsupported schema is rejected before provider, worktree,
 or source mutation. It is retained unchanged for diagnosis or explicit abandonment; Execute never
@@ -241,6 +279,8 @@ Select the lowest unfinished ordinal whose predecessor has a complete delivered 
 blocked and delivered checkpoints by manifest compare-and-swap and independently read back every
 field. Never infer delivery from an issue status, recreate a known branch/commit/PR, remove a dirty or
 unverified worktree, or advance a sibling from a partial checkpoint.
+
+<a id="repository-ancestry-and-base-change-detection"></a>
 
 ## Planning base and Execute choice
 

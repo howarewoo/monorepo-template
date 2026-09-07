@@ -62,7 +62,7 @@ Accepted canonical URL forms are:
 Canonical URLs are user-facing references and Commit attribution targets. Native GraphQL node IDs and
 Project item IDs remain separate mutation identities.
 
-Build and post-proof Fix resolve an exact supplied Project URL or create one `[Build]/[Fix] <goal>`
+Build and project-backed Fix resolve an exact supplied Project URL or create one `[Build]/[Fix] <goal>`
 Project under the configured owner. The complete specification is written inside `ProjectV2.readme`
 between markers `<!-- woostack-spec-start -->` and `<!-- woostack-spec-end -->`, preserving unrelated
 README bytes. `shortDescription` contains a concise goal summary.
@@ -99,7 +99,7 @@ records `status: "abandoned"` in the manifest and retains all local artifacts in
 | Skill | GitHub provider behavior |
 | --- | --- |
 | [woostack-build](/docs/skills/woostack-build) | Resolves an exact supplied Project or creates one `[Build] <goal>` Project; writes specification to managed README; creates parentless issues with direct Project membership; and wires $N-1$ native blocked-by edges. |
-| [woostack-fix](/docs/skills/woostack-fix) | Proves root cause before provider access; preserves an exact source `--issue` as context with a direct Project link; and creates/reconciles a separate strict increment chain. |
+| [woostack-fix](/docs/skills/woostack-fix) | Bounded Fix is provider-free. Project-backed Fix proves root cause before provider access, preserves an exact source `--issue` as context with a direct Project link, and creates/reconciles a separate strict increment chain. |
 | [woostack-plan](/docs/skills/woostack-plan) | Standalone Plan requires an exact existing canonical Project URL (`orgs/<owner>/projects/<N>` or `users/<owner>/projects/<N>`) and synchronizes the direct issue graph; delegated Plan is provider-free. |
 | [woostack-execute](/docs/skills/woostack-execute) | Provider mode: consumes exact Project/issue URLs, validates ancestry/graph, transitions Project item status (`planned` → `executing` → `inReview` → `done`), and closes issue only at `done`; all-done leaves Project open. Mirrored local runs: consumes local run manifest, associates PR to exact mapped issue (`Resolves <url>`) without Project status transitions or issue closure, uses authoritative local CAS checkpoints, emits nonblocking warnings on mirror/association failure, and supports existing-open-PR `--recheck` repair without duplicate work. |
 | [woostack-commit](/docs/skills/woostack-commit) | Exact `--issue <url>` attribution; writes optional requested delivery note with read-back; note failure is nonblocking. |

@@ -73,19 +73,12 @@ or increment work item must retain these fields in its complete description:
 
 - stable task ID, unique positive ordinal, concise outcome, and exactly one intended PR;
 - exact scope and explicit non-goals;
-- exact files and symbols, or one bounded first discovery step with its stopping boundary;
-- ordered, concrete implementation steps detailed enough for a fast execution model;
-- an executor-ready removal-before-addition analysis: consider safe deletion or simplification
-  opportunities first, then record bounded evidence for the selected removal or why addition is
-  necessary;
-- observable acceptance criteria, each mapped to an implementation step;
+- affected files, symbols, or a bounded discovery surface, with relevant interfaces and constraints;
+- observable acceptance criteria defining completion;
 - focused checks and one executable smoke scenario;
-- documentation, migration, deployment, compatibility, and cross-increment effects (including
-  explicit `none` where a category has no effect);
-- risks and active blockers (including explicit `none` where clear);
-- an explicit stop marker stating when the increment is complete and no further work belongs in it;
-- a declared Graphite parent; and
-- a hand-written changed-line estimate and size rationale.
+- material risks, active blockers, and relevant documentation, migration, deployment,
+  compatibility, or cross-increment effects; and
+- a declared Graphite parent and exact predecessor dependency binding.
 
 When an increment touches an inter-application boundary (HTTP/RPC server-client, service-to-service, webhooks, queues/events, or third-party APIs in either direction), the direct issue contract must explicitly identify each boundary and specify adapter mapping, boundary validation/narrowing, transport error translation, app-local placement, wire/API compatibility, and focused boundary test obligations following the canonical [application-boundary adapters rule](../woostack-bootstrap/references/patterns.md#3-application-boundary-adapters). Do not demand identity-only or no-op wrappers when a deliberately shared contract is already the application/domain shape.
 
@@ -96,11 +89,6 @@ before use. Verify a manifest-defined command against its exact manifest entry a
 external runtime prerequisite. A missing or invented command blocks plan persistence; never defer
 existence checking to Execute.
 
-The size target is approximately 500 or fewer hand-written changed lines per intended PR. Generated
-files and lockfiles may exceed that target only when inseparable from the increment. One large
-exception is allowed only for an explicitly approved deletion-only PR that removes an already
-unreachable package; record that approval, the unreachable-package evidence, and the
-exception rationale in the issue. Otherwise split or reject an increment that exceeds the target.
 
 ## Chain invariants
 
@@ -114,16 +102,16 @@ ordinal k (2..N): ordinal k-1 → ordinal k
 ```
 No missing, extra, branching, cyclic, or synthetic dependency is valid. The declared Graphite parent
 for ordinal 1 is the approved integration parent branch; for every later ordinal it is the
-immediately preceding increment's Graphite parent branch. Bind that stable parent-branch intent in
+immediately preceding increment's branch. Bind that stable parent-branch intent in
 each complete issue description and carry the last admitted tip as separate repository evidence for
 Execute's base-change check. A different branch identity, unknown task, ordinal gap, out-of-order edge,
 or parent that Graphite cannot represent blocks the plan. Validate that every acceptance criterion is
 covered exactly by at least one increment and that every issue contract is complete before any provider
 mutation.
 
-Prefer the fewest increments that remain independently reviewable and fit the size target. Do not
-split by file or layer merely to manufacture issues. Use Red → Green → Refactor for behavior changes
-only as a structure around concrete steps, never as a substitute for those steps.
+Prefer the fewest independently reviewable increments that deliver coherent outcomes. Do not
+split by file or layer merely to manufacture issues. Leave coding order and implementation
+decomposition to the executor within each approved increment's scope.
 
 ## Provider synchronization
 
@@ -170,10 +158,8 @@ identity or an execution claim.
 - Ordinals are exactly `1..N`; native dependencies are exactly `N-1 → N`.
 - Standalone Plan requires `--project` for Linear and GitHub; for Plane `--project` is optional and omitted input
   uses the exact `artifacts.plane.project`.
-- Every issue carries the complete executor contract, size evidence, stop marker, and declared
-  Graphite parent.
-- Direct issue plans target about 500 or fewer hand-written changed lines, with only the stated
-  generated/lockfile and explicitly approved unreachable-package deletion exceptions.
+- Every issue carries the complete outcome, scope, acceptance, verification, and declared
+  Graphite parent/dependency contract.
 - Delegated Build/Fix planning performs zero provider reads and writes; its wrapper hardens,
   writes plain `execution-plan.md`, and optionally synchronizes when mirroring is enabled.
 - Standalone Plan keeps its direct project synchronization and independent read-back unchanged.

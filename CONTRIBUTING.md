@@ -1,6 +1,8 @@
 # Contributing
 
-This repo is a **published collection of skills**, not a codebase. Contributions are edits to the skills — the Markdown under `skills/` plus the support files a skill ships (HTML templates, the review engine's shell scripts and prompts, JSON config). The public command/adoption surface is `using-woostack`, `woostack-init`, `woostack-bootstrap`, `woostack-build`, `woostack-fix`, `woostack-change`, `woostack-plan`, `woostack-execute`, `woostack-commit`, `woostack-review`, `woostack-address-comments`, `woostack-status`, `woostack-visualize`, `woostack-debug`, `woostack-tdd`, `woostack-doctor`, `woostack-sweep`, `woostack-qa`, `woostack-audit`, `woostack-eval`, and `woostack-reflect`. The collection also ships `woostack-ideate` and `woostack-harden` as internal sub-skills.
+This repo publishes skills and their support assets, plus the documentation site. The command and
+internal-skill inventory lives in [AGENTS.md](AGENTS.md#what-this-repo-is); the
+[routing skill](skills/using-woostack/SKILL.md#command-routing) maps user intent to those workflows.
 
 See [AGENTS.md](AGENTS.md) for the full repo contract; this file is the short contributor's version.
 
@@ -9,7 +11,7 @@ See [AGENTS.md](AGENTS.md) for the full repo contract; this file is the short co
 | You want to... | Edit |
 |---|---|
 | Change project adoption / command routing guidance | `skills/using-woostack/SKILL.md` |
-| Change Linear development-authority guidance | `skills/woostack-init/references/artifact-backends.md` and its consumers |
+| Change local run storage or optional provider mirroring | `skills/woostack-init/references/artifact-backends.md` and the selected provider profile |
 | Add/revise a bootstrap decision or its default | `skills/woostack-bootstrap/references/decisions.md` |
 | Swap a default framework | `skills/woostack-bootstrap/references/frameworks.md` |
 | Document a new gotcha | `skills/woostack-bootstrap/references/frameworks.md` (Known gotchas section) |
@@ -45,30 +47,23 @@ See [AGENTS.md](AGENTS.md) for the full repo contract; this file is the short co
 1. Branch from `main` (`main` is protected — PRs only, never push directly).
 2. Edit the relevant skill files. One concern per PR where possible.
 3. Verify every cross-link still resolves (`[label](path.md#anchor)`).
-4. For shell/JSON skill assets, run the static checks the asset expects (`bash -n`, `jq`). For
-   artifact adoption docs, run
-   `bash skills/using-woostack/tests/test-artifact-reader-contract.sh`. This repo has no universal
-   app test runner or self-CI by design.
+4. Run the affected asset's real CLI/smoke scenarios and focused behavioral tests, plus syntax and
+   cross-link checks. Do not pin instruction wording or duplicate the implementation in a test-local
+   simulator. This repo has no universal app test runner or self-CI.
 5. Open a PR — fill out the template.
 
 ## Editing conventions
 
 - **Skill assets only.** Markdown, plus the support files a skill ships (HTML templates and specs, the review engine's shell scripts and prompts, JSON config). No *application* code, app build configs, or app lockfiles belong in this repo.
 - **No fabricated versions.** When a skill needs a version, the procedure resolves it live (`npm view <pkg> version`). Reference frameworks by name, not by version, except in `skills/woostack-bootstrap/references/frameworks.md`, which may pin exact versions when a known incompatibility forces it.
-- **Consumer development authority is Linear-only.** The official host-exposed Linear MCP is the
-  sole development-record interface. A multi-issue feature uses one project with ordered increment
-  issues; project updates own its specification, decisions, phase, and progress. No Linear
-  document is created, and there is no selectable alternative authority. Keep non-design consumer
-  state under `.woostack/`, and follow the canonical
-  [Linear MCP development authority](skills/woostack-init/references/artifact-backends.md#managed-resource-model)
-  rather than restating resource or lifecycle details. Don't reintroduce the old `.woo-review/`
-  paths.
+- **One artifact contract.** Local run authority, optional provider mirrors, storage mechanics, and
+  recovery live in the [artifact contract](skills/woostack-init/references/artifact-backends.md).
+  Load the selected provider profile rather than repeating its native-resource rules.
 - Prefer tables for option matrices, bulleted lists for stepwise procedures.
 - Keep examples short. The skill describes intent; project-local docs cover the specifics.
 - **Cross-link rather than duplicate.** If a fact lives in `architecture.md`, link to it from `patterns.md`; don't restate.
-- **Preserve the public surface.** Linear development authority does not create skills or command-routing rows.
-  Keep the twenty-one public command/adoption skills and all twenty-three fixed `SKILL.md` files
-  named in [AGENTS.md](AGENTS.md).
+- **Preserve the public surface.** Keep the command and fixed skill paths named in
+  [AGENTS.md](AGENTS.md). Provider integrations do not add command-routing rows.
 - Keep each `SKILL.md` in sync with its references. Its `description` must state *when* to use the skill, not summarize the workflow — a workflow summary causes agents to skip the references.
 
 ## Reviewing

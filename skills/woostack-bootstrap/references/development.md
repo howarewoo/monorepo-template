@@ -57,19 +57,10 @@ access blocks only that artifact operation. `woostack-change` never contacts a p
 specification revision, then the exact complete direct-issue graph. Material edits invalidate the
 matching approval and return to specification hardening or graph hardening.
 
-`woostack-bootstrap` is greenfield only. Before design or target access, it routes an
-existing-repository bug to `woostack-fix`, a bounded one-PR non-bug request to `woostack-change`,
-and multi-PR work to `woostack-build`. Its requirements, research, options, complete design, and
-explicit approval authorize the scaffold. Optional project persistence happens only when requested
-and remains separate from the filesystem boundary.
-
-Bootstrap does not stat, list, read, canonicalize, create, or write the target and does not invoke
-Git before design approval. Its first target-filesystem action is a read-only collision check with
-no Git invocation. Only an absent target or a completely listed empty non-Git directory permits
-mkdir, write, scaffolding, or Git. A populated path, existing checkout, non-directory/symlink,
-unreadable/partial state, or ambiguity blocks while preserving the approved design and any optional
-artifact receipts. Init persists only non-secret policy and never creates local specs, plans, or
-fixes.
+[`woostack-bootstrap`](../SKILL.md) owns greenfield routing and complete-design approval;
+its [filesystem procedure](bootstrap.md#filesystem-write-barrier-and-collision-check) owns bounded
+target inspection and fresh collision-safe write admission. Optional project persistence remains
+separate from write authority. Init persists only non-secret policy, never local specs, plans, or fixes.
 
 Implementation branches begin from verified repository base evidence and follow the
 [canonical worktree contract](../../woostack-init/references/worktrees.md). Bootstrap's initial

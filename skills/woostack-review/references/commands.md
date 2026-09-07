@@ -3,7 +3,7 @@
 ## Public mode
 
 - `/woostack-review <PR#>` — review one exact existing pull request. The command fetches that PR's
-  GitHub evidence, runs the detected multi-angle swarm once, runs one evidence adjudicator pass,
+  GitHub evidence, runs the risk-proportional review queue once, runs one evidence adjudicator pass,
   deterministically finalizes its findings, and posts one batched native GitHub Review.
 This is the only public review mode.
 

@@ -24,28 +24,8 @@ When `--run <exact-run-id>` is supplied, Build resumes only that exact run direc
 `.woostack/tmp/runs/<run-id>/` under the shared artifact contract. When omitted, Build creates a new
 persistent local run under `.woostack/tmp/runs/<run-id>/`.
 
-Local run creation is unconditional. Default local mode makes zero provider calls. When `artifacts.provider`
-is "local" or omitted in effective repository configuration, an explicit `--project` flag fails closed before
-any provider access with an error stating that `--project` requires configured provider mirroring
-(`artifacts.provider: "linear"`, `artifacts.provider: "plane"`, or `artifacts.provider: "github"`).
-When `artifacts.provider: "github"`, `--project` is optional. Build resolves the exact caller-supplied
-canonical GitHub Project URL or creates exactly one canonical Project titled `[Build] <goal>` after
-proving zero marker matches across owner pagination, with configured visibility (default `"private"`).
-Supplied Projects retain their existing titles and visibility. Each independently shippable increment is one
-direct parentless issue in the canonical repository with direct Project membership. Build verifies
-canonical repository association and Status field options before starting the conversation.
-When `artifacts.provider: "linear"`, `--project` is optional. Build resolves the exact caller-supplied Linear project
-or creates exactly one canonical project prefixed with `[Build] ` and otherwise derived from the accepted
-goal. Supplied projects retain their existing names. Each independently shippable increment is one direct
-issue in that project. Do not create a parent plan issue. Build verifies the canonical repository association,
-then uses validated repository/workspace/team defaults before starting the conversation.
-When `artifacts.provider: "plane"`, Build resolves the exact existing `artifacts.plane.project` under
-the configured `baseUrl` and workspace and verifies its canonical repository association. An optional
-`--project` must identify that same project; a mismatch fails closed. Build never infers or creates a
-Plane project. It creates one top-level specification work item prefixed with `[Build] ` with
-`parent = null` containing the complete specification, and creates each independently shippable
-increment as an exact child work item of that specification (`parent = <spec-item-UUID>`) with direct
-project membership and `N-1` sibling blocking relations.
+Default local mode makes zero provider calls. An explicit `--project` requires configured provider
+mirroring; resolve or create its exact project only through the selected profile and Build context.
 Before acting, load the shared
 [artifact contract](../woostack-init/references/artifact-backends.md), then load only the selected
 provider row:
@@ -61,6 +41,10 @@ authority for run allocation and resume, the permission-restricted manifest, rea
 artifacts, optional mirror synchronization, graph ordering, drift/failure recovery, retention, and
 unchanged Execute safety reads. The selected profile and Build references supply only provider-specific
 scope, identities, capabilities, mutations, and read-back.
+Use the canonical [run-store helper](../woostack-init/references/artifact-backends.md#owner-only-local-run-store)
+for allocation, every manifest read/CAS checkpoint, and final plain-artifact writes. Build supplies
+the complete admitted content; the helper owns filesystem safety, not user approval or workflow state.
+
 The shared [repository ancestry contract](../woostack-init/references/artifact-backends.md#repository-ancestry-and-base-change-detection)
 governs parent-branch intent and base movement detection; this wrapper does not restate those rules.
 ## Fixed chain
@@ -85,16 +69,10 @@ sequential direct-issue chain and performs no provider read or mutation. Harden 
 into the manifest and reconciles it with repository evidence. Build writes `execution-plan.md` directly
 under the run directory and performs optional bounded mirror synchronization when `artifacts.provider: "linear"`, `artifacts.provider: "plane"`, or `artifacts.provider: "github"`.
 
-At both specification and planning boundaries, Build requires a safe removal/simplification analysis
-before additive work. Ideate records viable removal opportunities before additive proposals, and Harden
-challenges an additive draft when bounded evidence shows the same contract can be met by deletion or
-simplification. The complete specification and delegated execution plan carry the selected removal or
-the executor-ready evidence for why addition is necessary. Preserve behavior and safety parity: this
-analysis never drops validation, error handling, security, accessibility, compatibility, data-loss
-protection, or deliberate safety redundancy. The canonical
-[least-code doctrine](../woostack-bootstrap/references/patterns.md#7-least-code--comments) is the
-source of truth; Execute's existing smallest-complete-change and behavior-preserving simplification
-contract remains unchanged.
+Apply the [least-code doctrine](../woostack-bootstrap/references/patterns.md#7-least-code--comments)
+at both boundaries. Ideate owns user verification of the complete specification, including technical
+details and removal opportunities; Harden owns repository reconciliation. Neither repository evidence
+nor a proposed default replaces the user's decisions.
 
 ## Readable plain artifacts
 
@@ -116,8 +94,9 @@ boundary.
 
 ## Verified handoff
 
-After `project-spec.md` and `execution-plan.md` are written (and optional mirror synchronization
-completes or records nonblocking failure), Build displays the exact run ID, readable artifact paths,
+This handoff is shared by Build and project-backed Fix. After both complete, user-verified
+`project-spec.md` and `execution-plan.md` are written (and optional mirroring completes or records
+nonblocking failure), the owning workflow displays the exact run ID, readable artifact paths,
 stable task mappings, dependency tuples, planning parent branch, planning parent tip, optional mirror
 mappings and status (when mirroring was enabled), and the exact handoff command:
 
@@ -125,12 +104,19 @@ mappings and status (when mirroring was enabled), and the exact handoff command:
 /woostack-execute --run <exact-run-id>
 ```
 
-Build then asks a body-free handoff question whose explicit options are exactly `Stop here`,
-`Execute`, and `Abandon`. `Stop here` returns the command without repository, run, or project-state
-mutation. `Execute` invokes normal [`woostack-execute`](../woostack-execute/SKILL.md) once in the
-same session with `--run <exact-run-id>`. `Abandon` records `status: "abandoned"` in the manifest,
-retains run artifacts, does not close or mutate a mirrored provider project, and does not dispatch
-Execute. Unknown or custom input fails closed and asks again; it never dispatches or mutates.
+Ask whether to `Stop here`, `Execute`, or `Abandon`. Accept an unambiguous natural-language choice;
+the user need not repeat a literal option label.
+
+- **Stop here:** return the resume command without repository, run, or project-state mutation.
+- **Execute:** invoke normal [`woostack-execute`](../woostack-execute/SKILL.md) once with the exact
+  `--run <exact-run-id>`.
+- **Abandon:** record `status: "abandoned"`, retain the run, leave any mirrored project unchanged,
+  and do not dispatch Execute.
+
+Ambiguous intent asks for clarification without mutation. A response changing scope, technical
+decisions, or acceptance returns to the owning Ideate/Harden/Plan boundary for explicit verification;
+approval of the prior artifacts does not authorize the changed contract. In-scope verification
+reminders may accompany a clear Execute choice.
 
 Execute applies the shared repository ancestry and base-change contract to those inputs and owns
 implementation, focused verification, progress evidence, and repository delivery under its own

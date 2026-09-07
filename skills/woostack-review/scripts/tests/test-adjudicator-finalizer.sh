@@ -6,6 +6,16 @@ source "$ROOT/skills/woostack-init/scripts/tests/assert.sh"
 SCRIPT="$DIR/intersect-findings.sh"
 work="$(mktemp -d)"; trap 'rm -rf "$work"' EXIT
 export OUTDIR="$work/out"; mkdir -p "$OUTDIR"
+printf '{"files":[{"path":"a.ts"}]}\n' > "$OUTDIR/meta.json"
+cat > "$OUTDIR/diff.txt" <<'DIFF'
+diff --git a/a.ts b/a.ts
+--- a/a.ts
++++ b/a.ts
+@@ -1,0 +1,3 @@
++one
++two
++three
+DIFF
 printf '{"severity_floor":"high","nits":true,"defer_markers":true}\n' > "$OUTDIR/config.json"
 cat > "$OUTDIR/findings.adjudicator.json" <<'JSON'
 [
@@ -64,13 +74,18 @@ cat > "$OUTDIR/findings.adjudicator.json" <<'JSON'
 JSON
 cp "$OUTDIR/findings.adjudicator.json" "$OUTDIR/raw_findings.json"
 bash "$SCRIPT" >/dev/null
-assert_eq "$(jq 'length' "$OUTDIR/findings.json")" "2" "finalizer drops unresolvable changed-line anchors"
+assert_eq "$(jq 'length' "$OUTDIR/findings.json")" "3" "finalizer preserves accepted findings without inline anchors"
+assert_eq "$(jq -r '.[] | select(.line == 99) | .inline' "$OUTDIR/findings.json")" "false" "unresolvable location becomes a general comment"
 assert_eq "$(jq -r '.[] | select(.title == "Degrade invalid range") | has("end_line")' "$OUTDIR/findings.json")" "false" "finalizer degrades an invalid range to its valid start"
 assert_eq "$(jq -r '.schema_version' "$OUTDIR/findings.metrics.json")" "4" "finalizer emits schema-version-four metrics"
 assert_eq "$(jq -r '.angles.bugs.raw_count' "$OUTDIR/findings.metrics.json")" "3" "metrics count raw adjudicator candidates"
-assert_eq "$(jq -r '.angles.bugs.kept' "$OUTDIR/findings.metrics.json")" "2" "metrics count final kept findings"
-assert_eq "$(jq -r '.angles.bugs.dropped_by_adjudicator' "$OUTDIR/findings.metrics.json")" "1" "metrics count rejected candidates"
-assert_eq "$(jq -r '.angles.bugs.blocking_count' "$OUTDIR/findings.metrics.json")" "2" "metrics count blocking findings"
+assert_eq "$(jq -r '.angles.bugs.kept' "$OUTDIR/findings.metrics.json")" "3" "metrics count anchored and general findings"
+assert_eq "$(jq -r '.angles.bugs.dropped_by_adjudicator' "$OUTDIR/findings.metrics.json")" "0" "missing inline anchor does not count as rejection"
+assert_eq "$(jq -r '.angles.bugs.blocking_count' "$OUTDIR/findings.metrics.json")" "3" "general blockers retain their impact"
+: > "$OUTDIR/changed-paths.filtered.txt"
+rc=0; bash "$SCRIPT" >/dev/null 2>&1 || rc=$?
+assert_exit 1 "$rc" "empty filtered scope cannot fall back to unfiltered paths for general comments"
+rm "$OUTDIR/changed-paths.filtered.txt"
 rm "$OUTDIR/findings.adjudicator.json"; rc=0; bash "$SCRIPT" >/dev/null 2>&1 || rc=$?
 assert_exit 1 "$rc" "missing adjudicator output blocks"
 finish

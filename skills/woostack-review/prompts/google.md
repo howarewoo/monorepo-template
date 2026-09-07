@@ -35,7 +35,7 @@ You are running as a parallel worker for a specific angle.
 - Do NOT spawn further subagents for other angles.
 - Run ONLY Phase 2 below for your target angle.
 - Write findings to `$OUTDIR/findings.<angle>.json` (default `$OUTDIR/findings.<angle>.json`) and then EXIT.
-- The findings file MUST be a JSON array only — starts with `[`, ends with `]`, no preamble, no markdown fences, no commentary. See *Output Discipline* in `_worker-header.md`. Validate every `line` via `scripts/resolve-diff-line.sh` and drop findings the helper rejects.
+- Follow `_worker-header.md` for JSON serialization, candidate schema, receipt completion, and location handling.
 
 ### MODE: validate
 You are running as the final controller.
@@ -86,20 +86,13 @@ You are the <angle> reviewer for this PR. Read:
 
 Write findings as a JSON array to $OUTDIR/findings.<angle>.json
 (or .<angle>.<chunk_id>.json when chunked) per the schema in _worker-header.md.
-The file MUST start with `[` and end with `]` — no preamble, no commentary,
-no markdown fences. Before writing each finding's `line` field, validate it
-via `bash $WOO_REVIEW_ACTION_PATH/scripts/resolve-diff-line.sh --file <p>
---line <N>` and drop the finding when the helper prints `null`.
-
-Write `[]` to your findings path FIRST so a crash leaves an empty array,
-not a missing file. Replace with the final array before EXIT.
+Follow _worker-header.md for JSON serialization, location handling, and crash accounting.
+Write the receipt last, only after completing the review and saving the real array.
 
 EXIT when done. Do NOT post comments, edit the PR, or touch other angles.
 ```
 
-After every subagent has finished, run `bash $WOO_REVIEW_ACTION_PATH/scripts/merge-findings.sh` — it concatenates every `findings.<angle>*.json` into `raw_findings.json` and applies within-angle dedup so duplicates across chunks collapse before adjudication.
-
-**Retry-once recovery.** Subagent calls can die mid-run (model stream errors, turn-limit interrupts) and leave no findings file. Before invoking `merge-findings.sh`, scan `$OUTDIR/angles.txt` (× `chunks.txt` when chunked) and check that each expected `findings.<angle>.json` (or `findings.<angle>.<chunk_id>.json`) exists and parses as a JSON array via `jq -e 'type == "array"'`. For any path that fails the check, re-dispatch THAT `(angle, chunk)` subagent ONCE with the same brief. Cap is one retry per pair — if the retry also fails, leave the file as-is and proceed. The merge step recovers malformed JSON; missing files just mean the angle produced no findings.
+Follow `_orchestrator-header.md`'s **Worker completion** protocol before adjudication.
 
 ## Phase 3 — Evidence adjudication
 

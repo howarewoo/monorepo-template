@@ -81,8 +81,10 @@ done
 WORKER
 chmod +x "$work/worker.sh"
 
+rc=0
 OUTDIR="$work/out" FORCE_TIER=deep \
-  bash "$SCRIPT" --max-concurrency 2 -- "$work/worker.sh"
+  bash "$SCRIPT" --max-concurrency 2 -- "$work/worker.sh" || rc=$?
+assert_exit 1 "$rc" "malformed output after retry blocks even with a receipt"
 
 assert_eq "$(cat "$work/out/state/max")" "2" "max concurrency respected"
 assert_eq "$(cat "$work/out/state/api-count")" "2" "missing artifact retried once after drain"
@@ -94,7 +96,7 @@ assert_eq "$(jq -r '.retry_angles | index("docs") != null' "$work/out/swarm-metr
 assert_eq "$(jq -r '.retry_angles | index("skills") == null' "$work/out/swarm-metrics.json")" "true" "single finding object normalized without retry"
 assert_eq "$(jq -r '.still_invalid | index("docs") != null' "$work/out/swarm-metrics.json")" "true" "metrics record still-invalid angle"
 assert_eq "$(jq -r '.degraded' "$work/out/swarm-metrics.json")" "true" "metrics record degradation"
-assert_eq "$(jq -r 'type' "$work/out/findings.docs.json")" "array" "still-invalid artifact reset to array"
+assert_eq "$(jq -r 'type' "$work/out/findings.docs.json")" "object" "failed artifact remains available for diagnosis"
 assert_eq "$(jq -r 'type' "$work/out/findings.skills.json")" "array" "single finding object converted to array"
 assert_eq "$(jq -r 'length' "$work/out/findings.skills.json")" "1" "single finding object preserved"
 

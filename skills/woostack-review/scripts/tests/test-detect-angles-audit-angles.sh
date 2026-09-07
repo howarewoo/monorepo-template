@@ -35,17 +35,5 @@ assert_eq "$(grep -cx 'bugs' "$OUTDIR/angles.txt" || true)" "1" "bugs cannot be 
 rm -rf "$work"
 
 
-# Site 3 (load-config.sh VALID_ANGLES): both new angles must be registered, else
-# review.angles.force / .skip silently reject them. This site was historically missed when adding
-# an angle.
-VA_LINE="$(grep 'VALID_ANGLES' "$DIR/load-config.sh")"
-assert_contains "$VA_LINE" "simplify" "VALID_ANGLES includes simplify"
-assert_contains "$VA_LINE" "production-readiness" "VALID_ANGLES includes production-readiness"
-
-# Site 10 (anthropic.md standard-tier angle list): both angles must appear so the per-provider tier
-# table does not silently drop them; this site was historically missed for the comments angle.
-ANTHRO_LINE="$(grep 'effort: medium.*(' "$DIR/../prompts/anthropic.md")"
-assert_contains "$ANTHRO_LINE" "simplify" "anthropic standard tier lists simplify"
-assert_contains "$ANTHRO_LINE" "production-readiness" "anthropic standard tier lists production-readiness"
 
 finish

@@ -19,8 +19,7 @@ fallback tokens. Artifact operations follow the canonical
 
 ## Tier routing
 
-**Per-call routing.** Resolve the effective tier — forced tier if set, else the prompt's
-`tier:` frontmatter — through the active provider's column in
+**Per-call routing.** Resolve the caller's effective tier through the active provider's column in
 [`../model-tiers.md`](../model-tiers.md) plus its override precedence, and pass everything
 the resolved tier specifies on every spawn (the pass-or-inherit law lives in the dispatching
 skill).
@@ -40,8 +39,6 @@ host — no spawn-time auth probe exists; switch manually by promoting an entry 
   `@subagent` dispatch; `reviewerCredentialContextId` is
   `opencode:subagent:<worker-id>`. Feed both into
   [Review's bound-validator sequence](../../../woostack-review/SKILL.md).
-- **woostack-execute:** route implementation workers at the `fast` tier per call;
-  preserve the controller's project admission and delivery boundaries.
 - **woostack-eval (comparative dispatch):** submit the candidate and baseline as two isolated
   `@subagent` workers in the same parallel dispatch, keeping every inseparable pair intact.
   Pin the same concrete model on both calls. `session-default` is provable only when the runtime

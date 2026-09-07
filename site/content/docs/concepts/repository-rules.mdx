@@ -66,8 +66,8 @@ See [patterns.md §3](https://github.com/howarewoo/woostack/blob/main/skills/woo
 
 - Gather relevant product, scale, traffic, hosting, data, identity, compliance, integration, budget,
   and team constraints before selecting technologies.
-- Research current named options and present two or three cohesive stacks with their trade-offs,
-  production readiness, operating costs, and authoritative sources.
+- Validate a user-specified stack with current sources. Compare cohesive alternatives when material
+  technology tradeoffs remain unresolved.
 - Obtain explicit approval of the complete stack and architecture before scaffolding. Do not infer a
   default for an undecided category.
 - Record the exact selected technologies, material choices, and live-resolved versions in the root
@@ -171,7 +171,6 @@ Additional rules:
 - Preserve deliberate defense in depth; it is not ordinary DRY duplication.
 - Keep a regression test for a behavior-changing simplification.
 - Give a deliberate known limitation a `why` comment that names its ceiling and upgrade path.
-- Keep non-test source files at or below 500 lines.
 - Document user-facing components and procedures with the repository's native convention.
 - Comments explain non-obvious reasons, constraints, workarounds, or invariants—not what the code
   already states.
@@ -184,9 +183,9 @@ See [Least code, still safe](/docs/concepts/least-code) for the rationale and re
 
 Before creating a repository:
 
-- Complete the live research and explicit technology-approval gate above.
-- Do not access or modify the target before approval.
-- Make the first target operation a read-only collision check.
+- Preflight the target read-only before committing to a design.
+- Complete the live research and explicit technology-approval gate above before writes.
+- Refresh the collision check immediately before scaffolding.
 - Proceed only when the path is absent or an empty non-Git directory.
 - Reject symlinks, populated directories, existing repositories or worktrees, unreadable paths,
   ambiguous results, and paths owned by another run.

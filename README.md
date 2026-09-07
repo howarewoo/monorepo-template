@@ -2,44 +2,18 @@
 
 **Repository-first, evidence-driven workflows for AI-assisted software delivery.**
 
-`woostack` packages opinionated workflows into twenty-one public installable skills that work
-across coding harnesses. Canonical persistent run artifacts in `.woostack/tmp/runs/<run-id>/` own
-current build and post-diagnosis fix product scope and execution plans, with optional Linear or Plane
-mirroring (`artifacts.provider: "linear"` or `artifacts.provider: "plane"`). Git and GitHub own source, branches, pull requests,
-reviews, and merge evidence. Provider mirrors record workflow context; Git and GitHub remain the sole
-authority for source control and delivery truth.
+`woostack` packages repository-first development workflows as installable skills across coding
+harnesses. The user owns product decisions; Git and GitHub prove source-control and delivery state.
+The [routing skill](skills/using-woostack/SKILL.md#command-routing) is the command index.
 
-- **Multiperson by design:** Explicit task boundaries, dependency relations, handoffs, and verified
-  source-control evidence let human and agent engineers coordinate without hidden local state.
-- **Decision-maker/coder separation:** A decision-maker owns scope, review, and acceptance; an
-  isolated coding profile implements one bounded task at a time.
-- **Canonical executor-ready records:** Every build manages one specification plus direct increment
-  contracts with dependency relations in its retained run manifest. After proof, every new Fix uses
-  the same structure for its complete specification plus a strict direct-issue chain.
-- **Agent and model agnostic:** The skills work across supported harnesses. Builds and proved fixes
-  operate locally by default; provider mirroring remains optional in other workflows.
+Bounded changes and understood fixes use one-PR delivery. Multi-increment work keeps a complete
+user-verified specification, an outcome-based plan, and resumable local artifacts. Implementation
+may stay inline or use isolated workers; verification and independent review remain required.
 
----
-
-- [Getting Started](#getting-started)
-  - [1. Installation](#1-installation)
-  - [2. Initialization](#2-initialization)
-  - [3. Project Integration](#3-project-integration)
-  - [4. Repository Policy](#4-repository-policy)
-  - [5. Artifact Context, Provider Mirroring, and External Engineers](#5-artifact-context-provider-mirroring-and-external-engineers)
-- [The Core Development & Review Loop](#the-core-development--review-loop)
-  - [Writing and Modifying Code](#writing-and-modifying-code)
-  - [Review and Iterate Flow](#review-and-iterate-flow)
-- [Contributing](#contributing)
-- [Spec Version](#spec-version)
-- [License](#license)
-
----
 
 ## Getting Started
 
-Follow this sequence to install the skills, initialize local repository support, and optionally configure
-validated Linear or Plane defaults for development-artifact mirroring.
+Install the skills, initialize local support, and keep project-specific policy in the repository.
 
 ### 1. Installation
 
@@ -50,11 +24,7 @@ pnpx skills add howarewoo/woostack
 ```
 
 
-This command registers twenty-one public command/adoption skills and two bundled internal skills
-at twenty-three fixed `SKILL.md` locations. The collection includes `using-woostack`,
-`woostack-init`, `woostack-bootstrap`, `woostack-build`, `woostack-fix`, `woostack-change`,
-`woostack-review`, `woostack-address-comments`, `woostack-eval`, and `woostack-reflect`, among the
-rest, plus its two internal helpers.
+The public commands and bundled internal phases are listed in [AGENTS.md](AGENTS.md#what-this-repo-is).
 
 > **Recommended companion — [impeccable](https://github.com/pbakaus/impeccable).** woostack's front-end design skill of choice. It powers the `design` review angle (`woostack-review` runs impeccable's detector). Optional but recommended:
 >
@@ -72,18 +42,9 @@ Run initialization in the project root:
 /woostack-init
 ```
 
-Initialization creates non-secret repository policy, diagnostics, and worktree support. Every run
-also discovers the host-exposed official Linear MCP and, when authenticated read access is
-available, preserves or configures validated repository/workspace/team/native-name defaults for
-later caller-selected artifact operations. Missing or incomplete setup is reported separately and
-never fails local initialization. Setup makes no provider write, selects no artifact, and keeps
-authentication in the host's secret store.
-
-If the repository still contains tracked legacy specifications, plans, fixes, or overnight
-handbacks, run `/woostack-init --migrate-legacy` only when you explicitly want the guarded one-way
-import. It imports both active and historical-completed records into verified Linear resources,
-preserves Git/merged-PR recovery and attribution evidence, and deletes local sources only after the
-complete all-or-nothing read-back receipt passes. Never migrate or delete those files implicitly.
+Initialization creates non-secret policy, diagnostics, worktree support, and host adapters. Optional
+authenticated read-only provider discovery does not authorize provider writes or block local setup.
+See [Init](skills/woostack-init/SKILL.md) for setup and explicit legacy migration.
 
 ### 3. Project Integration
 
@@ -98,13 +59,8 @@ The [using-woostack](skills/using-woostack/SKILL.md) skill reads project rules a
 
 ### 4. Repository Policy
 
-Customize non-secret repository policy in `.woostack/config.json`, including review behavior,
-status staleness, pre-commit hooks, and optional `artifacts.linear` or `artifacts.plane` defaults. Build
-uses those defaults to resolve or create its Linear project when mirroring is enabled and no exact
-project is supplied. Plane instead requires `artifacts.plane.project` to name the exact existing
-project that receives specification and increment work items. A new Fix uses provider configuration
-only after root-cause proof. Policy cannot authorize provider writes or repository work.
-Provider authentication stays in the OAuth or secret store.
+Customize non-secret defaults in `.woostack/config.json`. Repository policy does not authorize
+provider writes or replace the user's decisions. Authentication stays in the host secret store.
 
 Review-policy fragment:
 ```json
@@ -125,43 +81,14 @@ For the full policy surface, see the authored
 
 ### 5. Artifact Context, Provider Mirroring, and External Engineers
 
-The canonical persistent artifact store for `woostack-build` and project-backed `woostack-fix` is local
-in `.woostack/tmp/runs/<run-id>/`. Workflows operate with default zero-provider local authority
-(`artifacts.provider: "local"`). When `artifacts.provider: "linear"` or `artifacts.provider: "plane"`, local Build and Fix artifacts mirror to the configured provider
-in bounded post-drafting cycles; mirror failure is recorded in the manifest and is nonblocking for
-local authority.
-When mirroring is enabled, Build resolves one exact project or creates one from validated defaults
-before ideation. After an exact baseline read, Ideate, Harden, and delegated Plan keep gated work in one
-permission-restricted run manifest and make no intermediate provider calls. The responsible user
-sees the complete exact specification or direct-issue/dependency plan before handoff. Only then
-does the controller perform the immediate drift check, one bounded synchronization, and exact
-read-back.
+Build and project-backed Fix retain specifications, plans, and recovery state under
+`.woostack/tmp/runs/<run-id>/`. Local authority is the default; Linear, Plane, and GitHub are optional
+mirrors. Bounded Fix and Change make no artifact-provider calls.
 
-When mirrored, Linear holds the high-level specification on the project description with direct parentless
-increment issues and native dependencies. Plane attaches one top-level specification work item
-(`parent = null`) and child increment work items with `N-1` strict sibling blocking relations to the
-exact configured project. After root-cause proof, Fix uses the same project-backed contract; an exact
-source issue remains preserved context, not a plan.
-
-The shared
-[Local run artifact and provider mirror contract](skills/woostack-init/references/artifact-backends.md#minimal-resumable-manifest-schema)
-is the single detailed authority for manifest permissions and atomicity, save/read-back/receipt
-ordering, stable canonical-issue-reference mapping with provider-native identities retained only as
-implementation details, drift/process-loss recovery, cleanup, and unchanged Execute safety reads.
-Standalone Plan keeps its direct synchronization and independent read-back unchanged. Exact
-resources take precedence over creation, and skills never read or expose API credentials.
-
-Explicit abandonment retains all run artifacts in `.woostack/tmp/runs/<run-id>/` with `status: "abandoned"`
-in the manifest and does not mutate a mirrored provider project. Handoff, replan, and blockers leave
-project status unchanged.
-The authority boundary:
-
-- **The user's request** selects the workflow and authorizes decisions.
-- **Local run manifests (`.woostack/tmp/runs/<run-id>/`)** own current fix/build product scope, plans,
-  contracts, and execution state (mirrored to Linear or Plane when configured).
-- **Git and GitHub** own source, branches, commits, pull requests, reviews, and merge truth.
-- **Provider delivery notes** record observed source-control evidence but cannot create it.
-- **Local diagnostic reports** are non-authoritative evidence.
+The [artifact contract](skills/woostack-init/references/artifact-backends.md) owns run storage,
+provider selection, synchronization, recovery, retention, and authority boundaries. Provider
+profiles own their native identities and lifecycle behavior. Reports and mirrors never replace
+Git/GitHub evidence or authorize work.
 Hermes is an external engineer, not an installed woostack host or runtime. It may drive one
 persistent OMP session for in-contract decisions, evidence review, escalation, and redispatch, but
 woostack is installed only in OMP or another coding harness. The
@@ -172,26 +99,24 @@ and fail-closed restart boundary; it does not grant Hermes implementation author
 
 ## The Core Development & Review Loop
 
-`woostack` applies gated, repository-first delivery with canonical local product records (and optional
-Linear or Plane mirroring) for builds and proved fixes.
+Choose a route by the shape of the work; see the [workflow maps](site/content/docs/concepts/workflows.mdx)
+for the complete sequence and handoff boundaries.
 
 ### Writing and Modifying Code
 
 No repository mutation starts ad hoc. An explicit goal and workflow contract come first:
 
 1. **Greenfield Applications** → [/woostack-bootstrap](skills/woostack-bootstrap/SKILL.md)
-   Obtains design approval, collision-checks the target, and scaffolds the selected architecture.
+   Checks the target read-only, obtains complete design approval, and scaffolds after fresh collision checks.
 2. **Multi-PR Features or Work Items** → [/woostack-build](skills/woostack-build/SKILL.md)
-   Maintains one canonical project specification, hardens one direct increment per task, and executes
-   reviewable PRs.
+   Prepares a fully user-verified specification and sequential outcome-based plan, then hands off to Execute.
 3. **Bug Fixes & Root-Cause Work** → [/woostack-fix](skills/woostack-fix/SKILL.md)
-   Diagnoses a free-form prompt, proves root cause, allocates the local run and direct increment plan,
-   and delivers one reviewed PR.
+   Proves the cause, obtains informed approval, and delivers a bounded fix or prepares project-backed work.
 4. **Bounded Non-Bug Changes** → [/woostack-change](skills/woostack-change/SKILL.md)
    Ships a bounded enhancement or refactor through one PR without contacting an artifact provider.
 
-Build resolves or creates its project before ideation. Fix remains provider-free until root-cause
-proof. `woostack-change` never reads or writes an artifact provider.
+Fix remains provider-free through diagnosis. A configured provider alone does not turn a bounded fix
+into a project. Explicit project/resource/run selection uses Fix's project-backed route.
 ### Review and Iterate Flow
 
 After writing code, use the verification and iteration loop:
@@ -199,9 +124,9 @@ After writing code, use the verification and iteration loop:
 Local findings and reports from review, audit, and QA are evidence for the
 responsible workflow. They never replace the approved contract or Git/GitHub facts.
 - **PR Reviews** → [/woostack-review](skills/woostack-review/SKILL.md)
-  Runs one evidence-led correctness pass plus narrowly triggered risk specialists, then one independent evidence adjudicator before posting a native review.
+  Selects holistic or specialist review for the changed surface, then runs an independent evidence adjudicator before posting a native review.
 - **Addressing Reviews** → [/woostack-address-comments](skills/woostack-address-comments/SKILL.md)
-  Iteratively guides you through resolving, clarifying, or pushing back on PR review comments, applying changes, and pushing commits.
+  Investigates every thread, batches cohesive corrections and verification, then replies and resolves each thread with evidence.
 - **Auditing Standing Code** → [/woostack-audit](skills/woostack-audit/SKILL.md)
   Audits an explicit target (a file, directory, or whole repo at rest — not a diff) for code simplification and production readiness, repointing the review swarm at an all-added diff and writing a report-only findings doc under `.woostack/audits/`. Never gates, posts, or merges.
 - **Exploratory Browser QA** → [/woostack-qa](skills/woostack-qa/SKILL.md)

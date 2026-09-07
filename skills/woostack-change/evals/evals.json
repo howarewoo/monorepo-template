@@ -79,19 +79,25 @@
     },
     {
       "id": "successful-delivery-reads-back-and-cleans",
-      "prompt": "Evaluate fixtures/change-contract-f.json after implementation and passing checks. Do not perform remote operations. Explain the success boundary, delivery evidence, and cleanup decision.",
+      "prompt": "Evaluate fixtures/change-contract-f.json after implementation and passing checks/review. Do not perform remote operations. Explain which independent evidence permits delivery and cleanup, and what happens if the implementation actor supplied the review or its complete diff identity no longer matches verification.",
       "fixtures": [
         "change-contract-f.json"
       ],
       "capabilities": [
         "read-workspace"
       ],
-      "expected": "Exactly one complete PR is read back at the verified commit/head/base, and only a verified clean successful worktree is removed.",
+      "expected": "Verification and an independent review must bind to the same complete task/repository/parent/diff before Graphite delivery. Exactly one complete PR is read back at the verified commit/head/base, and only a verified clean successful worktree is removed.",
       "assertions": [
         {
           "id": "one-pr-delivery",
           "kind": "qualitative",
           "rubric": "Does the response allow at most one Graphite-submitted PR and independently verify repository, branch, parent, commit, changed paths, PR URL, head/base, and open state?",
+          "critical": true
+        },
+        {
+          "id": "independent-current-diff-review",
+          "kind": "qualitative",
+          "rubric": "Does the response require a reviewer distinct from the implementer and review of the same task, repository, parent, and complete diff as verification, blocking delivery for self-review or stale review until fresh independent evidence exists?",
           "critical": true
         },
         {
@@ -111,12 +117,12 @@
       "capabilities": [
         "read-workspace"
       ],
-      "expected": "Repository, base, branch, worktree, head, or scope drift blocks mutation; the existing workspace is retained and exact direct Git/Graphite/GitHub resume evidence is returned.",
+      "expected": "Repository, incompatible base, branch, worktree, head, scope, or review-evidence drift blocks the affected mutation boundary; the existing workspace is retained and exact direct Git/Graphite/GitHub resume evidence is returned.",
       "assertions": [
         {
           "id": "no-mutation-on-drift",
           "kind": "qualitative",
-          "rubric": "Does the response block before mutation for every identity, ancestry, collision, or scope-drift condition and avoid duplicate workspaces?",
+          "rubric": "Does the response block the affected mutation for every identity, incompatible ancestry, collision, or scope-drift condition without duplicate workspaces, and require fresh independent review rather than submitting diff B under diff A's review?",
           "critical": true
         },
         {

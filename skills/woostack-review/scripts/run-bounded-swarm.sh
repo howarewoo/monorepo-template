@@ -259,7 +259,6 @@ for item in "${work_items[@]}"; do
   chunk="${item#*|}"
   if ! normalize_artifact "$angle" "$chunk"; then
     still_invalid+=("$item")
-    printf '[]\n' > "$(artifact_path "$angle" "$chunk")"
   fi
 done
 
@@ -340,12 +339,10 @@ jq -n \
     degraded: $degraded
   }' > "$OUTDIR/swarm-metrics.json"
 
+# Keep crash/retry accounting, but never turn a persistently malformed artifact
+# into an honest empty result. Receipt verification remains a separate hard gate.
 if [ "$degraded" = true ]; then
-  echo "::warning::bounded swarm degraded; invalid angle artifacts after retry: $(label_list "${still_invalid[@]}")" >&2
+  echo "::error::bounded swarm invalid after retry: $(label_list "${still_invalid[@]}")" >&2
+  exit 1
 fi
-
-# Single-authority receipt gate. Findings degradation (above) is a soft warning;
-# a missing/invalid receipt means an angle never executed → hard-fail the swarm so
-# the orchestrator cannot proceed to merge a false-clean review. verify-receipts.sh
-# also folds executed_angles / expected_total / missing_receipts into swarm-metrics.json.
 bash "$SCRIPT_DIR/verify-receipts.sh"

@@ -5,10 +5,9 @@
 # Side effects: writes /tmp/pr-review/angles.txt (one angle per line).
 #
 # Dispatch policy:
-#   bugs      — the singular general correctness pass, always on.
-#   specialists — only deterministic changed-path or changed-line signals below.
-#                 Broad source-file fanout (architecture, comments,
-#                 production-readiness, and simplify) is intentionally absent.
+#   general   — one holistic local worker for bounded, low-risk prefetched PRs.
+#   bugs      — singular correctness pass when specialist selection is retained.
+#   specialists — deterministic changed-path or changed-line signals below.
 #   seo       — HARD files (fire on path alone): robots.txt, sitemap.{xml,ts},
 #               app/manifest.{ts,json}. SOFT surfaces (*.html, head/layout/page
 #               files, next.config.*) fire only via a diff token: legacy <meta /
@@ -407,6 +406,56 @@ if [ -f "$CFG" ] && jq -e '.angles.force // empty' "$CFG" >/dev/null 2>&1; then
     done
     [ $already -eq 0 ] && ANGLES+=("$f")
   done < <(jq -r '.angles.force[]?' "$CFG")
+fi
+
+# Collapse only the bounded local queue, before any worker launches. CI, synthetic
+# audits, chunking, and explicit angle overrides keep the existing specialist queue.
+# Rules, contract, docs, and test lenses are included in the holistic prompt.
+holistic=true
+for angle in "${ANGLES[@]}"; do
+  case "$angle" in bugs|conventions|acceptance|docs|tests) ;; *) holistic=false ;; esac
+done
+if [ "${GITHUB_ACTIONS:-false}" = true ] || [ "${CI:-false}" != false ] ||
+   [ -n "${GITHUB_OUTPUT:-}" ] || [ -s "$OUTDIR/chunks.txt" ] ||
+   [ -n "$DISABLE" ]; then
+  holistic=false
+fi
+if [ -f "$CFG" ] && jq -e '((.angles.force // []) | length) > 0' "$CFG" >/dev/null; then
+  holistic=false
+fi
+if [ "$holistic" = true ] && python3 - "$META" "$DIFF" <<'PY'
+import json, re, sys
+meta = json.load(open(sys.argv[1]))
+files = meta.get("files", [])
+if meta.get("baseRefName") == "audit":
+    sys.exit(1)
+if not re.fullmatch(r"[0-9a-f]{40}(?:[0-9a-f]{24})?", str(meta.get("headRefOid", ""))):
+    sys.exit(1)
+if not isinstance(files, list) or not 1 <= len(files) <= 5:
+    sys.exit(1)
+counts = [item.get(key) for item in files if isinstance(item, dict)
+          for key in ("additions", "deletions")]
+if len(counts) != 2 * len(files) or any(type(count) is not int or count < 0 for count in counts):
+    sys.exit(1)
+if not 1 <= sum(counts) <= 200:
+    sys.exit(1)
+lines = open(sys.argv[2]).read().splitlines()
+if any(line.startswith(("Binary files ", "GIT binary patch", "deleted file mode ",
+                        "old mode ", "new mode ", "rename from ", "rename to "))
+       for line in lines):
+    sys.exit(1)
+paths = [line[6:] for line in lines if line.startswith("+++ b/")]
+expected = [item.get("path") for item in files if isinstance(item, dict)]
+if not paths or set(paths) != set(expected):
+    sys.exit(1)
+if sum(line.startswith("@@ ") for line in lines) < len(paths):
+    sys.exit(1)
+changed = sum(line.startswith(("+", "-")) and not line.startswith(("+++ ", "--- "))
+              for line in lines)
+sys.exit(0 if changed == sum(counts) else 1)
+PY
+then
+  ANGLES=("general")
 fi
 
 CSV=$(IFS=,; echo "${ANGLES[*]}")

@@ -43,14 +43,13 @@ accept a review, merge, or silently reduce the detected angle set or required ad
   and is never authoritative contract context, Linear read-back, `reviewResult`, or work acceptance.
   A missing receipt, invalid required field, incomplete supplied reviewer identity, or any authority
   other than `"advisory-only"` HARD-FAILS before candidate merge, adjudication, finalization, or post.
-- If your runtime offers a "write file" tool, use it directly — do NOT echo the JSON through a chat channel that prepends prose.
-- **Escape discipline inside string fields.** Every `"description"`, `"fix"`, and `"suggestion"` is a JSON string — inside it, the only valid backslash escapes are `\"`, `\\`, `\/`, `\b`, `\f`, `\n`, `\r`, `\t`, and `\uXXXX`. Bare backslashes in code samples (Windows paths, regex like `\d`, LaTeX) MUST be doubled to `\\`. Tabs and newlines in code samples MUST be `\t` / `\n`, never raw control bytes. The merge step has a fallback sanitizer, but a finding that loses content during sanitization is one that fails to land cleanly on the PR.
-- Before writing each finding's `line` and optional `end_line`, validate the anchor via:
-  ```bash
-  bash "$WOO_REVIEW_ACTION_PATH/scripts/resolve-diff-line.sh" \
-    --file "<path>" --line "<N>" --end "<N>"  # omit --end for one line
-  ```
-  The helper prints the canonical start for a single-line anchor, `<start>:<end>` for a valid same-hunk range, or `null` when the start is not anchorable on the diff's RIGHT side. DROP the finding when it prints `null`. When a requested range resolves to only the start, omit `end_line` and keep the single-line finding. Candidate merge and deterministic finalization repeat this validation as safety nets.
+- Serialize findings with a JSON library (`JSON.stringify`, `json.dump`, or equivalent), then
+  parse the saved artifact and require an array before writing the receipt. Do not hand-escape
+  JSON or repair broken escape sequences by deleting characters. The controller validates
+  candidate schema; malformed output blocks rather than counting as successful coverage.
+- Supply the relevant post-patch line and optional same-hunk end line. The deterministic
+  finalizer resolves anchors after adjudication. An unresolved inline location is not a reason
+  to discard a concrete change-owned finding: accepted findings are retained as general comments.
 - `$OUTDIR` defaults to a **per-project** path — `/tmp/pr-review-<hash>` derived from the repo's git toplevel (so concurrent reviews of different repos on one machine never share a tree). The orchestrator exports the resolved `OUTDIR` to you; **always prefer the exported `$OUTDIR` env var over any literal `/tmp/pr-review` path throughout this contract.** If `$OUTDIR` is somehow unset, re-derive it by sourcing `scripts/resolve-outdir.sh` — never fall back to a bare `/tmp/pr-review`.
 
 ## Prefetched Artifacts (do NOT re-fetch)
@@ -139,7 +138,7 @@ these fields are discarded before `raw_findings.json`.
 
 `angle` is one of `bugs | security | conventions | acceptance | seo | aeo | design | database | tests | api | infra | observability | i18n | docs | deps | architecture | comments | simplify | production-readiness`.
 
-`line` MUST be the post-patch absolute start line — i.e. a line that exists on the RIGHT side of the diff (a `+` added line or a ` ` context line within a hunk for `file`). Optional `end_line` is the inclusive post-patch end of a multi-line anchor and MUST be greater than `line` on the RIGHT side of that same hunk. Validate both through `scripts/resolve-diff-line.sh` (see *Output Discipline* above). Drop the finding when the helper returns `null`; when it returns only the start for a requested range, omit `end_line` and keep the single-line finding.
+`line` is the relevant positive post-patch line; optional `end_line` is the inclusive end of a multi-line anchor and must be greater than `line`. The finalizer validates the RIGHT-side location, degrades cross-hunk ranges to a valid start, and marks unresolvable locations for general review comments. Never invent a location or report a pre-existing defect merely because a line appears in the diff.
 
 ### `fix_type` discriminator
 
