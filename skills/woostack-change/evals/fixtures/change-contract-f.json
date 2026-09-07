@@ -10,7 +10,17 @@
   ],
   "verification": {
     "focused": "pass",
+    "completeDiffIdentity": "settings-label-diff-c",
     "smoke": "pass"
+  },
+  "implementationActor": "implementer-1",
+  "independentReview": {
+    "reviewer": "reviewer-1",
+    "taskId": "settings-label",
+    "repository": "https://github.com/acme/app",
+    "parent": "main@aaaaaaaa",
+    "completeDiffIdentity": "settings-label-diff-c",
+    "result": "pass"
   },
   "pullRequest": {
     "url": "https://github.com/acme/app/pull/42",

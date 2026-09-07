@@ -5,87 +5,52 @@ description: Repository delivery evidence, local run authority with optional Lin
 
 import { ContextEconomy } from '@/components/concepts/context-economy';
 
-woostack is a multiperson development workflow with two distinct truth domains. Local run manifests
-in `.woostack/tmp/runs/<run-id>/` own current product specifications, increment contracts, and
-manifest state for builds and post-diagnosis fixes (with optional Linear, Plane, or GitHub mirroring: `artifacts.provider: "linear"`,
-`"plane"`, or `"github"`). Git and GitHub own source, branches, commits, pull requests, reviews,
-and merge evidence. A build always manages one high-level specification plus direct increment
-contracts with dependency relations in its retained local run manifest. After proof, a Fix uses the
-same local run structure for its complete specification plus a strict direct-issue chain. Other
-workflows remain artifact-optional.
+woostack separates product decisions from repository delivery evidence. The user verifies what is
+being built; Git and GitHub prove source, ancestry, commits, pull requests, reviews, and merge state.
 
-Default init may make authenticated read-only Linear setup calls to validate non-secret defaults
-(or GitHub discovery when `artifacts.provider: "github"` is selected), but that narrow exception permits no provider write.
-## The build loop
-
-[woostack-build](/docs/skills/woostack-build) handles work expected to require multiple
-independently shippable increments. It chains a fixed sequence:
-
-> allocate or resume local run in `.woostack/tmp/runs/<run-id>/` (and admit baseline if mirroring) →
-> ideate and harden the specification in a local draft → write `project-spec.md` (and optional mirror
-> sync) → plan and harden locally keyed direct increment contracts → write `execution-plan.md` (and
-> optional mirror sync) → retain run artifacts → present verified run handoff
-
-Ordered increments remain independently shippable and map to reviewable PRs. Build operates with
-default local run authority under `.woostack/tmp/runs/<run-id>/`.
-
-Bounded one-PR work takes a smaller route. [woostack-fix](/docs/skills/woostack-fix) proves a root
-cause, allocates or resumes its local run store for the complete fix specification, synchronizes its
-strict direct-issue chain after writing both plain artifacts, then presents the same
-user-controlled handoff. [woostack-change](/docs/skills/woostack-change) executes one explicit bounded
-enhancement/refactor without contacting a provider.
-
-Explicit build or project-backed Fix abandonment stops repository work, sets `status: "abandoned"` in
-the run manifest, and retains all run artifacts without mutating a mirrored provider project. Standalone
-Plan closes its existing project as canceled after independent read-back. Normal handoff, replanning,
-and blockers leave project status unchanged.
-
-## Plain readable artifacts and user-controlled handoff
-
-Build and project-backed Fix write plain Markdown working documents directly under
-`.woostack/tmp/runs/<run-id>/`:
-
-1. **`project-spec.md`** contains the complete user-verified high-level specification. When
-   `artifacts.provider` is configured for mirroring (`"linear"`, `"plane"`, or `"github"`),
-   one bounded mirror synchronization writes the specification to the configured provider; mirror failures are nonblocking.
-2. **`execution-plan.md`** contains every ordered increment contract and dependency tuple. When
-   `artifacts.provider` is configured for mirroring (`"linear"`, `"plane"`, or `"github"`),
-   one bounded mirror synchronization binds stable task keys to canonical provider references; mirror failures are nonblocking.
-After both files are written, Build/Fix display the exact run ID, readable artifact paths, stable task
-mappings, dependencies, planning parent branch, planning parent tip, and
-`/woostack-execute --run <exact-run-id>`. When mirroring is enabled, they also display the project
-URL/UUID as evidence, never as the Build/Fix handoff command. A body-free handoff Ask offers exactly
-`Stop here`, `Execute`, and `Abandon`: Stop here returns without mutation, Execute dispatches normal
-Execute once, and Abandon records abandonment without dispatch. Unknown or custom input asks again
-and fails closed.
-
-When the repository integration parent tip moves after planning, Execute detects the change and asks
-the user to choose `Continue`, `Revise spec/plan`, or `Stop` before any source mutation.
-
-The local manifest and its plain Markdown artifacts in `.woostack/tmp/runs/<run-id>/` are retained
-upon completion and abandonment to preserve an unbroken audit trail. An approved nonterminal run can
-resume exactly by run ID.
 ## Two delivery shapes
 
-| | Standalone work | Multi-increment work |
-| --- | --- | --- |
-| Use when | One bounded fix/change can ship in one PR | A feature needs multiple independently shippable increments |
-| Active contract | Fix: complete specification plus direct-issue plan. Change: one explicit goal | Complete specification plus direct-issue plan |
-| Development plan | Fix: local run manifest after root-cause proof → direct increment contracts + dependencies (optional Linear, Plane, or GitHub mirror). Change: none | Local run manifest → direct increment contracts + dependencies (optional Linear, Plane, or GitHub mirror) |
-| Evidence | Local run manifest owns spec/plan (optional Linear, Plane, or GitHub mirror); Git/GitHub prove delivery | Local run manifest owns spec/plan (optional Linear, Plane, or GitHub mirror); Git/GitHub prove delivery per increment |
-| Code delivery | One GitHub PR | One GitHub PR per increment |
+- **Bounded work:** Change handles one non-bug enhancement or refactor. Fix proves a defect and
+  obtains explicit approval of the complete correction and verification before one-PR delivery.
+  Neither bounded route requires a project run or artifact-provider access.
+- **Project-backed work:** Build and larger, uncertain, or explicitly project-backed fixes retain a
+  complete specification, sequential increment plan, and recovery manifest under
+  `.woostack/tmp/runs/<run-id>/`. Local authority is the default; Linear, Plane, and GitHub may mirror
+  completed artifacts.
 
-These shapes are chosen by work size. Retained local run manifests record build/fix product authority
-and enable exact resume for approved nonterminal runs
-(`/woostack-execute --run <exact-run-id>`), but never replace direct repository delivery evidence.
+See [Workflow maps](/docs/concepts/workflows) for the sequences and
+[Building rules](/docs/concepts/building-rules) for the approval and delivery boundaries.
+
+## Complete user understanding
+
+Planning is a dialogue, not an agent-generated specification presented as settled fact. Ideate
+requires explicit user verification of material goals, behavior, exclusions, architecture, data
+models, API details, and verification expectations. Harden reconciles repository evidence one
+discrepancy at a time. Existing conventions and plausible defaults never replace the user's decision.
+
+Plans describe outcomes and acceptance rather than predicting every implementation step or line
+count. That gives the implementer room to work without weakening the approved product contract.
+
+## Retained artifacts and optional mirrors
+
+Project-backed workflows keep `project-spec.md`, `execution-plan.md`, and recovery state across
+completion, interruption, and abandonment. The
+[artifact contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/artifact-backends.md)
+owns storage, exact resume, mirroring, and lifecycle details. A provider mirror cannot authorize
+repository work or override the local run.
+
+Build and project-backed Fix present the verified artifacts before the user chooses whether to
+execute, stop, or abandon. Clear natural-language intent is accepted; changed scope returns to
+explicit verification. The [Build handoff](/docs/skills/woostack-build#verified-handoff) is canonical.
+
 
 ## Context economy
 
 <ContextEconomy />
 
-The working context is scarce. A window stuffed with material the current step does not need
-reasons worse and runs out sooner. woostack keeps it focused through compact tool output, isolated
-coding sessions, and independent review.
+Load the workflow and references needed for the current decision. Implement inline when delegation
+adds no useful separation; use isolated workers for substantial independent work or bounded context.
+Independent review and observed verification remain separate from implementation.
 
 ### Session reflection becomes instruction suggestions
 
@@ -101,35 +66,17 @@ build workflow under its own contract.
 
 ### Tools compute, agents read compact results
 
-Small helpers gather and compress deterministic repository context so agents consume a result
-rather than every input. Review prefetch gathers the relevant diff, metadata, and repository rules
-once for independent analysis. Local Build/Fix runs retain only their verified manifest and
-repository delivery evidence. Provider-mode workflows retain only the verified identities and
-synchronization receipts required for the current decision.
+Small helpers gather and validate deterministic evidence so agents can concentrate on engineering
+judgment. Review prefetch gathers the relevant diff, metadata, and repository rules once. Run-store
+operations enforce filesystem integrity; workflow decisions still require user verification.
 
-Automatic init setup uses the host's authenticated official Linear MCP connection to discover non-secret defaults.
-When `artifacts.provider: "github"` is selected, Init uses authenticated `gh` for read-only discovery. Init needs only read
-capability and validates local config writes independently; it never reads a development artifact or probes a provider write.
-
-When `artifacts.provider` is configured for mirroring (`"linear"`, `"plane"`, or `"github"`),
-Build and Fix mirroring verifies the canonical repository association and resolved owner, workspace, or team,
-proves the exact capabilities it needs without reading credentials, and independently reads
-mutations back. Tracked policy supplies validated defaults only after a workflow selects a provider and
-cannot authorize unrelated provider writes.
 
 ### External engineers and coding harnesses
 
-Hermes is an external engineer, not a supported coding harness or installed woostack runtime. If
-used, it drives one persistent OMP process. Woostack remains installed in OMP or another coding
-harness, where project-scoped workers implement and verify bounded tasks.
-
-Hermes may make in-contract decisions, review OMP evidence, escalate contract changes to the
-responsible user, relay exact approval responses verbatim through the same OMP process, and
-redispatch bounded corrections. It may not edit implementation source, run implementation
-commands, or replace direct Git/GitHub evidence. Live approval responses must be relayed verbatim;
-cross-session resume against retained unchanged local artifacts does not require the original
-process to stay alive. See the [Hermes guide](/docs/hermes) for the external boundary and
-fail-closed approval relay.
+Hermes is an external engineer, not an installed coding harness. It may drive a persistent OMP
+session, review evidence, and relay the responsible user's live decisions verbatim; it does not gain
+implementation authority. See the [Hermes guide](/docs/hermes) for that boundary and cross-session
+resume.
 
 ## Where to go next
 

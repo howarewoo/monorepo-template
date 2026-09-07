@@ -151,17 +151,17 @@ finding explicitly marked blocking always surfaces regardless of the floor.
 
 ### Angle selection
 
-Angles are auto-detected from the diff and prefetched review context. Force an angle to run it regardless of detection; skip one
-to keep it off. `force` wins when an angle appears in both. The `bugs`, `security`, and `simplify`
-angles can never be skipped. They are silently kept even if listed.
+Angles are selected from the diff and verified context. Bounded low-risk local queues may use one
+holistic reviewer. Explicit force/skip settings retain specialist selection; `force` wins a tie and
+the base `bugs` pass cannot be skipped. CI and audit retain their existing specialist coverage.
 
 | Key | Type | Default | Meaning |
 | --- | --- | --- | --- |
 | `review.angles.force` | array of string | `[]` | Angles always enabled. |
-| `review.angles.skip` | array of string | `[]` | Angles never enabled (except `bugs` / `security` / `simplify`). |
+| `review.angles.skip` | array of string | `[]` | Angles excluded from specialist selection (except `bugs`). |
 
-See the [review angle reference](/docs/concepts/review-angles) for all 22 angles, including what
-each one audits, when it runs automatically, and its model tier.
+See the [review angle reference](/docs/concepts/review-angles) for each lens. The detector owns the
+exact selection heuristics; worker prompt frontmatter owns model tiers.
 
 ### Filtering the diff
 
@@ -362,8 +362,9 @@ worktrees are cut from.
   Init scaffolds `models`, `review`, and `status`, and automatically adds validated
   Linear defaults when safe authenticated discovery succeeds. When `artifacts.provider: "github"`,
   Init discovers GitHub defaults via `gh`. Missing connectivity never blocks
-  local initialization. Build and Fix operate with default local run authority under
-  `.woostack/tmp/runs/<run-id>/`; setting `artifacts.provider: "github"`, `"linear"`, or `"plane"` enables optional provider mirroring (Build, Fix, and Plan).
+  local initialization. Build and project-backed Fix use
+  [local run authority](/docs/configuration/artifacts/local) with optional configured provider
+  mirrors. Bounded Fix and Change remain provider-free.
   [woostack-doctor](/docs/skills/woostack-doctor) validates effective runtime policy; explicit live checks
   prove optional artifact connectivity.
 </Callout>

@@ -75,21 +75,16 @@ In local run mode (`--run`), require one exact run identifier corresponding only
 `<repo-root>/.woostack/tmp/runs/<exact-run-id>/`. Exact path only; fuzzy discovery, search, pattern
 matching, directory traversal, or chat memory is rejected.
 
-Admit local run files under the shared
-[artifact contract](../woostack-init/references/artifact-backends.md#plain-markdown-artifacts-and-minimal-run-manifest):
+Use the shared [owner-only local run store](../woostack-init/references/artifact-backends.md#owner-only-local-run-store)
+helper for every read and CAS update; its permission, no-follow, locking, containment, and
+independent-readback checks are required before using run data.
 
-1. Prove `.woostack/tmp/` is covered by Git ignore, then reopen `.woostack`, `tmp`, `runs`, and the
-   exact run directory in order with no-follow semantics. Require the run directory to be owned by
-   the current process user, mode exactly `0700`, and strictly beneath the admitted repository root.
-2. Require `manifest.json`, `project-spec.md` (when present), `execution-plan.md` (when present), and
-   `.lock` to satisfy the shared owner-only `0600` regular-file and ancestor checks; reject symlinks,
-   non-regular files, broader permissions, foreign ownership, unexpected entries, and path escape.
-3. Validate `manifestVersion: 1`, `manifestRevision`, `workflow`, `runId` matching `<exact-run-id>`,
+1. Validate `manifestVersion: 1`, `manifestRevision`, `workflow`, `runId` matching `<exact-run-id>`,
    `repoRoot` matching the current canonical repository root, `status`, `planningParentBranch`,
    `planningParentTip`, empty `draft.unresolvedQuestions`, the complete stable-task/dependency graph,
    and `taskExecutions`. Reject `status: "abandoned"`; `status: "completed"` is an independently
    verified no-work result.
-4. Pre-change runs whose manifests depend on removed approval receipts or fingerprints fail closed on
+2. Pre-change runs whose manifests depend on removed approval receipts or fingerprints fail closed on
    admission, directing the user to regenerate plain artifacts under the owning Build/Fix workflow.
 
 ### Base-change detection and user choice
@@ -190,14 +185,15 @@ Local run mode bypasses provider lifecycle synchronization.
    no-op. Local run mode bypasses this provider gate.
 5. In local run mode, before worktree or source mutation, CAS-update
    `taskExecutions[stableTaskKey]` from `pending`/`blocked` to `active` with the exact intended task,
-   worktree, branch, parent, and start tip; increment `manifestRevision` and independently reopen and
-   verify it no-follow. A resumed `active` task must match that evidence exactly. Then create or resume
-   exactly one deterministic isolated worktree owned by this run. Sequential within each run; distinct
-   run IDs may execute concurrently in isolated worktrees only when paths and responsibility surfaces
-   do not collide. Dispatch the configured fast-model subagent with the exact task scope and exclusive
-   worktree ownership.
-6. After the worker returns, run one focused verification and changed-path smoke scenario, then one
-   bounded spec-compliance validator against the approved contract. When validation produces
+   worktree, branch, parent, and start tip through the shared run-store helper; require its
+   independent read-back. A resumed `active` task must match that evidence
+   exactly. In every mode, create or resume exactly one deterministic isolated worktree owned by
+   this run. Sequential within each run; distinct run IDs may execute concurrently in isolated
+   worktrees only when paths and responsibility surfaces do not collide. Implement inline by
+   default or delegate useful isolated work under the canonical
+   [implementation driver](references/subagent-driver.md).
+6. Run one focused verification and real changed-path smoke scenario, then obtain an independent
+   bounded spec-compliance result under the driver's [validation gate](references/subagent-driver.md#independent-spec-validation). When validation produces
    screenshots in Linear provider mode, apply [Controller-owned screenshot evidence](references/controller.md#controller-owned-screenshot-evidence)
    before commit. For Plane and GitHub provider modes, screenshot attachment and comment evidence are Linear-only and
    explicitly skipped; continue repository delivery.
@@ -250,9 +246,9 @@ Local run mode bypasses provider lifecycle synchronization.
      Completing all increments leaves the Project open; only explicit provider closure closes the Project.
    - In local run mode, CAS-update `taskExecutions[stableTaskKey]` from `active` to `delivered` only
      with the complete delivery checkpoint (`{ stableTaskKey, ordinal, branch, commitSha, prUrl,
-     prHead, prBase, graphiteParent, verificationReceipt, deliveredAt }`). Increment
-     `manifestRevision`, reopen the manifest and plain artifacts no-follow, and verify every persisted
-     field before worktree teardown or advancing to the next sibling.
+     prHead, prBase, graphiteParent, verificationReceipt, deliveredAt }`). Use the shared run-store
+     helper and verify every field in its independent read-back before worktree teardown or
+     advancing to the next sibling.
    - If Linear, Plane, or GitHub mirror writes are configured in local run mode, they are best effort only: failure
      emits a warning and never invalidates, blocks, or overwrites the authoritative local checkpoint.
    Neither transition result can authorize teardown, resume, or sibling progression without the completed
@@ -271,8 +267,8 @@ exact native UUID or exact case-sensitive name with group `started`, reading bac
 name, and group) with recovery evidence before a failed Plane cycle can resume.
 In GitHub provider mode, transition and independently read back the selected Project item to the configured
 `artifacts.github.projectStatuses.blocked` mapping without closing the issue, retaining recovery evidence.
-In local run mode, CAS-update the active task to `blocked` with that recovery evidence, increment and independently
-read back the manifest revision. Retain the worktree. Resume only after fresh independent evidence proves the
+In local run mode, use the shared run-store helper to CAS-update the active task to `blocked` with
+that recovery evidence and verify its independent read-back. Retain the worktree. Resume only after fresh independent evidence proves the
 same run and state and the shared repository ancestry contract admits that evidence. Rediscover existing commits
 or PRs before retrying and never create a duplicate.
 Linear provider-mode failures retain the same recovery evidence at their canonical project/issue boundary.
@@ -285,7 +281,7 @@ resolved `artifacts.linear.issueStates.executing` mapping when all direct issues
 the selected Plane child work item and its parent specification work item to `artifacts.plane.issueStates.executing`
 (resolving configured issueStates by exact native UUID or case-sensitive name in exact scope, validating allowable
 group semantics, and reading back native state ID, name, and group) and read back without project mutation, then
-dispatch one fast-model subagent in its isolated worktree.
+implement the selected increment in its isolated worktree under the implementation driver.
 
 In Plane specification mode, Execute repeatedly runs cycles for the lowest unfinished child work item in strict
 ordinal order, advancing to the next unfinished child after each verified delivery checkpoint, and transitions the
@@ -302,20 +298,11 @@ other required evidence. Exact issue mode never advances siblings, even when the
 retain exact recovery evidence (transitioning both child work item and parent specification work item to
 `artifacts.plane.issueStates.blocked` in Plane provider mode).
 
-Every implementation is delegated to the configured fast-model subagent; the controller must not
-substitute local work or claim a dispatch it did not perform. The packet contains the exact task or
-issue, task key, allowed paths, worktree path, canonical parent branch/current admitted tip,
-retained start/head when resuming, Graphite parent, acceptance, and explicit prohibitions on scope
-changes, credentials, source-control boundaries, provider writes, and work in another worktree.
-
-The worker edits only its isolated worktree and returns changed paths, diff identity, focused check
-and smoke observations, and one status. It does not commit, push, submit a PR, change Linear, review,
-validate its own acceptance, or advance the controller. The controller owns screenshot inspection,
-safe selection, attachment upload, inline comment, and fresh comment/image read-back; the worker never
-receives Linear, attachment, browser, GitHub-write, commit, PR, review, acceptance, or sibling
-authority. The controller runs only one focused verification/smoke and one small bounded
-spec-compliance validator. Repair confirmed omissions in scope; broad quality findings, redesigns,
-and unrelated cleanup return to the owning workflow.
+The [implementation driver](references/subagent-driver.md) owns inline/delegated selection, host
+routing, exclusive writable ownership, complete worker packets, handback, and independent
+spec-validation mechanics. Both implementation paths return to the same controller delivery gates.
+The controller alone owns screenshot inspection, safe selection, attachment upload, inline comment,
+and fresh comment/image read-back.
 
 ## Lifecycle and repository delivery
 

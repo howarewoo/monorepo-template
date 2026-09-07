@@ -21,7 +21,7 @@ You are running as a parallel worker for a specific angle.
 - Do NOT launch subagents for other angles.
 - Run ONLY the logic for your target angle (loading its prompt from `$WOO_REVIEW_ACTION_PATH/prompts/angles/<angle>.md`).
 - Write your findings to `$OUTDIR/findings.<angle>.json` (default `$OUTDIR/findings.<angle>.json`) and then EXIT.
-- The findings file MUST be a JSON array only — starts with `[`, ends with `]`, no preamble, no markdown fences, no commentary. See *Output Discipline* in `_worker-header.md`. Validate every `line` via `scripts/resolve-diff-line.sh` and drop findings the helper rejects.
+- Follow `_worker-header.md` for JSON serialization, candidate schema, receipt completion, and location handling.
 
 ### MODE: validate
 You are running as the final controller.
@@ -106,14 +106,7 @@ Each subagent:
 
 If the Task tool caps practical parallelism below the angle count, spawn in waves of ≤4 subagents. Do not skip any enabled angle.
 
-**Retry-once recovery.** Sub-agents can die mid-run (model stream errors, turn-limit interrupts) and leave no findings file. After the swarm reports done, before invoking `merge-findings.sh`, scan `$OUTDIR/angles.txt` and check each angle's expected output:
-
-- Unchunked: `$OUTDIR/findings.<angle>.json`
-- Chunked: every `$OUTDIR/findings.<angle>.<chunk_id>.json` for each chunk id in `chunks.txt`
-
-For any path that (a) does not exist, OR (b) does not parse as a JSON array (`jq -e 'type == "array"'` returns non-zero), re-launch THAT subagent ONCE with an identical brief and `model:` slug. Cap is one retry total per `(angle, chunk)` pair — if the retry also fails, leave the file missing/malformed and proceed to merge. The merge step's recovery handles malformed files; missing files simply count as "this angle produced no findings."
-
-After recovery, run `bash $WOO_REVIEW_ACTION_PATH/scripts/merge-findings.sh` — it concatenates every `findings.<angle>*.json` into `raw_findings.json` and applies within-angle dedup so duplicates across chunks collapse before adjudication.
+Follow `_orchestrator-header.md`'s **Worker completion** protocol before adjudication.
 
 ## Step 3 — Evidence adjudication
 

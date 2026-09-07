@@ -163,10 +163,15 @@ cat > "$work/findings.security.json" <<'JSON'
 ]
 JSON
 
+rc=0; bash "$SCRIPT" >"$work/output.txt" 2>&1 || rc=$?
+assert_exit 1 "$rc" "malformed candidates block instead of producing a false-clean result"
+jq 'map(select(.title != "Missing evidence" and .title != "Unbounded confidence"))' \
+  "$work/findings.security.json" > "$work/valid.json"
+mv "$work/valid.json" "$work/findings.security.json"
 bash "$SCRIPT" >"$work/output.txt" 2>&1
-assert_eq "$(jq 'length' "$work/raw_findings.json")" "2" "valid candidates survive while malformed candidates are rejected"
-assert_eq "$(jq -r '.[0].failure_mode' "$work/raw_findings.json")" "The endpoint returns a record without ownership enforcement" "same-anchor paraphrases dedup by canonical anchor"
-assert_eq "$(jq -r '[.[].line] | map(tostring) | join(",")' "$work/raw_findings.json")" "2,3" "different changed anchors survive dedup"
+assert_eq "$(jq 'length' "$work/raw_findings.json")" "3" "valid candidates reach adjudication including disputed location ownership"
+assert_eq "$(jq -r '.[0].failure_mode' "$work/raw_findings.json")" "The endpoint returns a record without ownership enforcement" "same-anchor paraphrases dedup by claimed anchor"
+assert_eq "$(jq -r '[.[].line] | map(tostring) | join(",")' "$work/raw_findings.json")" "2,3,1" "location validity is deferred to adjudication and finalization"
 assert_eq "$(jq -r '.[0].evidence.related_files[0]' "$work/raw_findings.json")" "src/store.ts" "cross-file risk evidence survives"
 assert_eq "$(jq '[.[] | select(.category == "unsupported")] | length' "$work/raw_findings.json")" "0" "unsupported candidate is rejected before raw findings"
 

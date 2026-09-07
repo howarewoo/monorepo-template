@@ -66,40 +66,29 @@ The prefetch step parses optional effective configuration (`.woostack/config.jso
 
 ## Review Angles
 
-This action runs up to twenty distinct review angles, auto-selected from the changed files. The set of enabled angles is listed in `/tmp/pr-review/angles.txt`. The per-angle prompt bodies live at `${ACTION_PATH}/prompts/angles/<angle>.md` and are loaded by the orchestrator.
+Dispatch the exact queue selected by `detect-angles.sh`; selection conditions live in
+[`SKILL.md`](../SKILL.md#2-select-and-dispatch-the-review-queue-once), not a second profile/config
+system. Load each queued `prompts/angles/<angle>.md`. A `general` receipt covers one holistic
+worker; its findings retain their semantic lens labels. The queue, not finding labels, determines
+required worker receipts.
 
-| Angle | Always-on | Tooling |
-|---|---|---|
-| `bugs` | yes | LLM only |
-| `security` | yes | LLM with an embedded generic OWASP-shaped exploit rubric |
-| `conventions` | gated on `rules.md` presence | LLM + project-discovered `rules.md` (concatenated `AGENTS.md` / `CLAUDE.md` / `.cursorrules` / `.windsurfrules` / `GEMINI.md`) |
-| `acceptance` | gated on local parent-owned `intent.md` presence | LLM + active caller-approved contract, optionally enriched from an exact verified Linear artifact; never enabled by CI attribution alone |
-| `seo` | no | LLM + `coreyhaines31/seo-audit` rubric (embedded in `prompts/angles/seo.md`) |
-| `aeo` | no | LLM + `coreyhaines31/ai-seo` rubric (embedded in `prompts/angles/aeo.md`); deeper `references/` fetched on demand via `gh api repos/coreyhaines31/marketingskills/contents/skills/ai-seo/references/<file>` |
-| `design` | no | LLM + `npx -y impeccable@$IMPECCABLE_VERSION detect --json` (one run; quantitative pass from JSON + qualitative critique scoped to flagged files) |
-| `database` | no | LLM with an embedded technology-neutral correctness and safety rubric |
-| `tests` | no | LLM only — gated on test-file path in diff |
-| `api` | no | LLM only — gated on OpenAPI / GraphQL / `.proto` / route-handler paths or HTTP-verb tokens in the diff |
-| `infra` | no | LLM only — gated on `.github/workflows/`, `Dockerfile*`, Terraform / Pulumi / CDK, K8s manifests, Helm |
-| `observability` | no | LLM only — gated on logging / error-handling tokens in the diff |
-| `i18n` | no | LLM only — gated on `locales/` / `messages/` / `i18n/` / `translations/` directory trees, `*.po` / `*.pot` files, or `i18n.t(` / `useTranslations(` / `<Trans` / `<FormattedMessage` / `$t(` / `t("…")` tokens in the diff body |
-| `docs` | no | LLM only — gated on docs paths (`README*`, `CHANGELOG*`, `docs/`, `.env.example`, `*.md`/`*.mdx`, `openapi.{yaml,yml,json}`, `swagger.{yaml,yml,json}`) in diff; `SKILL.md` is excluded — owned by `skills` |
-| `deps` | no | LLM only — gated on dependency-manifest paths (`package.json`, lockfiles, `requirements.txt`, `go.mod`, `Cargo.toml`, …) in diff |
-| `architecture` | no | LLM only — gated on general-purpose source files in diff (`*.ts`/`*.js`/`*.py`/`*.go`/`*.rs`/`*.java`/`*.rb`/`*.php`/`*.cs`/…); structural-quality / code-judo pass; skips doc-only and config-only PRs |
-| `skills` | no | LLM only — gated on a validated right-side `SKILL.md` package in `skill-packages.json`; deletion-only changes do not enable it; audits the whole touched package against woostack's cross-vendor house rubric (`SKILL.md` is excluded from the `docs` gate so a SKILL.md-only PR routes here) |
-| `comments` | no | LLM only — gated on general-purpose source files in diff (same signal as `architecture`); audits whether code comments still match the code the PR changed. Always non-blocking. |
-| `simplify` | no | LLM only — gated on general-purpose source files in diff (same signal as `architecture`); YAGNI / dead-code / duplication delete-list; defers structural-shape to `architecture` when both run |
-| `production-readiness` | no | LLM only — gated on general-purpose source files in diff; resilience/operability posture (timeouts, retries, idempotency, degradation, resource limits) |
+### Worker completion
 
-Each angle writes its candidates to `/tmp/pr-review/findings.<angle>.json`. The orchestrator merges them into `raw_findings.json`, runs one evidence adjudicator, deterministically finalizes `findings.json`, then posts inline comments via a single batched GitHub Review. PR labels MUST NOT be mutated — blocking is signalled exclusively through the native `REQUEST_CHANGES` review event.
+When the host can expose a worker command, use `scripts/run-bounded-swarm.sh` for queue
+initialization, bounded transport recovery, crash accounting, and receipt verification. Native
+subagent APIs follow the same protocol: initialize expected arrays, dispatch the complete queue,
+retry each missing/invalid artifact or receipt once after drain, then hard-fail any unresolved
+coverage. Never replace a failed worker with `[]` and call it clean. Verify receipts with
+`scripts/verify-receipts.sh`, then use `scripts/merge-findings.sh` for strict JSON/schema
+validation and candidate deduplication. Exactly one independent adjudicator follows.
 
 ## Output Contract
 
 Every run MUST end with one batched GitHub Review submitted via
 `gh api repos/<repo>/pulls/<PR>/reviews` containing all inline comments, the summary, the context
 disclosure, and the `STATUS_LINE` in the **review body**. First compute the candidate native event:
-`REQUEST_CHANGES` (≥1 blocking finding or open prior thread), `COMMENT` (≥1 non-nit non-blocking
-finding), or `APPROVE` (no findings, or only nits — nits post inline but never withhold approval).
+`REQUEST_CHANGES` (≥1 blocking finding or open prior thread), otherwise `APPROVE` (including
+non-blocking findings and nits, which are still posted).
 Immediately before the POST, independently read the implementation author's immutable native
 GitHub principal ID from canonical PR/head evidence and the authenticated posting actor's immutable
 native GitHub principal ID from GitHub. A login, profile/session, credential or token-store name,
@@ -186,137 +175,10 @@ ${CONTEXT_DISCLOSURE}
 <!-- woostack-review:sha=${HEAD_SHA} -->
 BODY_EOF
 
-# 2. Prepare the review payload with inline comments
-python3 -c '
-import json, sys, os, re
-
-# Read the final validated findings (output of intersect-findings.sh).
-try:
-    findings = json.load(open("/tmp/pr-review/findings.json"))
-except Exception:
-    findings = []
-
-# Prior threads include resolved entries (status field). Event floor counts
-# OPEN threads only — resolved ones do not gate the review event.
-try:
-    priors = json.load(open("/tmp/pr-review/prior-findings.json"))
-except Exception:
-    priors = []
-
-commit_id = os.environ.get("HEAD_SHA")
-pr_body = open("/tmp/pr_review_body.txt").read()
-
-has_new_blocking = any(f.get("blocking", False) for f in findings)
-has_open_priors  = any(p.get("status") == "open" for p in priors)
-# Nits are event-neutral: a non-nit, non-blocking finding triggers COMMENT; a PR
-# whose only findings are nits (or none) APPROVEs. Nit comments still post inline
-# under APPROVE — they inform without withholding the green check.
-has_non_nit = any(not f.get("nit", False) for f in findings)
-if has_new_blocking or has_open_priors:
-    event = "REQUEST_CHANGES"
-elif has_non_nit:
-    event = "COMMENT"
-else:
-    event = "APPROVE"
-
-# Native actor gate. A login/profile/session/token label is never proof. Retain
-# the computed status and findings, but deliver COMMENT unless both fresh native
-# GitHub IDs are present and distinct.
-auth_actor_id = os.environ.get("AUTH_GITHUB_USER_ID") or ""
-implementation_author_id = os.environ.get("IMPLEMENTATION_AUTHOR_GITHUB_USER_ID") or ""
-native_actor_separation_proved = (
-    bool(auth_actor_id)
-    and bool(implementation_author_id)
-    and auth_actor_id != implementation_author_id
-)
-if not native_actor_separation_proved:
-    if event != "COMMENT":
-        pr_body = pr_body.rstrip() + (
-            "\n\n_Review event delivered as COMMENT because distinct native "
-            "GitHub implementation-author and reviewer principal IDs were not "
-            "both proven. The status line above carries the actual verdict._\n"
-        )
-    event = "COMMENT"
-
-comments = []
-for f in findings:
-    # Inline comment format: bold title, issue description, recommended fix,
-    # compact severity + angle footer.
-    nit = bool(f.get("nit", False))
-    title = f["title"].strip()
-    # Guard against an angle that already phrased the title as "Nit: …".
-    if nit and not title.lower().startswith("nit:"):
-        title = f"Nit: {title}"
-    description = f["description"].strip()
-    fix = (f.get("fix") or "").strip()
-    angle = (f.get("angle") or "").strip()
-    severity = (f.get("severity") or "").strip().upper()
-    blocking = bool(f.get("blocking", False))
-
-    body = f"**{title}**\n\n{description}"
-    dt = (f.get("deferred_to") or "").strip()
-    # Defense-in-depth: deferred_to is the only body field taken verbatim from the
-    # untrusted diff (the woostack-defer marker <ref>). Strip Markdown control
-    # chars so a crafted <ref> cannot break out of the italic note into links/code
-    # spans. Valid refs ("increment 3", "#225") are unaffected.
-    dt = re.sub(r"[`_*\[\]<>\n\r]", "", dt)
-    if dt:
-        body += f"\n\n_Deferred to {dt}; non-blocking._"
-    if fix:
-        body += f"\n\nFix: {fix}"
-    # Render ```suggestion``` only when the evidence adjudicator approved fix_type=suggestion.
-    # fix_type=prose (or missing) → prose-only recommendation, no block.
-    if f.get("fix_type") == "suggestion" and f.get("suggestion"):
-        # Defense-in-depth: neutralize any line of ≥3 backticks that would close
-        # the fence and let agent-supplied content escape into comment Markdown.
-        # The adjudicator already downgrades these; the renderer rechecks at the
-        # GitHub trust boundary.
-        safe_lines = []
-        for line in f["suggestion"].splitlines():
-            if re.match(r"^\s*`{3,}", line):
-                line = line.replace("`", "'")
-            safe_lines.append(line)
-        safe = "\n".join(safe_lines)
-        body += f"\n\n```suggestion\n{safe}\n```"
-
-    # Attribution footer: compact severity + angle metadata. Both values are
-    # whitelisted so malformed input cannot inject text into the rendered comment.
-    footer_parts = []
-    if severity in {"HIGH", "MEDIUM", "LOW"}:
-        if nit:
-            sev_tag = f"{severity} · NIT"
-        elif blocking:
-            sev_tag = f"{severity} · BLOCKING"
-        else:
-            sev_tag = severity
-        footer_parts.append(f"<strong>{sev_tag}</strong>")
-    if angle in {"bugs","security","conventions","acceptance","seo","aeo","design","database","tests","api","infra","observability","i18n","docs","deps","architecture","skills","comments","simplify","production-readiness"}:
-        footer_parts.append(f"<code>{angle}</code>")
-    if footer_parts:
-        body += "\n\n<sub>— " + " · ".join(footer_parts) + "</sub>"
-
-    location = {
-        "path": f["file"],
-        "line": int(f["line"]),
-        "side": "RIGHT",
-        "body": body
-    }
-    if f.get("end_line") is not None:
-        location.update({
-            "start_line": int(f["line"]),
-            "start_side": "RIGHT",
-            "line": int(f["end_line"])
-        })
-    comments.append(location)
-
-payload = {
-    "commit_id": commit_id,
-    "body": pr_body,
-    "event": event,
-    "comments": comments
-}
-print(json.dumps(payload))
-' > /tmp/pr_review_payload.json
+# 2. Serialize the finalized inline/general findings and native event.
+# Missing/malformed artifacts or a head mismatch fail; never substitute an empty result.
+python3 "$WOO_REVIEW_ACTION_PATH/scripts/build-review-payload.py" \
+  /tmp/pr_review_body.txt > /tmp/pr_review_payload.json
 
 # 2.5. Pending-review preflight (issue #190). GitHub allows only ONE pending
 # (unsubmitted) review per user per PR. A leftover draft — from a prior post
@@ -437,7 +299,7 @@ Every runner MUST write a final `findings.json` (for debugging + potential post-
 
 `angle` is one of `bugs | security | conventions | acceptance | seo | aeo | design | database | tests | api | infra | observability | i18n | docs | deps | architecture | comments | simplify | production-readiness`.
 
-`line` MUST be the post-patch absolute start line — i.e. a line that exists on the RIGHT side of the diff (a `+` added line or a ` ` context line within a hunk for `file`). Optional `end_line` is the inclusive post-patch end of a multi-line anchor and MUST be greater than `line` on the RIGHT side of that same hunk. Validate both via `scripts/resolve-diff-line.sh`; drop a finding when the helper returns `null`, and omit `end_line` when a requested range degrades to its valid start.
+`line` is the relevant positive post-patch line; optional `end_line` is the inclusive end and must be greater than `line`. `intersect-findings.sh` resolves the RIGHT-side location once after adjudication, degrades a cross-hunk range to its valid start, and sets `inline: false` when no location resolves. The payload renderer preserves such accepted findings in the general review body rather than dropping them.
 
 ### `fix_type` discriminator
 
@@ -475,7 +337,7 @@ Fix: <fix>
 
 `deferred_to` is a string set by the evidence adjudicator when a co-located marker covers a missing-work gap. `intersect-findings.sh` forces a non-empty value to `nit: true, blocking: false` (gated by `review.defer_markers`). Never set on security findings or wrong code present in this PR.
 
-The body builder in the posting step (see python snippet above) renders this format automatically from `title` / `description` / `fix` / `fix_type` / `suggestion` / `angle` / `severity` / `blocking` / `nit`. Angle agents populate candidate fields; the adjudicator preserves or normalizes accepted findings, and the finalizer adds `nit`.
+`scripts/build-review-payload.py` renders the final finding set. Workers populate candidate fields; the adjudicator preserves accepted findings, and the finalizer adds `nit` and resolves `inline` locations.
 
 ## Blocking Criteria
 

@@ -84,7 +84,6 @@ problem first, then take the first rung that holds.
 - **Deliberate-corner marker (delta E).** A knowingly-cut corner with a known ceiling leaves a
   `why` comment naming the ceiling and the upgrade path. If broadly reusable, surface it as a
   session-end instruction suggestion.
-- Non-test source files: ≤ 500 lines.
 - User-facing components and procedures: document purpose, inputs, and outputs using the
   repository's native documentation convention.
 - Comments explain **why** when non-obvious (hidden constraint, workaround, surprising invariant).

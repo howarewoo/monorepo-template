@@ -3,16 +3,13 @@ title: Overview
 description: "woostack's local run authority, optional Linear, Plane, and GitHub mirror records, delivery boundaries, and context management."
 ---
 
-woostack coordinates multiperson development through explicit workflow contracts, isolated
-implementation, and independent review. Local run manifests under `.woostack/tmp/runs/<run-id>/`
-own current product scope, increment contracts, and execution state for builds and post-diagnosis
-fixes, with optional Linear, Plane, or GitHub mirroring (`artifacts.provider: "linear"`, `"plane"`, or `"github"`). Git and GitHub own code and
-pull-request truth.
+woostack coordinates development through explicit user decisions, isolated implementation, and
+independent review. Bounded fixes and changes use one-PR delivery. Build and project-backed Fix retain
+complete user-verified specifications, outcome-based plans, and recovery state locally, with optional
+provider mirrors. Git and GitHub prove code and pull-request state.
 
-Every build manages one high-level specification plus direct increment contracts with dependency
-relations in its retained run manifest. After root-cause proof, every Fix uses the same local run
-structure for its complete specification plus a strict direct-issue chain. Bounded changes remain
-artifact-free; other artifact use remains opt-in.
+The [core concepts](/docs/concepts) explain the authority boundaries; the
+[workflow maps](/docs/concepts/workflows) show how to choose and run each route.
 [woostack-reflect](/docs/skills/woostack-reflect) suggests novel durable rules from a fixed
 active-conversation snapshot and routes each finding to the narrowest applicable rule or canonical
 skill owner. Local diagnostic reports remain non-authoritative evidence.

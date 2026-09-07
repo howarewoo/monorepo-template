@@ -65,6 +65,6 @@ Prefetch has already run the deterministic parser and package validator. A fatal
 
 **Output.** Write findings as a JSON array to `$OUTDIR/findings.skills.json` using the schema in `_worker-header.md`. Each finding gets `"angle": "skills"` and MUST populate `title` (bold headline ≤60 chars), `description` (the violation — name the file and house rule broken, but no fix), `fix` (recommended change in prose), and `fix_type`.
 
-`diff.txt` is the sole finding-anchor and `resolve-diff-line.sh` authority. Pass the resolver the touched `SKILL.md` and relevant RIGHT-side candidate line; use only the returned changed line, and DROP any finding that resolves to `null`. Never anchor directly to an unchanged snapshot sibling. A new skill may anchor any relevant added `SKILL.md` line.
+`diff.txt` owns finding locations. Identify the touched `SKILL.md` location responsible for the package defect; never anchor directly to an unchanged snapshot sibling. Follow `_worker-header.md` for deterministic inline versus general delivery. A new skill may identify any relevant added `SKILL.md` line.
 
 Set `fix_type: "suggestion"` only when a ≤10-line single-file drop-in replacement at `line` is safe, and populate `suggestion`. Otherwise set `fix_type: "prose"` with `suggestion: null`. See `_worker-header.md` for the full rule.

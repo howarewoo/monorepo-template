@@ -1,0 +1,89 @@
+# Bounded one-PR delivery
+
+Shared implementation and delivery mechanics for [`woostack-change`](../SKILL.md) and the
+[direct bounded Fix path](../../woostack-fix/SKILL.md#direct-bounded-fix). The calling skill owns
+admission and user authority: Change accepts only non-bug work; Fix requires causal proof and
+explicit informed approval. This reference cannot widen either contract or replace those gates.
+
+The calling skill owns delivery directly, without invoking another woostack workflow. Make zero
+development-artifact provider calls and create no project manifest, specification, or execution
+plan. Git, Graphite, and canonical GitHub repository/PR operations supply source-control evidence,
+not development-artifact authority.
+
+## Keep one bounded contract
+
+Keep the following explicit in the active conversation or completely verified handoff packet:
+
+- stable task identity, goal, exact repository/target, allowed paths, non-goals, and acceptance;
+- intended correction or change, relevant technical consequences, risks, focused verification,
+  and changed-path smoke scenario;
+- integration base commit and intended Graphite parent;
+- current worktree, branch, head, complete diff identity, and PR facts; and
+- for Fix, the evidence-bound diagnosis, full presented scope, and the user's explicit approval.
+
+Do not create hidden workflow state. Repository defaults cannot widen the accepted scope. If
+scope expands, retain the workspace and return to the calling skill's planning/admission boundary;
+never silently change the contract or split it into additional PRs.
+
+## Create or resume one isolated workspace
+
+Apply the [canonical worktree contract](../../woostack-init/references/worktrees.md#1-identity-and-placement)
+for identity, base admission, collision discovery, creation, and task-only writes. Independently
+read the physical repository root, canonical remote, configured integration base and exact commit,
+complete worktree/branch/status/diff inventory, Graphite ancestry, and canonical GitHub PR state.
+Require either no task state or one exact recoverable state. Never reset, clean, stash, overwrite,
+or create around unexpected user work.
+
+Create and assert one isolated worktree under the
+[canonical creation contract](../../woostack-init/references/worktrees.md#5-create-and-assert),
+with one Graphite-tracked branch whose parent is the verified integration base. Resume an exact
+existing task/worktree/branch/parent/head instead of creating a duplicate. Revalidate the approved
+contract and direct repository evidence before each mutation boundary and after interruptions.
+
+## Implement, verify, and independently review
+
+Implement every change needed for the accepted bounded scope and no other change. Prefer safe
+removal or simplification over additive work. Preserve validation, error handling, security,
+accessibility, compatibility, and data-loss protections. Follow the canonical
+[application-boundary adapters rule](../../woostack-bootstrap/references/patterns.md#3-application-boundary-adapters)
+for new or materially changed boundaries; do not migrate untouched legacy boundaries or add no-op
+wrappers for shared identity contracts.
+
+Inspect the complete diff and changed paths. Run focused verification and the changed-path smoke
+scenario, retaining exact commands and observed results. For Fix, confirm the proved reproduction
+no longer triggers and retain a regression test when it defends the failure; if impractical, report
+why and the direct smoke evidence. A failed or incomplete required check blocks delivery.
+
+An independent read-only reviewer, distinct from the implementer, must check the full accepted
+contract against the complete diff, relevant safety/edge cases, and observed verification. For Fix,
+include whether the correction addresses the proved cause rather than masking its symptom. Bind
+review evidence to reviewer identity, task, repository, parent, and the same complete diff identity
+as verification. The implementer cannot approve their own work; unavailable independent review
+blocks delivery rather than becoming self-review. Correct in-scope findings, rerun affected checks,
+and obtain fresh independent review for the changed diff. Material scope changes return to the
+calling skill before more implementation; Fix approval never carries over to a changed correction.
+
+## Deliver and read back one PR
+
+Only after verification and independent review pass on the same complete diff, use Graphite to
+commit and submit at most one PR. Never merge, mark ready, enable auto-merge, enqueue, or force-push.
+Independently read back the exact repository, branch, parent, commit, changed paths, PR URL,
+PR head/base, and open state. The success boundary is one complete reviewable PR whose verified
+commit contains every requested bounded change.
+
+Remove only the isolated worktree after successful delivery and independently verified cleanliness,
+following [canonical teardown](../../woostack-init/references/worktrees.md#8-teardown). Keep its
+branch, commits, and PR; never remove a user-owned checkout.
+
+If implementation, verification, review, commit, submission, read-back, or cleanup fails, is blocked,
+or has an unknown outcome, retain the worktree. Return exact Git, Graphite, and GitHub resume
+evidence: repository/base, task/worktree, branch/parent, head/commit, status/diff, verification/review
+results, and PR URL/state when known. On resume, reread those facts and continue at the first
+unproved boundary without duplicating a branch, commit, PR, or cleanup.
+
+## Return
+
+Return the stable task identity, accepted scope and Fix approval when applicable, worktree/branch,
+base/parent, changed paths, verification/smoke and independent-review results, commit SHA, canonical
+PR URL/head/base/state, and cleanup result. For a reroute or retained failure, name the destination
+or blocker and exact safe resume boundary. Never claim evidence not directly observed.

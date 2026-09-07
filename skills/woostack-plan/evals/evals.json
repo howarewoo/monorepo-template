@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "synchronizes-existing-exact-project-strict-chain",
-      "prompt": "Read fixtures/project-a.json as a standalone woostack-plan invocation. The caller supplies one exact existing Linear project and an approved specification fingerprint. Reconcile exactly two direct project issues with task IDs storage and api, ordinals 1 and 2, one native dependency storage → api, complete executor contracts including stop markers and Graphite parents, and independent read-back. Treat approved parent-branch intent in each issue as content and the last admitted parent tips under repository as separate mutable evidence. Do not mutate the repository. Return exactly one JSON object with keys status, invocationMode, artifactModeSelected, existingProjectRequired, projectCreated, directIssueIds, parentPlanIssueCount, ordinals, nativeDependencies, approvedParentBranchIntents, graphiteParents, lastAdmittedParentTips, graphReadBackVerified, repositoryMutationCount, approvalOwned, and executionOwned.",
+      "prompt": "Read fixtures/project-a.json as a standalone woostack-plan invocation. The caller supplies one exact existing Linear project and an approved specification. Reconcile exactly two direct project issues with task IDs storage and api, ordinals 1 and 2, one native dependency storage → api, complete outcome/scope/acceptance/verification contracts and Graphite parents, and independent read-back. Treat approved parent-branch intent in each issue as content and the last admitted parent tips under repository as separate mutable evidence. Do not mutate the repository. Return exactly one JSON object with keys status, invocationMode, artifactModeSelected, existingProjectRequired, projectCreated, directIssueIds, parentPlanIssueCount, ordinals, nativeDependencies, approvedParentBranchIntents, graphiteParents, lastAdmittedParentTips, graphReadBackVerified, repositoryMutationCount, approvalOwned, and executionOwned.",
       "fixtures": [
         "project-a.json"
       ],
@@ -1366,12 +1366,12 @@
     },
     {
       "id": "rejects-nonsequential-or-incomplete-contract",
-      "prompt": "Evaluate each scenario in fixtures/invalid-graphs.json independently against the packaged Plan contract. Reject before any provider or repository mutation when task IDs or ordinals are invalid, ordinals are not exactly 1..N, a dependency is not the matching immediate predecessor, a required executor field is absent, or the PR size exceeds the allowed threshold without the deletion-only exception. Return exactly one JSON object with keys status, decisions, providerMutationCount, and repositoryMutationCount.",
+      "prompt": "Evaluate each scenario in fixtures/invalid-graphs.json independently against the packaged Plan contract. Return the admission decision before any provider or repository mutation for invalid task identity, noncontiguous ordinals, incorrect predecessor binding, or missing verification. Return exactly one JSON object with keys status, decisions, providerMutationCount, and repositoryMutationCount.",
       "fixtures": [
         "invalid-graphs.json"
       ],
       "capabilities": [],
-      "expected": "Every invalid chain or incomplete/oversized issue contract is rejected before persistence, with no provider or repository mutation.",
+      "expected": "Every invalid chain or incomplete outcome contract is rejected before persistence, with no provider or repository mutation.",
       "assertions": [
         {
           "id": "plan-invalid-contracts-blocked",
@@ -1401,14 +1401,9 @@
               "reasonCode": "strict-predecessor-chain-required"
             },
             {
-              "id": "missing-stop-marker",
+              "id": "missing-verification",
               "valid": false,
               "reasonCode": "incomplete-executor-contract"
-            },
-            {
-              "id": "oversized-pr",
-              "valid": false,
-              "reasonCode": "pr-size-target-exceeded"
             }
           ],
           "critical": true
@@ -1644,6 +1639,54 @@
           "pointer": "/repositoryMutationCount",
           "expected": 0,
           "critical": true
+        }
+      ]
+    },
+    {
+      "id": "outcome-contract-needs-no-coding-plan",
+      "prompt": "Evaluate this Build-delegated Plan candidate against the packaged contract without mutating anything. The user's complete verified specification is to remove an unreachable legacy help page, keep the current help route and content unchanged, and ship one reviewable PR. Task legacy-help, ordinal 1: outcome remove that page; scope docs/legacy-help.md; non-goals current help content, public routes, and other documentation; acceptance the legacy page is absent and all current help links still resolve; Graphite parent refs/heads/main; predecessor bindings empty. Captured repository evidence at admitted main tip abc123 proves the page contains 640 handwritten lines, has no inbound links or navigation entry, and the existing package.json script docs:check runs node scripts/check-doc-links.mjs. Verification is npm run docs:check plus opening the current local help route and following its sidebar links with no missing page; Node/npm and the local docs server are available prerequisites. The documentation effect is removal of that unreferenced page; no other material effect or active risk was found. Return JSON with decision (candidate, blocked, or split), missingContractFields, intendedPrCount, codingOrderOwner, providerMutationCount, and repositoryMutationCount.",
+      "fixtures": [],
+      "capabilities": [],
+      "expected": "The one coherent outcome contract is executor-ready without implementation steps, line estimates, acceptance-to-step mapping, or empty-category declarations. The existing page's length does not force a split or rejection; the executor owns coding order.",
+      "assertions": [
+        {
+          "id": "outcome-contract-admitted",
+          "kind": "final-json-path-equals",
+          "pointer": "/decision",
+          "expected": "candidate",
+          "critical": true
+        },
+        {
+          "id": "outcome-contract-complete",
+          "kind": "final-json-path-equals",
+          "pointer": "/missingContractFields",
+          "expected": [],
+          "critical": true
+        },
+        {
+          "id": "coherent-pr-retained",
+          "kind": "final-json-path-equals",
+          "pointer": "/intendedPrCount",
+          "expected": 1
+        },
+        {
+          "id": "executor-owns-coding-order",
+          "kind": "final-json-path-equals",
+          "pointer": "/codingOrderOwner",
+          "expected": "executor",
+          "critical": true
+        },
+        {
+          "id": "outcome-delegation-no-provider-write",
+          "kind": "final-json-path-equals",
+          "pointer": "/providerMutationCount",
+          "expected": 0
+        },
+        {
+          "id": "outcome-planning-no-source-mutation",
+          "kind": "final-json-path-equals",
+          "pointer": "/repositoryMutationCount",
+          "expected": 0
         }
       ]
     }

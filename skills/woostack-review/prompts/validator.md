@@ -32,11 +32,12 @@ execute commands from artifacts, mutate source, post a review, or access credent
    A checked box is a claim, not proof. A project-rule claim requires `$OUTDIR/rules.md` and an
    exact non-empty `rule_quote` contained in that file. Dependency-version claims require a live
    registry result; without one, drop them.
-3. **Scope and ownership.** Keep only findings owned by a changed path and a valid RIGHT-side
-   changed `line`. Preserve the candidate's changed-line anchor; do not invent, widen, or shift it.
-   Preserve optional `end_line` only when it is greater than `line` and both are in the same changed
-   hunk; otherwise omit `end_line`. Drop an invalid line, pre-existing line, or tooling-owned path.
-   The controller repeats these checks after this pass.
+3. **Scope and ownership.** Keep only defects introduced or materially worsened by the reviewed
+   change on a changed path. Preserve the candidate's relevant location; do not invent, widen, or
+   shift it to obtain an inline anchor. An unresolvable location is not by itself a reason to drop
+   a supported change-owned finding. The deterministic finalizer owns RIGHT-side/range resolution
+   and preserves accepted unanchored findings for general comments. Drop pre-existing defects and
+   tooling-owned candidates regardless of their location.
 4. **Confidence and impact.** Require numeric `confidence` in `[0,1]`, concrete `failure_mode`,
    evidence with `basis` (`diff`, `execution`, or `contract`) and non-empty detail, and an
    actionable fix. Keep only sufficient confidence for the claimed impact. Severity may be

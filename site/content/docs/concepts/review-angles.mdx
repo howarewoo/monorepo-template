@@ -3,51 +3,50 @@ title: Review angle reference
 description: The review lenses, automatic detection rules, and model tier for each angle.
 ---
 
-woostack-review examines a pull request through a set of angles. Each angle covers one concern,
-such as correctness, security, SQL, or accessibility. The review dispatches one subagent for each
-active angle, then validates the findings. Configuration keys for forcing or skipping angles are in
-the [angle selection reference](/docs/configuration#angle-selection).
+Review lenses cover concerns such as correctness, security, SQL, and accessibility. Local bounded
+low-risk changes use one holistic reviewer; risk-bearing, broad, CI, audit, or explicitly configured
+reviews retain specialist workers. Every route uses independent adjudication and verified receipts.
 
 ## Angle selection
 
-Three rules decide which angles run on a given pull request:
+The [detector](https://github.com/howarewoo/woostack/blob/main/skills/woostack-review/scripts/detect-angles.sh)
+owns the selection heuristics. It starts with general correctness and adds specialists from
+changed-path, changed-line, or verified context signals. Before dispatch it may consolidate the
+bounded local queue into `general`, which covers correctness, security/compatibility, simplicity,
+project rules, acceptance, documentation, and tests.
 
-1. **`bugs`, `security`, and `simplify` always run.** They are on for every review and can never be skipped.
-2. **The other angles auto-detect from the diff or prefetched review context.** Most look at changed files and diff content. `acceptance` instead runs when the branch resolves to a governing woostack spec+plan or fix. A `.sql` file pulls in `database`; a `.tsx` file pulls in `design`.
-3. **Configuration can override detection.** `review.angles.force` runs an angle regardless of the diff, and `review.angles.skip` keeps one off. `force` wins a tie, and `bugs` / `security` / `simplify` ignore `skip`. See [angle selection](/docs/configuration#angle-selection).
+Explicit force/skip settings preserve specialist selection. `force` wins a tie; the base `bugs`
+pass cannot be skipped. See [angle selection](/docs/configuration#angle-selection).
 
 ## Angle catalog
 
-The table lists what each angle reviews, when it runs automatically, and its model tier.
+The catalog describes each lens. Automatic path/token rules live only in the detector; prompt
+frontmatter owns the worker tier.
 
-| Angle | Audits | Fires when | Tier |
-| --- | --- | --- | --- |
-| `acceptance` | Governing intent: explicit acceptance criteria, checked implementation steps, and artifact claims | prefetch resolves the PR to a woostack spec+plan or self-contained fix (`intent.md` exists) | standard |
-| `aeo` | Answer-engine optimization: AI-crawler access and structured data for answer engines | `robots.txt`, `llms.txt`, pricing/public content surfaces, or AI-crawler / JSON-LD tokens in the diff | fast |
-| `api` | API contracts: routes, OpenAPI / GraphQL / proto schemas, HTTP handlers | OpenAPI / GraphQL / proto files, route trees, or HTTP-verb route bindings in the diff | standard |
-| `architecture` | Structural quality of source: boundaries, coupling, code health | any general-purpose source file changes (skips doc-only and config-only PRs) | standard |
-| `bugs` | Correctness: logic errors and broken behavior | always (cannot be skipped) | standard |
-| `comments` | Comment rot: whether code comments still match the code the PR changed | any general-purpose source file changes. Always non-blocking | fast |
-| `conventions` | Project rules: adherence to the repo's own AGENTS.md / CLAUDE.md and similar | the repo carries a rule file (AGENTS.md, CLAUDE.md, .cursorrules, .windsurfrules, GEMINI.md) along the changed paths | standard |
-| `database` | Database correctness: integrity, migration/data-loss safety, transactions/concurrency, indexes/queries, and access control | `.sql`, migration trees, ORM schema/config files, or SQL DDL / raw-SQL tokens in the diff | standard |
-| `deps` | Dependency hygiene: manifests and lockfiles | a dependency manifest or lockfile changes (package.json, pnpm-lock.yaml, go.mod, Cargo.toml) | fast |
-| `design` | Visual and UX heuristics for front-end changes | a styling or markup file changes (`.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`, and similar) | standard |
-| `docs` | Documentation hygiene: READMEs, changelogs, Markdown | README, CHANGELOG, `docs/`, or `.md` / `.mdx` files change (a SKILL.md routes to `skills`) | fast |
-| `i18n` | Internationalization: translation catalogs and message usage | `locales/`, `messages/`, `i18n/`, `.po` files, or translation tokens in the diff | fast |
-| `infra` | Infrastructure: CI, containers, IaC, Kubernetes | workflow files, Dockerfiles, Terraform / Pulumi / CDK, k8s or helm trees, or IaC tokens in the diff | standard |
-| `observability` | Logging and error handling: silent failures and swallowed errors | logging or error-handling tokens in the diff (console / logger / Sentry / OpenTelemetry, swallowed catches, production mock fallbacks) | standard |
-| `production-readiness` | Resilience and operability: failure handling, retries, timeouts, resource limits, operational readiness | any general-purpose source file changes (same signal as `architecture`) | standard |
-| `security` | Threat model: injection, auth, secrets, unsafe patterns | always (cannot be skipped) | standard |
-| `seo` | Search-engine optimization: meta tags, sitemaps, canonical URLs | HTML, head / layout files, `robots.txt`, `sitemap`, `next.config`, or SEO tokens in the diff | fast |
-| `simplify` | Simplification: code that should be smaller or not exist (YAGNI, dead code, duplication, thin abstractions) | every review | standard |
-| `skills` | Cross-vendor Agent Skill authoring: the full validated right-side package against woostack's house rubric | a Git-visible right-side `SKILL.md` package appears in the review manifest; deletion-only changes do not enable it | standard |
-| `tests` | Test coverage and quality | a test file changes (`.test.*`, `.spec.*`, `_test.*`, or `tests/` / `__tests__/` / `spec/` trees) | standard |
+| Angle | Concern |
+| --- | --- |
+| `general` | Holistic bounded local review, including applicable rules and approved intent |
+| `acceptance` | Approved acceptance criteria and contract claims |
+| `aeo` | AI-crawler access and structured answer-engine content |
+| `api` | Routes, public contracts, schemas, and wire compatibility |
+| `architecture` | Boundaries, coupling, and structural quality |
+| `bugs` | Evidence-backed correctness and broken behavior |
+| `comments` | Comment accuracy; findings are non-blocking |
+| `conventions` | The repository's own applicable rules |
+| `database` | Integrity, migrations, transactions, queries, and access control |
+| `deps` | Dependency compatibility and hygiene |
+| `design` | Visual design, UX, and accessibility |
+| `docs` | Accuracy of documentation affected by the change |
+| `i18n` | Translation catalogs and message usage |
+| `infra` | CI, containers, deployment, and infrastructure definitions |
+| `observability` | Logging, diagnostics, and silent failures |
+| `production-readiness` | Operational failure handling and resource limits |
+| `security` | Injection, authorization, secrets, and unsafe data flows |
+| `seo` | Search metadata, crawling, and indexing |
+| `simplify` | Unnecessary code, duplication, and needless abstractions |
+| `skills` | The validated changed Agent Skill package |
+| `tests` | Observable behavior coverage and test quality |
 
-The exact gating heuristics (file globs and diff-token patterns) live in [`detect-angles.sh`](https://github.com/howarewoo/woostack/blob/main/skills/woostack-review/scripts/detect-angles.sh), the source of truth. This table summarizes them in plain language.
-
-<Callout type="info">
-  `bugs`, `security`, and `simplify` run on every review and can never be skipped. Listing any of them under `review.angles.skip` is silently ignored.
-</Callout>
 
 <Callout type="info">
   Three angles behave specially. `comments` is always non-blocking: it posts nits, never a blocking finding. `conventions` only runs when the repo carries a rule file (AGENTS.md, CLAUDE.md, .cursorrules, .windsurfrules, or GEMINI.md) along the changed paths. `acceptance` only runs when prefetch resolves governing woostack intent; a later-increment `woostack-defer(<ref>)` marker can demote matching missing work to a visible non-blocking nit, but never defers security.

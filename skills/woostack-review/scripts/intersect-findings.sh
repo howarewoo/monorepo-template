@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Finalize the one independently adjudicated finding set.
-# The adjudicator writes findings.adjudicator.json; this script applies deterministic severity,
-# deferral, and changed-line ownership before publishing findings.json exactly once.
+# The adjudicator writes findings.adjudicator.json; this script applies deterministic
+# severity/deferral and resolves inline locations without losing accepted findings.
 set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 source "$SCRIPT_DIR/resolve-outdir.sh"
@@ -92,46 +92,52 @@ with open(target, "w") as fh:
     json.dump(result, fh, indent=2)
     fh.write("\n")
 PY
-mv "$TMP" "$FINAL"
 resolver="$SCRIPT_DIR/resolve-diff-line.sh"; diff_path=""
-[ -s "$OUTDIR/diff.filtered.txt" ] && diff_path="$OUTDIR/diff.filtered.txt"
-[ -n "$diff_path" ] || [ ! -s "$OUTDIR/diff.txt" ] || diff_path="$OUTDIR/diff.txt"
-if [ -n "$diff_path" ] && [ -f "$resolver" ]; then
-  TMP="$(mktemp)"
-  python3 - "$FINAL" "$TMP" "$OUTDIR" "$resolver" <<'PY'
+[ -f "$OUTDIR/diff.filtered.txt" ] && diff_path="$OUTDIR/diff.filtered.txt"
+[ -n "$diff_path" ] || [ ! -f "$OUTDIR/diff.txt" ] || diff_path="$OUTDIR/diff.txt"
+[ -n "$diff_path" ] && [ -f "$resolver" ] || {
+  echo "::error::intersect-findings: missing diff or anchor resolver" >&2; exit 1;
+}
+python3 - "$TMP" "$OUTDIR" "$resolver" <<'PY'
 import json, os, subprocess, sys
-source, target, outdir, resolver = sys.argv[1:]
+source, outdir, resolver = sys.argv[1:]
 findings = json.load(open(source)); allowed = set()
 for name in ("changed-paths.filtered.txt", "changed-paths.txt"):
     path = os.path.join(outdir, name)
-    if os.path.isfile(path): allowed.update(x.strip() for x in open(path) if x.strip())
-if not allowed and os.path.isfile(os.path.join(outdir, "meta.json")):
-    try:
-        meta = json.load(open(os.path.join(outdir, "meta.json"))); allowed.update(x.get("path") for x in meta.get("files", []) if isinstance(x, dict) and x.get("path"))
-    except (OSError, ValueError, AttributeError): pass
+    if os.path.isfile(path):
+        allowed.update(x.strip() for x in open(path) if x.strip())
+        break
+else:
+    meta = json.load(open(os.path.join(outdir, "meta.json")))
+    allowed.update(item["path"] for item in meta["files"])
 kept = []
 for finding in findings:
     path, line = finding.get("file"), finding.get("line")
-    if not path or line is None: continue
-    if allowed and path not in allowed: continue
-    cmd = ["bash", resolver, "--file", str(path), "--line", str(line)]
-    if "end_line" in finding: cmd += ["--end", str(finding.get("end_line"))]
-    try: resolved = subprocess.run(cmd, env={"OUTDIR": outdir, "PATH": os.environ.get("PATH", "")}, capture_output=True, text=True, check=False)
-    except OSError: continue
+    if path not in allowed:
+        raise SystemExit(f"adjudicator finding outside changed paths: {path}")
+    cmd = ["bash", resolver, "--file", path, "--line", str(line), "--no-cache"]
+    if "end_line" in finding: cmd += ["--end", str(finding["end_line"])]
+    resolved = subprocess.run(cmd, env={"OUTDIR": outdir, "PATH": os.environ.get("PATH", "")},
+                              capture_output=True, text=True, check=False)
+    if resolved.returncode:
+        raise SystemExit(f"anchor resolver failed: {resolved.stderr}")
     value = resolved.stdout.strip()
-    if resolved.returncode or not value or value == "null": continue
+    if value == "null":
+        finding["inline"] = False
+        kept.append(finding)
+        continue
     try:
         if ":" in value: start, end = (int(x) for x in value.split(":", 1))
         else: start, end = int(value), None
-    except ValueError: continue
-    normalized = dict(finding); normalized["line"] = start
+    except ValueError:
+        raise SystemExit(f"invalid anchor resolver output: {value!r}")
+    normalized = dict(finding); normalized["line"] = start; normalized["inline"] = True
     if end is None: normalized.pop("end_line", None)
     else: normalized["end_line"] = end
     kept.append(normalized)
-with open(target, "w") as fh: json.dump(kept, fh, indent=2); fh.write("\n")
+with open(source, "w") as fh: json.dump(kept, fh, indent=2); fh.write("\n")
 PY
-  mv "$TMP" "$FINAL"
-fi
+mv "$TMP" "$FINAL"
 if [ "$metrics_enabled" = true ]; then
   python3 - "$OUTDIR/raw_findings.json" "$FINAL" "$OUTDIR/findings.metrics.json" <<'PY'
 import json, os, re, sys

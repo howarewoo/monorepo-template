@@ -3,42 +3,37 @@
     "duplicate-task-id": {
       "acceptanceCriteria": ["criterion-a", "criterion-b"],
       "increments": [
-        {"taskId": "task-a", "ordinal": 1, "covers": ["criterion-a"], "predecessors": [], "stopMarker": "done"},
-        {"taskId": "task-a", "ordinal": 2, "covers": ["criterion-b"], "predecessors": ["task-a"], "stopMarker": "done"}
+        {"taskId": "task-a", "ordinal": 1, "covers": ["criterion-a"], "predecessors": []},
+        {"taskId": "task-a", "ordinal": 2, "covers": ["criterion-b"], "predecessors": ["task-a"]}
       ]
     },
     "ordinal-gap": {
       "acceptanceCriteria": ["criterion-a", "criterion-b"],
       "increments": [
-        {"taskId": "task-a", "ordinal": 1, "covers": ["criterion-a"], "predecessors": [], "stopMarker": "done"},
-        {"taskId": "task-b", "ordinal": 3, "covers": ["criterion-b"], "predecessors": ["task-a"], "stopMarker": "done"}
+        {"taskId": "task-a", "ordinal": 1, "covers": ["criterion-a"], "predecessors": []},
+        {"taskId": "task-b", "ordinal": 3, "covers": ["criterion-b"], "predecessors": ["task-a"]}
       ]
     },
     "wrong-predecessor": {
       "acceptanceCriteria": ["criterion-a", "criterion-b", "criterion-c"],
       "increments": [
-        {"taskId": "task-a", "ordinal": 1, "covers": ["criterion-a"], "predecessors": [], "stopMarker": "done"},
-        {"taskId": "task-b", "ordinal": 2, "covers": ["criterion-b"], "predecessors": [], "stopMarker": "done"},
-        {"taskId": "task-c", "ordinal": 3, "covers": ["criterion-c"], "predecessors": ["task-b"], "stopMarker": "done"}
+        {"taskId": "task-a", "ordinal": 1, "covers": ["criterion-a"], "predecessors": []},
+        {"taskId": "task-b", "ordinal": 2, "covers": ["criterion-b"], "predecessors": []},
+        {"taskId": "task-c", "ordinal": 3, "covers": ["criterion-c"], "predecessors": ["task-b"]}
       ]
     },
-    "missing-stop-marker": {
-      "acceptanceCriteria": ["criterion-a"],
-      "increments": [
-        {"taskId": "task-a", "ordinal": 1, "covers": ["criterion-a"], "predecessors": []}
-      ]
-    },
-    "oversized-pr": {
+    "missing-verification": {
       "acceptanceCriteria": ["criterion-a"],
       "increments": [
         {
           "taskId": "task-a",
           "ordinal": 1,
-          "covers": ["criterion-a"],
-          "predecessors": [],
-          "stopMarker": "done",
-          "handWrittenChangedLines": 501,
-          "sizeException": null
+          "outcome": "Remove the unreachable legacy help page in one PR.",
+          "scope": ["docs/legacy-help.md"],
+          "nonGoals": ["Changing current help content or public routes"],
+          "acceptance": ["criterion-a: the unreachable page is absent and current help links still resolve"],
+          "graphiteParent": "refs/heads/main",
+          "predecessors": []
         }
       ]
     }

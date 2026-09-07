@@ -73,8 +73,8 @@ worktree isolation, or treating absent evidence as success.
   `reviewerCredentialContextId` is `omp:task:<agent-id>`. Feed both into
   [Review's bound-validator sequence](../../../woostack-review/SKILL.md). Missing receipts still
   fail the existing hard receipt gate.
-- `woostack-execute`: map the implementation worker to `agent: woostack-fast`; the project
-  controller owns admission, verification, and delivery.
+- `woostack-execute`: when its [implementation driver](../../../woostack-execute/references/subagent-driver.md)
+  delegates, map the selected effective tier through the host-owned worker table above.
 - `woostack-commit`: map optional fast drafting to `agent: woostack-fast`; draft inline if
   unavailable.
 - **woostack-eval (comparative dispatch):** map the candidate and baseline's common effective tier

@@ -66,8 +66,13 @@ local in `.woostack/tmp/runs/<run-id>/`. Workflows operate with default zero-pro
 local artifacts mirror in bounded post-drafting cycles. Supplying `--project` when `artifacts.provider` is not
 configured for provider mirroring fails closed immediately.
 
+Bounded Fix presents the proved diagnosis, complete proposed correction, material technical
+consequences, and verification for explicit user approval, then uses the shared bounded delivery
+workflow without a project run or provider calls. Multi-increment, materially uncertain, or explicitly
+project-backed fixes use the retained planning workflow below.
+
 Gated Ideate, Harden, and delegated Plan work is managed in one permission-restricted run manifest
-with zero provider cycles. Build and Fix write plain `project-spec.md` and `execution-plan.md`
+with zero provider cycles. Build and project-backed Fix write plain `project-spec.md` and `execution-plan.md`
 directly under `.woostack/tmp/runs/<run-id>/` and proceed directly to a user-controlled handoff
 (`Stop here`, `Execute`, `Abandon`). When `artifacts.provider` selects a configured provider, local
 artifacts mirror in bounded post-drafting cycles; mirror failure is recorded in the manifest and is
@@ -183,7 +188,7 @@ directory, not in this repo.
   [`skills/woostack-bootstrap/references/`](skills/woostack-bootstrap/references/)
 - Build loop:
   [`skills/woostack-build/SKILL.md`](skills/woostack-build/SKILL.md)
-- Small-change fix loop (public command; diagnose → fix plan → approve → delegate execution to woostack-execute):
+- Bug-fix workflow (public command; prove cause → informed approval → bounded delivery or project planning):
   [`skills/woostack-fix/SKILL.md`](skills/woostack-fix/SKILL.md)
 - Bounded non-bug change loop (public command; one reviewable PR, no approval gate or persisted plan):
   [`skills/woostack-change/SKILL.md`](skills/woostack-change/SKILL.md)

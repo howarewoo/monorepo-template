@@ -1,6 +1,6 @@
 ---
 name: woostack-review
-description: Review one exact existing PR with one multi-angle pass, one evidence adjudicator, and native GitHub comments/verdict. Never edits or merges.
+description: Review one exact existing PR with risk-proportional independent reviewers, one evidence adjudicator, and native GitHub comments/verdict. Never edits or merges.
 install: pnpx skills add howarewoo/woostack
 requires:
   bins: [gh, jq, node]
@@ -10,7 +10,7 @@ recommends:
 
 # woostack-review
 
-Review one exact existing pull request with one detected multi-angle pass, one independent evidence adjudicator, and one native GitHub review. Review is advisory: it never edits code or merges.
+Review one exact existing pull request with one risk-proportional review pass, one independent evidence adjudicator, and one native GitHub review. Review is advisory: it never edits code or merges.
 
 ## Command
 
@@ -68,24 +68,31 @@ Capture and reuse the same `OUTDIR` for every worker and script. `prefetch.sh` m
 read the exact PR and produce its canonical evidence tree. Missing/invalid PR evidence, stale or
 contaminated output, incomplete pagination, or an ambiguous head blocks before dispatch.
 
-### 2. Detect angles and run the swarm once
+### 2. Select and dispatch the review queue once
 
 ```bash
 bash "$WOO_REVIEW_ACTION_PATH/scripts/load-config.sh"
 bash "$WOO_REVIEW_ACTION_PATH/scripts/detect-angles.sh"
 ```
 
-**The multi-angle swarm pass** dispatches every entry in `$OUTDIR/angles.txt`, crossed with
-`$OUTDIR/chunks.txt` when chunking is active. Initialize expected finding artifacts, prove all
-required host selectors before launch, and dispatch the complete queue with fresh isolated reviewer
-sessions under the worker header. Follow the canonical scripts for bounded transport recovery and
-receipt validation. Internal retries recover a missing worker artifact inside this pass; they do
-not start a second angle-detection or review pass.
+`detect-angles.sh` selects the complete `$OUTDIR/angles.txt` queue before dispatch. For a local
+prefetched PR with at most five files and 200 changed lines, it selects one holistic `general`
+worker when only correctness, conventions, acceptance, docs, and test lenses were detected.
+The holistic prompt covers all those lenses plus relevant security, compatibility, operational
+safety, simplicity, and comments; findings retain their semantic angle labels.
+
+CI, audits, explicit force/skip overrides, specialist risk signals, broader or chunked diffs,
+and binary/deletion/rename/mode changes retain the existing specialist selection. Missing or
+incomplete bounded-diff evidence never qualifies for consolidation.
+
+Dispatch every queued entry, crossed with `$OUTDIR/chunks.txt` when active, using fresh isolated
+reviewer sessions. Prove required host selectors first and follow the controller header's
+completion protocol. Recovery stays inside this pass, never a second review pass.
 
 Every worker writes its receipt and `findings.<angle>[.<chunk>].json` only under `OUTDIR`. After the
 queue drains, verify every required receipt with `scripts/verify-receipts.sh`, then run
-`scripts/merge-findings.sh` to produce `raw_findings.json`. Missing or invalid required receipts
-block posting rather than silently reducing coverage.
+`scripts/merge-findings.sh` to produce `raw_findings.json`. Missing/invalid required receipts or
+malformed worker output block posting rather than silently reducing coverage.
 
 ### 3. Run the sole evidence adjudicator
 
@@ -115,7 +122,8 @@ bash "$WOO_REVIEW_ACTION_PATH/scripts/intersect-findings.sh"
 ```
 
 `findings.json` is written once from the adjudicator output and is the only accepted finding set.
-Missing or invalid receipt, self-review, stale head, identity/digest, or changed-line checks block.
+Missing or invalid receipt, self-review, stale head, identity/digest, or scope evidence blocks.
+The finalizer resolves inline anchors once; accepted unanchored findings remain general comments.
 
 ### 4. Post every accepted finding and one verdict
 
@@ -144,7 +152,7 @@ that was not independently observed.
 ## Hard constraints
 
 - One exact existing PR and one standard public command.
-- One detected multi-angle pass, then exactly one fresh evidence adjudicator, then deterministic finalization.
+- One selected review pass, then exactly one fresh evidence adjudicator, then deterministic finalization.
 - Every accepted blocker and nit is posted to that exact PR.
 - Blockers request changes; no-blocker and nit-only results do not block.
 - Review workers are read-only; Review never edits code or merges.

@@ -12,8 +12,8 @@ technologies and versions live, presents a complete architecture and scope, and 
 design approval before any target-directory write. That approval—not a provider receipt—releases
 the write barrier after repository and target collision checks pass.
 
-The stack remains dynamic rather than template-selected. Compare current production-ready options
-against the project's requirements, then scaffold each approved app with code local to that app.
+The stack remains dynamic rather than template-selected. Validate the user's supplied stack against
+the project's requirements, then scaffold each approved app with code local to that app.
 Extract a package only when multiple apps need the same code. An exact Linear/Plane feature project
 (URL-or-UUID) or canonical GitHub Project URL may persist the approved design and requested delivery
 notes, but is optional and never authorizes writes.
@@ -39,7 +39,7 @@ stored development record.
 
 Use bootstrap only when there is no existing codebase whose conventions or history own the work.
 An empty remote repository may be the intended destination, but an existing repository request
-routes before requirements gathering, MCP preflight, project creation, or target access:
+routes before requirements gathering, MCP preflight, or project creation:
 
 - bugs, regressions, incidents, and root-cause work → [`woostack-fix`](../woostack-fix/SKILL.md);
 - a bounded non-bug enhancement or refactor that fits one reviewable PR, including a one-file
@@ -50,17 +50,19 @@ Single-surface throwaway scripts are also outside bootstrap.
 
 ## Procedure
 
-1. **Classify and capture intent without target access.** Classify greenfield versus brownfield
-   first. Retain the requested target path as an opaque string; do not stat, list, read,
-   canonicalize, create, or write it, and do not invoke Git.
+1. **Classify and capture intent.** Classify greenfield versus brownfield first. Bounded read-only
+   target inspection may establish existence or collisions under the
+   [filesystem procedure](references/bootstrap.md#filesystem-write-barrier-and-collision-check);
+   it grants no write authority.
 2. **Gather requirements.** Ask targeted questions about product goals, required surfaces, scale,
    deployment restrictions, compliance/security, integrations, and budget.
 3. **Perform live industry research.** Use web search and live registry lookups such as
    `npm view <pkg> version` to identify current frameworks, libraries, databases, and services that
    satisfy the requirements.
-4. **Present the design.** Compare 2–3 cohesive stack options with pros/cons, production-readiness,
-   and cost implications. Present one complete proposed architecture and scope, including surfaces
-   and initial features. Keep the design only in the conversation/run context: create no remote project/issue,
+4. **Present the design.** Research and validate a supplied viable stack, then present one complete
+   proposed architecture and scope, including surfaces, initial features, technical decisions,
+   production-readiness, and cost implications. Compare alternatives only for unresolved material
+   tradeoffs. Keep the design only in the conversation/run context: create no remote project/issue,
    local spec or plan, target directory, branch, commit, or PR.
 
 <HARD-GATE name="design-approval">
@@ -74,11 +76,10 @@ approval, perform no official-MCP development mutation and create no development
    branch, normalized approved goal/scope, and a deterministic in-run project identity. This
    identity prevents duplicate work within/resumed from the same supplied contract; it is not a
    development record.
-6. **Collision-check the target and admit the filesystem write barrier.** After design approval and
-   repository/base intent are retained, perform the first target-filesystem action: a read-only collision
-   check with no Git invocation. Proceed only when it proves the target is absent or an empty non-Git directory.
-   A populated path, existing Git checkout, non-directory/symlink, unreadable state, partial result, or
-   ambiguity blocks before mkdir, write, scaffold, or Git.
+6. **Admit the filesystem write barrier.** Follow the canonical
+   [collision-check procedure](references/bootstrap.md#filesystem-write-barrier-and-collision-check)
+   after approval and repository/base intent are retained. Early inspection cannot replace the
+   fresh pre-write check.
 7. **Optionally persist the approved design.** Only after design approval and target collision checks pass,
    and only when the caller explicitly requests provider persistence or supplies an exact Linear/Plane project URL-or-UUID or canonical GitHub Project URL,
    apply the shared [artifact contract](../woostack-init/references/artifact-backends.md), load only the selected
@@ -118,9 +119,9 @@ These are non-negotiable. Violating them produces an unattributed, broken, or dr
 - **Artifact-free until explicit approval.** Requirements, research, options, and design stay in
   the run context. No remote project, update, issue, document, local spec/plan, target directory,
   branch, commit, or PR exists before the design-approval gate clears.
-- **Approval before filesystem.** Missing design approval or repository/base intent means no stat,
-  list, read, canonicalization, creation, write, scaffolding CLI, or Git operation against the
-  target. Provider persistence is not part of this barrier.
+- **Approval before writes.** Follow the
+  [filesystem barrier](references/bootstrap.md#filesystem-write-barrier-and-collision-check);
+  early read-only inspection and provider receipts never authorize mutation.
 - **Artifacts are opt-in.** Without explicit selection, make no provider call. When selected, use
   only the configured official capability (MCP for Linear or Plane; host-authenticated gh for GitHub),
   exact identities, stable mutation IDs, complete pagination, and independent read-back. Never use a
@@ -128,14 +129,9 @@ These are non-negotiable. Violating them produces an unattributed, broken, or dr
 - **Artifact failure is scoped.** Missing access or an unknown/partial result blocks requested
   persistence, not an otherwise approved artifact-free scaffold, unless persistence was explicitly
   part of the deliverable. Never claim synchronization without direct read-back.
-- **Collision-safe first access.** After approval, the first target-filesystem action is a
-  read-only collision check. Only an absent target or empty non-Git directory permits
-  creation/scaffolding; any populated, Git-owned, unreadable, or ambiguous state blocks mutation.
 - **Pass stable run identity.** Scaffolding and later build/planning continuation reuse the
   normalized approved contract and deterministic task/project identity. Optional artifact IDs are
   carried only when persistence was selected.
-- **Confirm the stack before scaffolding.** Present options and receive explicit approval; never
-  silently choose or scaffold a stack.
 - **Always resolve latest versions live.** Never use hardcoded versions from memory. Query the
   registry live during research and exact resolution.
 - **Keep code app-local until shared.** Follow

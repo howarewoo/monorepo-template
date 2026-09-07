@@ -1,8 +1,9 @@
 # Sequential Execute controller
 
 This controller owns admission, deterministic selection, predecessor and Graphite-parent proof,
-worktree lifecycle, delivery checkpoint persistence, PR boundaries, and handback. The configured
-fast-model subagent owns implementation only. Execute never performs review or merge work.
+worktree lifecycle, delivery checkpoint persistence, PR boundaries, and handback. Implementation
+follows the [inline or optional delegated driver](subagent-driver.md). Execute never performs PR
+review or merge work.
 
 ## Admission and immutable identity
 
@@ -49,19 +50,15 @@ lifecycle write. Never infer approval from status, assignment, labels, comments,
 In local run mode, accept one exact `<exact-run-id>` at `<repo-root>/.woostack/tmp/runs/<exact-run-id>/`.
 Exact path only; fuzzy search, pattern matching, directory traversal, or chat memory is rejected.
 
-Admit local run files under the shared run-manifest contract:
+Use the shared [owner-only local run store](../../woostack-init/references/artifact-backends.md#owner-only-local-run-store)
+helper for every read and CAS update. Its security, locking, and independent-readback checks
+remain mandatory; the controller admits the returned data semantically:
 
-1. Prove Git ignores `.woostack/tmp/`; reopen each ancestor and the exact run directory no-follow.
-   Require the run directory to be owned by the process user, mode `0700`, and contained by the
-   canonical repository root.
-2. Require `manifest.json`, `project-spec.md` (when present), `execution-plan.md` (when present), and
-   `.lock` to satisfy the shared owner-only `0600` regular-file, no-follow ancestor, and containment
-   checks. Reject symlinks, broader permissions, foreign ownership, unexpected entries, and path escape.
-3. Validate `manifestVersion: 1`, exact `runId`, `manifestRevision`, `workflow`, `repoRoot`, `status`,
+1. Validate `manifestVersion: 1`, exact `runId`, `manifestRevision`, `workflow`, `repoRoot`, `status`,
    `planningParentBranch`, `planningParentTip`, empty `draft.unresolvedQuestions`, the complete
    stable-task/dependency graph, and `taskExecutions`. Reject `status: "abandoned"`; return an
    independently verified no-work result for `status: "completed"`.
-4. Pre-change runs whose manifests depend on removed approval receipts or fingerprints fail closed on
+2. Pre-change runs whose manifests depend on removed approval receipts or fingerprints fail closed on
    admission, directing the user to regenerate plain artifacts under the owning Build/Fix workflow.
 
 ### Base-change detection and user choice
@@ -121,8 +118,8 @@ admit (Linear project/issue, Plane spec/child work item, GitHub Project/issue, o
   → [Plane provider only] persist/read back selected work item and parent spec item executing mapping (project status unchanged)
   → [GitHub provider only] persist/read back selected Project item executing status option (project status unchanged)
   → persist task/issue intent + resume checkpoint
-  → create or resume one worktree → dispatch fast-model worker
-  → focused verification/smoke → bounded spec validator
+  → create or resume one worktree → implement inline or delegate isolated work
+  → focused verification/smoke → independent bounded spec validator
   → commit/Graphite submit (with --issue in Linear and GitHub provider modes, and in local run mode with an exact mapped GitHub mirror; without --issue in Plane provider mode, unmapped local runs, and non-GitHub local runs)
   → read back branch/commit/PR/receipt
   → persist + independently read back full delivery checkpoint (Linear, Plane, GitHub, or Manifest CAS)
@@ -175,8 +172,8 @@ contract to that evidence. The selected task's branch must retain exactly the de
 
 In local run mode, before worktree or source mutation, CAS-update
 `taskExecutions[stableTaskKey]` from `pending`/`blocked` to `active` with the exact intended task,
-worktree path, branch, parent, and start tip; increment `manifestRevision`, then independently reopen
-and verify it no-follow. A resumed `active` task must match that evidence exactly.
+worktree path, branch, parent, and start tip through the shared run-store helper and verify its
+independent read-back. A resumed `active` task must match that evidence exactly.
 
 Inventory `git worktree list --porcelain`, deterministic path, branch/commit/diff/index state,
 Graphite ancestry, and canonical PR state. There must be either no worktree state, in which case
@@ -189,23 +186,16 @@ the cycle. Never reset, clean, overwrite, reassign, or create around a collision
 Execution is strictly sequential within each run. Distinct run IDs may execute concurrently in isolated
 worktrees when their branches, paths, and responsibility surfaces do not collide.
 
-## Worker dispatch and narrow verification
+## Implementation and narrow verification
 
-Dispatch exactly one configured fast-model subagent in the exact isolated task worktree. Its packet includes
-run/task IDs, repository/worktree, allowed paths, canonical parent branch/current admitted tip,
-retained start/head when resuming, Graphite parent, acceptance, focused verification/smoke command,
-validator input, and prohibitions on source-control, provider writes, review, credentials, scope
-changes, and other worktrees.
+Follow the [implementation driver](subagent-driver.md) for inline/delegated selection, host routing,
+exclusive worktree ownership, packets, and handback. Both paths return here after implementation.
+Recheck worktree identity, canonical parent branch/current tip, retained start/head, ancestry, diff,
+PR base, and branch/parent before acting. Apply the driver's
+[independent spec-validation gate](subagent-driver.md#independent-spec-validation) to the approved
+contract and complete current diff before delivery.
 
-After handback, the controller rechecks worktree identity, canonical parent branch/current tip,
-retained start/head, ancestry, diff, PR base, and branch/parent before acting. Run one focused
-verification and changed-path smoke scenario, then one bounded spec-compliance validator against the
-approved contract. Repair only a confirmed in-scope omission through the same worker; do not broaden
-the check into unrelated analysis or cleanup.
-A timeout or missing response is `UNKNOWN`, not failure; inspect process and worktree before any
-redispatch.
-
-### Controller-owned screenshot evidence (Linear provider mode only)
+### Controller-owned screenshot evidence
 
 Immediately after successful focused UI validation and image inspection in Linear provider mode, when
 validation produced screenshots and before commit, the controller selects exactly one final
@@ -305,9 +295,9 @@ verified diff → commit → Git/Graphite read-back → one Graphite PR submissi
 
 After delivery, CAS-update `taskExecutions[stableTaskKey]` from `active` to `delivered` with the
 complete checkpoint (`{ stableTaskKey, ordinal, branch, commitSha, prUrl, prHead, prBase,
-graphiteParent, verificationReceipt, deliveredAt }`) and increment `manifestRevision`. Reopen the
-manifest no-follow and verify every persisted field before tearing down the clean worktree or
-advancing to the next sibling task.
+graphiteParent, verificationReceipt, deliveredAt }`) through the shared run-store helper. Verify
+every field in its independent read-back before tearing down the clean worktree or advancing
+to the next sibling task.
 
 If optional Linear, Plane, or GitHub mirror writes are configured in local run mode, mirror writes are best effort only:
 any mirror write failure emits a warning and never invalidates, blocks, or overwrites the authoritative
@@ -348,9 +338,9 @@ by exact UUID or case-sensitive name with group `started`, reading back its nati
 recovery evidence before a failed Plane cycle can resume.
 In GitHub provider mode, transition and independently read back the selected Project item to the configured
 blocked state (`artifacts.github.projectStatuses.blocked`) without closing the issue, retaining recovery evidence.
-In local run mode, CAS-update the active task to `blocked` with that recovery evidence, increment `manifestRevision`, and independently reopen/read back the
-manifest no-follow. Resume requires fresh independent evidence and must reuse an existing PR/commit when
-present.
+In local run mode, use the shared run-store helper to CAS-update the active task to `blocked` with
+that recovery evidence and verify its independent read-back. Resume requires fresh independent
+evidence and must reuse an existing PR/commit when present.
 The controller handback is evidence only: selected resource and state, ordinal/mode, predecessor,
 worktree/branch, changed paths, observed verification and validator results, transition/read-back
 receipts, commit and PR, teardown or retained recovery state, stop marker, and first blocker/unknown

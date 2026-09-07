@@ -49,11 +49,11 @@
     },
     {
       "id": "target-repository-boundary-precedes-provider-admission",
-      "prompt": "After Debug proves the root cause, classify three independent target-repository decisions without calling providers or mutating artifacts or the repository: a foreign target repository, a matching but unwritable active checkout, and a matching writable active checkout. Return exactly one JSON object with only these three top-level keys: foreignTarget, matchingUnwritable, and matchingWritable. For foreignTarget, output status \"blocked\", reason \"target-repository-mismatch\", safeOutcomes exactly [\"retarget-reinvoke-in-exact-writable-owning-repository\",\"diagnosis-only\"] in that order, providerCalls 0, projectCreated false, sourceLinkWritten false, repositoryMutationCount 0, and suppliedArtifactBypass false. For matchingUnwritable, output status \"blocked\", reason \"writable-target-checkout-required\", safeOutcomes [\"retarget-reinvoke-in-exact-writable-owning-repository\",\"diagnosis-only\"], providerCalls 0, projectCreated false, sourceLinkWritten false, repositoryMutationCount 0, and suppliedArtifactBypass false. For matchingWritable, output status \"continue\", nextPhase \"canonical-project-admission\", and classificationEffects with providerCalls 0, projectCreated false, sourceLinkWritten false, and repositoryMutationCount 0.",
+      "prompt": "After Debug proves the root cause, classify three independent target-repository decisions without calling providers or mutating artifacts or the repository: a foreign target repository, a matching but unwritable active checkout, and a matching writable active checkout. No project, issue, or run was supplied. Return one JSON object with foreignTarget, matchingUnwritable, and matchingWritable. For the first two give status, reason, safeOutcomes, providerCalls, projectCreated, sourceLinkWritten, repositoryMutationCount, and suppliedArtifactBypass. For matchingWritable give status, nextPhase, and classificationEffects containing providerCalls, projectCreated, sourceLinkWritten, and repositoryMutationCount. Use path-selection as the nextPhase when the target is admitted but Fix has not yet selected direct or project-backed delivery.",
       "capabilities": [
         "read-workspace"
       ],
-      "expected": "Foreign targets block with target-repository-mismatch; matching unwritable targets block with writable-target-checkout-required; both expose exactly the ordered safe outcomes retarget-reinvoke-in-exact-writable-owning-repository and diagnosis-only with no provider, project, source, or repository effects and no supplied-artifact bypass. A matching writable target continues to canonical-project-admission with zero effects scoped to classification.",
+      "expected": "Foreign and matching-unwritable targets block before provider, project, source, or repository effects without an artifact bypass, offering retarget-reinvoke-in-exact-writable-owning-repository or diagnosis-only. A matching writable target continues to read-only path selection, not unconditional project admission.",
       "assertions": [
         {
           "id": "foreign-target-blocked",
@@ -184,7 +184,7 @@
           "id": "writable-target-next-phase",
           "kind": "final-json-path-equals",
           "pointer": "/matchingWritable/nextPhase",
-          "expected": "canonical-project-admission",
+          "expected": "path-selection",
           "critical": true
         },
         {
@@ -267,7 +267,7 @@
     },
     {
       "id": "canonical-project-preserves-source-record",
-      "prompt": "The workspace selects official Linear provider (artifacts.provider: \"linear\"). After root-cause proof, Fix creates canonical project project-fix-241 named `[Fix] Prevent cache refresh stampedes` and independently reads it back. It adds only a supported projectLink to the source issue, preserves unrelated fields, and Plan returns direct issues WOO-242 and WOO-243. Return JSON with provider, projectId, projectName, projectReadBackVerified, sourceChangedFields, sourceUnrelatedFieldsPreserved, and directIssueIds.",
+      "prompt": "The workspace selects official Linear provider (artifacts.provider: \"linear\"). The user supplied an exact source issue and requested coordinated planning for a correction spanning two increments. After root-cause proof and writable-target admission, Fix creates canonical project project-fix-241 named `[Fix] Prevent cache refresh stampedes` and independently reads it back. It adds only a supported projectLink to the source issue, preserves unrelated fields, and Plan returns direct issues WOO-242 and WOO-243. Return JSON with provider, projectId, projectName, projectReadBackVerified, sourceChangedFields, sourceUnrelatedFieldsPreserved, and directIssueIds.",
       "capabilities": [
         "read-workspace"
       ],
@@ -513,6 +513,117 @@
           "kind": "final-json-path-equals",
           "pointer": "/repositoryMutationCount",
           "expected": 0,
+          "critical": true
+        }
+      ]
+    }
+    ,
+    {
+      "id": "bounded-fix-requires-informed-approval-without-project",
+      "prompt": "Use fixtures/bounded-fix.json only as synthetic evidence. Stop at the point before userResponseAfterPresentation: treat that response and deliveryEvidence as unavailable future events. Present the fix for approval and explain the next permitted action. Do not mutate anything or call a provider. A teammate argues that artifactsProvider=linear requires creating a project first and that the initial request to fix already authorizes implementation; assess both claims.",
+      "fixtures": ["bounded-fix.json"],
+      "capabilities": ["read-workspace"],
+      "expected": "Fix presents the complete evidence-bound diagnosis, exact writable repository, intended correction, technical consequences, scope, acceptance and verification, then waits for explicit informed approval. The configured provider alone causes no project run and no provider call.",
+      "assertions": [
+        {
+          "id": "complete-informed-presentation",
+          "kind": "qualitative",
+          "rubric": "Does the response present the causal units mismatch with source/probe evidence and freshness, exact writable repository/allowed paths/non-goals, correction, public-unit and storage consequences, deadline/zero-TTL acceptance, verification/smoke, and intended parent before asking for explicit approval?",
+          "critical": true
+        },
+        {
+          "id": "approval-before-effects",
+          "kind": "qualitative",
+          "rubric": "Does the response decline to implement, create a workspace/project run, or call a provider before approval, reject the initial request as approval of an unseen diagnosis, and keep the fully understood one-PR fix direct despite configured Linear?",
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "approved-bounded-fix-delivers-verified-pr-directly",
+      "prompt": "Use the complete fixtures/bounded-fix.json as synthetic observations, including the actual user response after presentation and delivery evidence. Do not execute commands or contact services. Explain whether the Fix can be reported delivered, the cleanup decision, and evidence to return. Distinguish GitHub source-control PR delivery from optional development-artifact provider access.",
+      "fixtures": ["bounded-fix.json"],
+      "capabilities": ["read-workspace"],
+      "expected": "Natural-language informed approval permits Fix to deliver one independently reviewed and verified Graphite PR with no project manifest/spec/plan or provider call. Only the clean task worktree may be removed; branch and open PR remain and never advance toward merge.",
+      "assertions": [
+        {
+          "id": "direct-approved-delivery",
+          "kind": "qualitative",
+          "rubric": "Does the response accept the explicit post-presentation approval, retain Fix identity rather than reroute through Change/Execute, and allow a single Graphite PR without project run files or Linear calls?",
+          "critical": true
+        },
+        {
+          "id": "complete-delivery-evidence",
+          "kind": "qualitative",
+          "rubric": "Does it bind passing reproduction/focused/smoke and distinct reviewer evidence to the same task/repository/parent/diff, report the exact commit and independently read open PR/head/base, permit only clean task-worktree teardown, retain the branch, and reject merge advancement?",
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "explicit-context-and-uncertainty-keep-project-backed-path",
+      "prompt": "After fresh causal proof and exact writable-target admission, classify independent cases without tools or mutation: (A) a fully understood one-PR fix, Linear configured, no explicit artifact context; (B) the same fix with --issue https://linear.app/acme/issue/APP-42 and Linear configured; (C) the same --issue with provider omitted; (D) --run retained-fix-1 naming an existing valid retained run; (E) exact --project under configured provider; (F) a correction requiring two dependent increments; (G) a one-PR proposal with unresolved data-loss consequences; (H) a one-PR fix whose user requests coordinated local persistence. Explain route, provider boundary, source preservation, and approval/resume behavior for each. Do not treat configured defaults or an issue as permission.",
+      "capabilities": ["read-workspace"],
+      "expected": "Only A defaults direct and provider-free. Explicit issue/project/run, coordinated persistence, multiple increments, or material uncertainty remain project-backed; C fails before provider access. Existing run identity and source-record protections are retained, with full project-backed verification and Build handoff.",
+      "assertions": [
+        {
+          "id": "path-selection-precedence",
+          "kind": "qualitative",
+          "rubric": "Does A remain direct with zero provider calls while B/D/E/F/G/H use project-backed admission/planning, with D resuming exactly retained-fix-1 rather than reallocating or bypassing its run contract?",
+          "critical": true
+        },
+        {
+          "id": "explicit-source-protections",
+          "kind": "qualitative",
+          "rubric": "Does C fail closed without provider calls instead of ignoring --issue, and does B require exact independent source/scope/parent/pagination verification, preserve the source except a supported read-back-verified project link, and never repurpose it or treat it as approval?",
+          "critical": true
+        },
+        {
+          "id": "project-verification-preserved",
+          "kind": "qualitative",
+          "rubric": "Does project-backed work retain complete specification/technical verification and Harden's one-question reconciliation, then use Build's full verified-artifact handoff and clear Stop/Execute/Abandon intent without bypassing ambiguous or changed-scope input?",
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "scope-change-and-stale-review-do-not-inherit-approval",
+      "prompt": "Use fixtures/bounded-fix.json as synthetic initial approved scope. Evaluate two independent later events without mutation: (A) the implementer discovers deadlines are also persisted in a production database and proposes rewriting stored rows, despite the original no-storage-migration contract; (B) scope remains unchanged, but a follow-up patch changes completeDiffIdentity to cache-expiry-diff-2 while independent review still covers cache-expiry-diff-1. Explain the next permitted boundary and retained evidence for each. The user has not approved any revised correction.",
+      "fixtures": ["bounded-fix.json"],
+      "capabilities": ["read-workspace"],
+      "expected": "Material migration scope returns to planning and fresh informed approval, using project-backed planning while consequences remain uncertain. A stale review blocks delivery until affected verification and independent review bind to the new diff; neither case duplicates or discards the retained workspace.",
+      "assertions": [
+        {
+          "id": "changed-correction-needs-fresh-approval",
+          "kind": "qualitative",
+          "rubric": "Does A stop before migration work, retain existing workspace/evidence, return to planning for material data-loss/storage consequences and present a complete revised correction for approval rather than treating earlier approval as permission?",
+          "critical": true
+        },
+        {
+          "id": "stale-review-blocks-delivery",
+          "kind": "qualitative",
+          "rubric": "Does B block commit/submission under diff-1 review, require affected verification and fresh independent review of diff-2, retain exact task/worktree/branch/head/diff facts, and avoid self-review or duplicate PRs?",
+          "critical": true
+        }
+      ]
+    },
+    {
+      "id": "transferred-debug-proof-is-freshness-checked",
+      "prompt": "Use fixtures/bounded-fix.json as a complete Debug handback before Fix approval, and compare two independent source states without running commands: (A) its exact repository/blob and millisecond clock assumptions independently read back unchanged; (B) the repository matches but the current clock implementation now returns seconds, contradicting the recorded runtime assumption. Explain which diagnosis work can transfer and what remains blocked. The handback itself includes no approval.",
+      "fixtures": ["bounded-fix.json"],
+      "capabilities": ["read-workspace"],
+      "expected": "Fresh same-source proof transfers without repeating all Debug phases, but changed clock evidence requires targeted causal investigation. Neither diagnosis authorizes implementation or skips writable-target admission and informed approval.",
+      "assertions": [
+        {
+          "id": "fresh-proof-reuse",
+          "kind": "qualitative",
+          "rubric": "Does A reuse the complete proof after independent exact source/runtime freshness checks rather than mandatory full re-proving, while still requiring writable-target admission and informed approval?",
+          "critical": true
+        },
+        {
+          "id": "stale-causal-link-blocks",
+          "kind": "qualitative",
+          "rubric": "Does B investigate the changed clock/unit causal link before proposing or applying the recorded multiplication, instead of trusting a report conclusion or repeating unrelated proof mechanically?",
           "critical": true
         }
       ]

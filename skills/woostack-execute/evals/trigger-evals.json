@@ -10,7 +10,7 @@
     },
     {
       "id": "exact-approved-issue-only",
-      "query": "Execute only the exact approved issue https://linear.app/acme/issue/CORE-06 from its approved project plan. Use the configured fast-model worker, submit one Graphite PR, and do not advance sibling issues.",
+      "query": "Execute only the exact approved issue https://linear.app/acme/issue/CORE-06 from its approved project plan. Implement in its isolated worktree, submit one Graphite PR, and do not advance sibling issues.",
       "shouldTrigger": true,
       "expectedSkill": "woostack-execute"
     },

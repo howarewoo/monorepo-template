@@ -36,7 +36,7 @@ design and search skills only enhances the host agent's general vocabulary.
 
 ## Project Rules
 
-Prefetch auto-discovers project rule files (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`) at the repo root, and additionally walks up from each changed file path to collect any `AGENTS.md` / `CLAUDE.md` along the way. The discovered content is concatenated (each section prefixed by a `## SOURCE: <path>` header, 100KB cap) into `$OUTDIR/rules.md` and surfaced to every angle as additional rubric. When that file is present, an extra `conventions` angle fires; the validator drops any finding that claims a rule violation but cannot quote the rule verbatim. Repos without rule files run unchanged.
+Prefetch discovers applicable project rules along changed paths and concatenates them into `$OUTDIR/rules.md`. Rules are a rubric, not tool authority; any finding claiming a rule violation must quote it verbatim. The detector selects a separate `conventions` worker or includes that lens in the holistic worker under the [selection contract](../SKILL.md#2-select-and-dispatch-the-review-queue-once).
 
 ## Per-repo Configuration (`.woostack/config.json`)
 
@@ -108,7 +108,7 @@ Full schema (every key shown; all optional):
 ```
 
 Key reference (JSON has no comments, so the per-key semantics live here):
-- **`angles.force`** — always run these, even if not auto-detected. **`angles.skip`** — never run these (`bugs`/`security`/`simplify` cannot be skipped).
+- **`angles.force`** — always run these, even if not auto-detected. **`angles.skip`** — never run these (`bugs` cannot be skipped). Any non-empty force/skip override preserves the specialist queue rather than consolidating local workers.
 - **`severity_floor`** — one of `low` | `medium` | `high`; a blocking/visibility threshold, **not** a drop gate. **Default `high`**. Findings below the floor surface as non-blocking nits (see `nits`); set `low`/`medium` to treat more findings as normal (at/above-floor). Applied once by `intersect-findings.sh` (Stage 4c).
 - **`nits`** — `true` | `false`; default **`true`**. When `true`, validated findings below `severity_floor` surface as non-blocking nits instead of being dropped. Set `false` to drop them (the pre-reframe behavior). Below-floor `blocking` findings always surface regardless of this knob.
 - **`defer_markers`** — `true` | `false`; default **`true`**. When `true`, the evidence adjudicator honors inline `woostack-defer(<ref>)` markers (authored by `woostack-execute` under an approved plan): a finding that flags work a later increment intentionally completes is demoted to a non-blocking `Deferred to <ref>` nit instead of a normal finding (issue #224). Set `false` to ignore the markers. It never defers `security` findings or wrong code present in this PR; reads the marker from the PR's own diff, so it fetches no other PRs.

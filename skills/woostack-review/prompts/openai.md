@@ -49,7 +49,7 @@ You are running as a parallel worker for a specific angle.
 - Do NOT manage labels.
 - Run ONLY Phase 2 below for your target angle.
 - Write findings to `$OUTDIR/findings.<angle>.json` (default `$OUTDIR/findings.<angle>.json`) and then EXIT.
-- The findings file MUST be a JSON array only — starts with `[`, ends with `]`, no preamble, no markdown fences, no commentary. See *Output Discipline* in `_worker-header.md`. Validate every `line` via `scripts/resolve-diff-line.sh` and drop findings the helper rejects.
+- Follow `_worker-header.md` for JSON serialization, candidate schema, receipt completion, and location handling.
 
 ### MODE: validate
 You are running as the final controller.
@@ -88,7 +88,7 @@ When no such subagent primitive exists, run each angle listed in `$OUTDIR/angles
 
 Stay within each angle's scope; do not let `bugs` flag a design issue or vice versa. `merge-findings.sh` (Phase 3) handles within-angle dedup across chunks.
 
-**Retry-once recovery.** Angle iterations can be cut short by tool-stream errors or turn-limit interrupts and leave no findings file. After the loop finishes, scan `$OUTDIR/angles.txt` (× `chunks.txt` when chunked) and check that each expected `findings.<angle>.json` (or `findings.<angle>.<chunk_id>.json`) exists and parses as a JSON array via `jq -e 'type == "array"'`. For any path that fails the check, re-run THAT angle iteration ONCE. Cap is one retry per `(angle, chunk)` pair; if the retry also fails, leave the file as-is and proceed to Phase 3 — the merge step recovers malformed JSON, and missing files just mean the angle produced no findings.
+Follow `_orchestrator-header.md`'s **Worker completion** protocol before adjudication.
 
 ## Phase 3 — Evidence adjudication
 
