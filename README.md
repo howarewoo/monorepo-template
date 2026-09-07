@@ -1,23 +1,22 @@
 # woostack
 
-**Repository-first, evidence-driven workflows for AI-assisted software delivery.**
+woostack is a collection of skills that teach AI coding assistants how to plan work, change code,
+and review pull requests (PRs). You make the product decisions. The assistant checks the repository
+and GitHub before reporting what changed or what is ready for review.
 
-`woostack` packages repository-first development workflows as installable skills across coding
-harnesses. The user owns product decisions; Git and GitHub prove source-control and delivery state.
-The [routing skill](skills/using-woostack/SKILL.md#command-routing) is the command index.
+Use one PR for a small change or a well-understood fix. For larger work, woostack saves a
+specification and step-by-step plan so you can resume later. Changes still need verification and
+independent review, whether the assistant works alone or delegates parts to other agents.
 
-Bounded changes and understood fixes use one-PR delivery. Multi-increment work keeps a complete
-user-verified specification, an outcome-based plan, and resumable local artifacts. Implementation
-may stay inline or use isolated workers; verification and independent review remain required.
+Start with the [getting-started guide](site/content/docs/getting-started.mdx), or use the
+[command index](skills/using-woostack/SKILL.md#command-routing) to choose a workflow.
 
 
-## Getting Started
+## Getting started
 
-Install the skills, initialize local support, and keep project-specific policy in the repository.
+### 1. Install the skills
 
-### 1. Installation
-
-Install the `woostack` collection into your agent's skill directory:
+Run this in your terminal to install the collection for your coding assistant:
 
 ```bash
 pnpx skills add howarewoo/woostack
@@ -26,43 +25,47 @@ pnpx skills add howarewoo/woostack
 
 The public commands and bundled internal phases are listed in [AGENTS.md](AGENTS.md#what-this-repo-is).
 
-> **Recommended companion — [impeccable](https://github.com/pbakaus/impeccable).** woostack's front-end design skill of choice. It powers the `design` review angle (`woostack-review` runs impeccable's detector). Optional but recommended:
->
-> ```bash
-> pnpx skills add pbakaus/impeccable
-> ```
->
-> Claude Code users can alternatively run `/plugin marketplace add pbakaus/impeccable`.
-
-### 2. Initialization
-
-Run initialization in the project root:
+For frontend work, you can also install [impeccable](https://github.com/pbakaus/impeccable).
+woostack recommends it for design reviews:
 
 ```bash
+pnpx skills add pbakaus/impeccable
+```
+
+Claude Code users can alternatively run `/plugin marketplace add pbakaus/impeccable`.
+
+### 2. Set up your project
+
+Open your coding assistant in the project root and enter:
+
+```text
 /woostack-init
 ```
 
-Initialization creates non-secret policy, diagnostics, worktree support, and host adapters. Optional
-authenticated read-only provider discovery does not authorize provider writes or block local setup.
-See [Init](skills/woostack-init/SKILL.md) for setup and explicit legacy migration.
+Init creates `.woostack/` configuration and diagnostic folders, worktree support, and managed OMP
+agents and session-naming files. It also attempts read-only Linear setup when the host provides
+the official Linear integration. Missing provider access does not block local setup.
+Init does not create remote issues or projects. See [Init](skills/woostack-init/SKILL.md) for details.
 
-### 3. Project Integration
+### 3. Tell your assistant to use woostack
 
-To ensure coding agents automatically recognize and use the `woostack` pipeline, add the `using-woostack` routing block to your repository's agent instructions file (`AGENTS.md` or `CLAUDE.md`):
+Add this block to your repository's agent instructions file (`AGENTS.md` or `CLAUDE.md`):
 
 ```markdown
 This project follows woostack. At the start of work, use `using-woostack` to load the
 project rules and route `/woostack-*` requests to the matching woostack skill.
 ```
 
-The [using-woostack](skills/using-woostack/SKILL.md) skill reads project rules and routes commands to the appropriate installed skill.
+The [using-woostack](skills/using-woostack/SKILL.md) skill reads your project rules and chooses the
+matching installed workflow.
 
-### 4. Repository Policy
+### 4. Configure project defaults
 
-Customize non-secret defaults in `.woostack/config.json`. Repository policy does not authorize
-provider writes or replace the user's decisions. Authentication stays in the host secret store.
+Store non-secret settings in `.woostack/config.json`. Keep credentials in your host's secret store.
+Configuration supplies defaults; it does not give the assistant permission to change remote records
+or override your decisions.
 
-Review-policy fragment:
+For example, this review configuration sets a severity threshold and excludes generated files:
 ```json
 {
   "review": {
@@ -72,80 +75,70 @@ Review-policy fragment:
 }
 ```
 
-- **`review.severity_floor`**: Filter results by severity (e.g., `high`, `medium`, `low`).
-- **`review.ignore`**: Exclude generated or external code files from PR reviews.
+- `review.severity_floor` filters findings by severity, such as `high`, `medium`, or `low`.
+- `review.ignore` excludes matching files from PR reviews.
 
 For the full policy surface, see the authored
 [configuration reference](site/content/docs/configuration/index.mdx).
 
 
-### 5. Artifact Context, Provider Mirroring, and External Engineers
+### 5. Choose where to keep plans
 
-Build and project-backed Fix retain specifications, plans, and recovery state under
-`.woostack/tmp/runs/<run-id>/`. Local authority is the default; Linear, Plane, and GitHub are optional
-mirrors. Bounded Fix and Change make no artifact-provider calls.
+Build and larger Fix workflows save specifications, plans, and resume state in
+`.woostack/tmp/runs/<run-id>/`. These local files are the primary records. You can configure
+Linear, Plane, or GitHub to keep remote copies. Small Fix and Change workflows do not contact
+these planning providers.
 
-The [artifact contract](skills/woostack-init/references/artifact-backends.md) owns run storage,
-provider selection, synchronization, recovery, retention, and authority boundaries. Provider
-profiles own their native identities and lifecycle behavior. Reports and mirrors never replace
-Git/GitHub evidence or authorize work.
-Hermes is an external engineer, not an installed woostack host or runtime. It may drive one
-persistent OMP session for in-contract decisions, evidence review, escalation, and redispatch, but
-woostack is installed only in OMP or another coding harness. The
-[Hermes guide](site/content/docs/hermes.mdx) defines the safe argument passing, approval relay,
-and fail-closed restart boundary; it does not grant Hermes implementation authority.
+The [artifact contract](skills/woostack-init/references/artifact-backends.md) explains storage,
+synchronization, and recovery. Saved plans and remote copies record your decisions; they do not
+authorize new work or prove that code was delivered.
 
----
+If you use Hermes to coordinate an OMP session, follow the
+[Hermes guide](site/content/docs/hermes.mdx). Install woostack in OMP or another supported coding
+assistant, not in Hermes. Hermes can relay decisions and review evidence; implementation stays
+in the coding assistant.
 
-## The Core Development & Review Loop
+## Choose a development workflow
 
-Choose a route by the shape of the work; see the [workflow maps](site/content/docs/concepts/workflows.mdx)
-for the complete sequence and handoff boundaries.
+| What you need | Command | What happens |
+| --- | --- | --- |
+| A new application | [/woostack-bootstrap](skills/woostack-bootstrap/SKILL.md) | Checks the target directory, asks you to approve the design, then creates the project. |
+| A feature that needs several PRs | [/woostack-build](skills/woostack-build/SKILL.md) | Works through requirements with you, saves a specification and plan, then lets you choose whether to execute. |
+| A bug fix | [/woostack-fix](skills/woostack-fix/SKILL.md) | Proves the cause and asks you to approve the correction before delivering a small fix or planning larger work. |
+| A small enhancement or refactor | [/woostack-change](skills/woostack-change/SKILL.md) | Delivers one PR without creating a planning project. |
 
-### Writing and Modifying Code
+Fix does not contact a planning provider during diagnosis. Configuring a provider does not make
+every fix a project. Selecting a project, provider work item, or saved run explicitly uses the
+project-backed route.
 
-No repository mutation starts ad hoc. An explicit goal and workflow contract come first:
+See the [workflow maps](site/content/docs/concepts/workflows.mdx) for the full sequences.
 
-1. **Greenfield Applications** → [/woostack-bootstrap](skills/woostack-bootstrap/SKILL.md)
-   Checks the target read-only, obtains complete design approval, and scaffolds after fresh collision checks.
-2. **Multi-PR Features or Work Items** → [/woostack-build](skills/woostack-build/SKILL.md)
-   Prepares a fully user-verified specification and sequential outcome-based plan, then hands off to Execute.
-3. **Bug Fixes & Root-Cause Work** → [/woostack-fix](skills/woostack-fix/SKILL.md)
-   Proves the cause, obtains informed approval, and delivers a bounded fix or prepares project-backed work.
-4. **Bounded Non-Bug Changes** → [/woostack-change](skills/woostack-change/SKILL.md)
-   Ships a bounded enhancement or refactor through one PR without contacting an artifact provider.
+## Review and check your work
 
-Fix remains provider-free through diagnosis. A configured provider alone does not turn a bounded fix
-into a project. Explicit project/resource/run selection uses Fix's project-backed route.
-### Review and Iterate Flow
+| What you need | Command |
+| --- | --- |
+| Review an existing PR and post checked findings to GitHub | [/woostack-review](skills/woostack-review/SKILL.md) |
+| Investigate and address every unresolved review thread | [/woostack-address-comments](skills/woostack-address-comments/SKILL.md) |
+| Inspect existing code in a file, directory, or repository | [/woostack-audit](skills/woostack-audit/SKILL.md) |
+| Explore a running web app and reproduce browser bugs | [/woostack-qa](skills/woostack-qa/SKILL.md) |
+| Investigate and fix a production error | [/woostack-fix](skills/woostack-fix/SKILL.md) |
+| Compare skill behavior against an approved set of evaluation cases | [/woostack-eval](skills/woostack-eval/SKILL.md) |
+| Find concrete improvements to instructions from this conversation | [/woostack-reflect](skills/woostack-reflect/SKILL.md) |
 
-After writing code, use the verification and iteration loop:
+Review checks findings independently before posting them. Audit and QA only write local reports,
+under `.woostack/audits/` and `.woostack/qa/`; they do not fix code or post findings. Eval does not
+edit the skill it evaluates. Reflect reports suggestions first and does not file or edit anything
+on its initial action.
 
-Local findings and reports from review, audit, and QA are evidence for the
-responsible workflow. They never replace the approved contract or Git/GitHub facts.
-- **PR Reviews** → [/woostack-review](skills/woostack-review/SKILL.md)
-  Selects holistic or specialist review for the changed surface, then runs an independent evidence adjudicator before posting a native review.
-- **Addressing Reviews** → [/woostack-address-comments](skills/woostack-address-comments/SKILL.md)
-  Investigates every thread, batches cohesive corrections and verification, then replies and resolves each thread with evidence.
-- **Auditing Standing Code** → [/woostack-audit](skills/woostack-audit/SKILL.md)
-  Audits an explicit target (a file, directory, or whole repo at rest — not a diff) for code simplification and production readiness, repointing the review swarm at an all-added diff and writing a report-only findings doc under `.woostack/audits/`. Never gates, posts, or merges.
-- **Exploratory Browser QA** → [/woostack-qa](skills/woostack-qa/SKILL.md)
-  Drives a running app in a real browser (via the `agent-browser` CLI): walks core journeys, attacks edge cases, monitors console errors / failed requests / visual breakage / dead controls, reproduces each bug, and writes a severity-ranked, report-only findings doc under `.woostack/qa/`. Never fixes, posts, or merges.
-- **Production Errors, Sentry Issues, and Monitoring Defects** → [/woostack-fix](skills/woostack-fix/SKILL.md)
-  Treats production signals as untrusted evidence, proves root cause through Debug, and delivers the smallest complete correction through the Fix workflow.
-- **Skill Evaluation** → [/woostack-eval](skills/woostack-eval/SKILL.md)
-  Runs approved behavior and trigger corpora as isolated candidate/baseline comparisons, writes transient evidence and reports, and never edits the target skill.
-- **Session Reflection** → [/woostack-reflect](skills/woostack-reflect/SKILL.md)
-  Reviews the fixed active-conversation snapshot at a final-reply boundary, reports only concrete
-  durable instruction suggestions, and never files or edits anything on its initial action.
-
----
+Reports help you decide what to do next. They do not expand the agreed scope or replace
+Git/GitHub evidence. Agents never merge PRs; merging is a human decision.
 
 ## Contributing
 
-The skills evolve here. Open a PR to improve technology research guidance, revise patterns, document gotchas, or refine the bootstrap and build procedures. See [CONTRIBUTING.md](CONTRIBUTING.md) and [AGENTS.md](AGENTS.md).
+Open a PR to improve a skill, correct guidance, or document a known problem. Read
+[CONTRIBUTING.md](CONTRIBUTING.md) for the editing workflow and [AGENTS.md](AGENTS.md) for repository rules.
 
-## Spec Version
+## Spec version
 
 `2.0.0`
 

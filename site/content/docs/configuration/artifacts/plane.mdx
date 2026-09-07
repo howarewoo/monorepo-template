@@ -3,10 +3,13 @@ title: Plane
 description: Reference for Plane artifact mirroring, configuration fields, hierarchy, and lifecycle behavior.
 ---
 
-Select Plane artifact mirroring with `artifacts.provider: "plane"`. The
-[local run](/docs/configuration/artifacts/local) remains authoritative.
+Select Plane artifact mirroring with `artifacts.provider: "plane"`. For Build and project-backed
+Fix, the [local run](/docs/configuration/artifacts/local) remains the source of truth.
 
 ## Configuration
+
+All fields shown below are required when Plane is selected. Replace the example project UUID,
+labels, and state names with verified values from your instance.
 
 ```json
 {
@@ -34,10 +37,10 @@ Select Plane artifact mirroring with `artifacts.provider: "plane"`. The
 | --- | --- | --- |
 | `artifacts.plane.baseUrl` | string | Canonical Plane Cloud or self-hosted API base URL. |
 | `artifacts.plane.workspace` | string | Exact workspace. |
-| `artifacts.plane.repository` | string | Canonical repository URL or repository identity. |
+| `artifacts.plane.repository` | string | Canonical `https://github.com/<owner>/<repo>` URL. The configuration resolver requires this URL form; a bare `owner/repo` is not accepted. |
 | `artifacts.plane.project` | string | Exact Plane project URL or native UUID. All specification and increment work items attach to this project. |
 | `artifacts.plane.projectLabels` | nonempty string array | Required when Plane is selected. Labels resolve by exact native UUID or exact case-sensitive name. |
-| `artifacts.plane.issueStates.*` | string | Native work-item state UUID or exact case-sensitive name. State-group checks apply at the lifecycle boundary. |
+| `artifacts.plane.issueStates.*` | string | Required keys: `planned`, `executing`, `inReview`, `done`, `blocked`. Each value is a native state UUID or exact case-sensitive name. Woostack checks the state group before a transition. |
 
 Credentials belong in the host's authenticated official Plane MCP or OAuth secret store, never in
 repository configuration. Plane supports Cloud and self-hosted instances. Its configuration is
@@ -45,18 +48,27 @@ manual; Init does not discover Plane defaults.
 
 ## Identities and hierarchy
 
-Plane resolves the exact configured project and verifies its instance, workspace, and repository
-association. Build, Fix, and standalone Plan create separate top-level `[Build]`, `[Fix]`, or `[Plan]`
-specification work items in that project. Plan increments are exact children of their specification
-item with strict sibling blocking relations. Readable work-item references remain separate from
-native UUIDs and stable external identities. Woostack never infers or creates the project.
+Woostack resolves the configured project and checks its instance, workspace, and repository
+association. Build, project-backed Fix, and standalone Plan create top-level `[Build]`, `[Fix]`, or
+`[Plan]` specification work items in that project. Bounded Fix does not contact Plane.
+Each increment is a child of its specification item. Native blocking relations connect adjacent
+increments in order. Readable work-item references, internal UUIDs, and external recovery IDs
+are kept separately. Woostack never guesses or creates the project.
 
 ## Lifecycle behavior
 
-Execute changes configured work-item states and aggregates the top-level specification work item's
-state from its children. `issueStates` applies to both levels. The configured project is association,
-not an artifact, so woostack does not configure or mutate Plane project status.
+Provider-mode Execute takes an exact `--issue` reference to a specification work item or one child
+increment. It does not accept `--project` as executable scope. It changes configured work-item
+states and derives the parent specification item's state from its children. `issueStates` applies
+to both levels. Local-run execution skips provider lifecycle changes.
 
-Bootstrap may mirror an approved design after its filesystem barrier when provider persistence is
-explicitly selected. Commit may verify an exact `--issue <id>`, add pull-request attribution, and
-write a delivery note with read-back.
+The configured project associates the work with a repository; its status is never changed by
+woostack. Handoff, abandonment, blockers, and completion leave the project unchanged.
+
+Bootstrap may mirror an approved design after the user approves writing to the verified filesystem
+target and explicitly selects provider persistence. Commit verifies an exact `--issue <id>`, adds
+the required merge-closing PR reference, and may write a requested delivery note with an independent
+read to confirm it was saved.
+
+See the [Plane provider contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/artifact-providers/plane.md)
+for label preservation, recovery IDs, state groups, and retained-run compatibility checks.

@@ -3,50 +3,51 @@ title: Least code, still safe
 description: "woostack's core engineering tenet: write as little code as necessary without cutting edge cases or risks."
 ---
 
-woostack's skills, and the code they generate, write as little code as necessary. Less code is less
-to read, test, and break. "Least code" is a discipline, not a golf score. Correctness and safety set
-its lower bound.
+Write as little code as the problem needs. Less code leaves less to read, test, and maintain, but
+correctness and safety determine how small a solution can be.
 
 ## Understand first, then take the first rung that holds
 
-Laziness applies to the *solution*, never to *reading*. The author reads the touched code and traces
-the real flow end to end before writing anything. The smallest change in the wrong place is a second
-bug. The first rung that solves the problem wins:
+Read the affected code and trace the actual flow from start to finish before choosing a solution.
+Then stop at the first option that solves the problem:
 
-1. **YAGNI:** decide whether the code is needed at all.
-2. **In-tree reuse:** use a helper, utility, or pattern that already exists in the repository.
-3. **The standard library:** use what the language already provides.
-4. **A native platform feature:** use the platform before adding another layer.
-5. **An already-installed dependency:** reuse a dependency the project already carries.
-6. **One line:** prefer a direct expression when it remains clear and safe.
-7. **New code:** only then, write the minimum new code that works.
+1. Decide whether the code is needed at all. This is YAGNI: "you aren't going to need it."
+2. Reuse a helper, utility, or pattern already in the repository.
+3. Use what the language's standard library provides.
+4. Use a native platform feature before adding another layer.
+5. Reuse a dependency the project already has.
+6. Use a direct expression when it is clear and safe.
+7. Write the minimum new implementation.
 
 ## Never shrink code by cutting safety
 
-Deletion beats addition, and boring beats clever. Code is small because it is necessary, not golfed.
-What never gets cut to shrink a diff: validation, error handling, security, accessibility, and
-data-loss handling. Deliberate multi-layer safety redundancy stays (it is not DRY-removable). At
-equal size, pick the edge-case-correct option, and a behavior-changing simplification keeps its
-regression test. A knowingly-cut corner leaves a `why` comment naming its ceiling and upgrade
-path.
+Prefer deletion and straightforward code. Never remove validation, error handling, security,
+accessibility, or data-loss protection just to shrink a diff. Keep deliberate layers of protection,
+even when they repeat a check. The DRY principle ("don't repeat yourself") does not justify removing
+that protection.
+
+When two solutions are the same size, choose the one that handles edge cases correctly. Keep the
+regression test for a simplification that changes behavior. A deliberate limitation needs a `why`
+comment that explains its limit and when to replace it.
 
 ## Comments explain why, not what
 
-Comments are minimal and explain *why*: a hidden constraint, a workaround, or a surprising
-invariant. The code already says *what*.
+Use comments for reasons the code cannot explain: a hidden constraint, a workaround, or a condition
+that must always hold. Avoid repeating what the code already says.
 
 ## Where it lives
 
-The tenet is enforced across the loop, not just stated:
+The standard applies during planning, implementation, and review:
 
 - The full generated-code standard is
   [`patterns.md §7`](https://github.com/howarewoo/woostack/blob/main/skills/woostack-bootstrap/references/patterns.md#7-least-code--comments).
-- At the specification and planning boundaries, [woostack-build](/docs/skills/woostack-build),
-  [woostack-fix](/docs/skills/woostack-fix), [woostack-ideate](/docs/skills/woostack-ideate),
-  [woostack-harden](/docs/skills/woostack-harden), and delegated
-  [woostack-plan](/docs/skills/woostack-plan) require removal or simplification analysis before
-  additive work. [woostack-execute](/docs/skills/woostack-execute) remains the implementation
-  enforcer, while [woostack-change](/docs/skills/woostack-change) applies the authoring discipline
-  to bounded changes.
-- The always-on [`simplify` review angle](/docs/concepts/review-angles) enforces the ladder; the
-  source-triggered `comments` angle catches comment drift when source changes.
+- [woostack-build](/docs/skills/woostack-build) and project-backed
+  [woostack-fix](/docs/skills/woostack-fix) prepare the specification and plan through
+  [woostack-ideate](/docs/skills/woostack-ideate), [woostack-harden](/docs/skills/woostack-harden),
+  and delegated [woostack-plan](/docs/skills/woostack-plan). Harden checks whether safe deletion,
+  reuse, or simplification can satisfy the scope before accepting additions.
+  [woostack-execute](/docs/skills/woostack-execute) applies the standard during implementation,
+  and [woostack-change](/docs/skills/woostack-change) applies it to bounded changes.
+- The [`simplify` review angle](/docs/concepts/review-angles) checks the ladder when selected.
+  Bounded holistic review includes simplicity and comment accuracy in its `general` pass.
+  Separate angle selection follows the detector and explicit configuration.

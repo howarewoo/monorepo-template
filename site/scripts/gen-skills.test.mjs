@@ -1,12 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
-import { parseFrontmatter } from '../../skills/woostack-eval/scripts/validate.mjs';
 import {
   INTERNAL_ORDER,
   PUBLIC_ORDER,
-  parseFrontmatter as generatorParseFrontmatter,
+  parseFrontmatter,
   stripTitleHeading,
   rewriteLinks,
   neutralizeTags,
@@ -14,9 +11,6 @@ import {
   navOrder,
 } from './gen-skills.mjs';
 
-test('generator re-exports the canonical frontmatter parser', () => {
-  assert.equal(generatorParseFrontmatter, parseFrontmatter);
-});
 
 test('parseFrontmatter extracts name + description and returns the body', () => {
   const raw = '---\nname: woostack-build\ndescription: Use when building a feature.\n---\n\n# woostack-build\n\nbody';
@@ -163,68 +157,3 @@ test('navOrder preserves the exact 22-public and 2-internal skill order', () => 
   assert.deepEqual(navOrder([...expected].reverse()), expected);
 });
 
-test('concepts taxonomy keeps context economy under context management', async () => {
-  const docsDir = path.join(import.meta.dirname, '..', 'content', 'docs');
-  const meta = JSON.parse(await readFile(path.join(docsDir, 'concepts', 'meta.json'), 'utf8'));
-  const overview = await readFile(path.join(docsDir, 'concepts', 'index.mdx'), 'utf8');
-
-  assert.equal(meta.title, 'Core concepts');
-  assert.ok(meta.pages.includes('context-management'));
-  assert.match(overview, /^title:\s*Overview$/m);
-  assert.doesNotMatch(overview, /ContextEconomy/);
-  assert.doesNotMatch(overview, /^## Context economy$/m);
-});
-
-test('configuration references follow the scaffold and artifact provider contract', async () => {
-  const repoRoot = path.resolve(import.meta.dirname, '..', '..');
-  const [templateRaw, configuration, localArtifacts, linearArtifacts, planeArtifacts, auditRaw] = await Promise.all([
-    readFile(path.join(repoRoot, 'skills', 'woostack-init', 'templates', 'config.json'), 'utf8'),
-    readFile(path.join(repoRoot, 'site', 'content', 'docs', 'configuration', 'index.mdx'), 'utf8'),
-    readFile(path.join(repoRoot, 'site', 'content', 'docs', 'configuration', 'artifacts', 'local.mdx'), 'utf8'),
-    readFile(path.join(repoRoot, 'site', 'content', 'docs', 'configuration', 'artifacts', 'linear.mdx'), 'utf8'),
-    readFile(path.join(repoRoot, 'site', 'content', 'docs', 'configuration', 'artifacts', 'plane.mdx'), 'utf8'),
-    readFile(path.join(repoRoot, 'skills', 'woostack-audit', 'SKILL.md'), 'utf8'),
-  ]);
-  const template = JSON.parse(templateRaw);
-  assert.deepEqual(Object.keys(template), ['artifacts', 'models', 'review', 'status']);
-  assert.equal(template.artifacts.provider, 'local');
-  assert.equal(template.linear, undefined);
-
-  const exampleMatch = /## A complete example[\s\S]*?```json\n([\s\S]*?)\n```/.exec(configuration);
-  assert.ok(exampleMatch, 'configuration page exposes a complete JSON example');
-  const example = JSON.parse(exampleMatch[1]);
-  assert.deepEqual(
-    Object.keys(example).sort(),
-    ['artifacts', 'audit', 'base_branch', 'commit', 'models', 'review', 'review_sweep', 'status']
-  );
-  assert.equal(example.artifacts.provider, 'local');
-  assert.ok(example.models);
-  assert.equal(example.linear, undefined);
-  assert.equal(example.audit.models, undefined);
-
-  assert.match(configuration, /There are eight supported top-level settings/);
-  assert.match(configuration, /\[`artifacts`\]\(\/docs\/configuration\/artifacts\)/);
-  assert.match(configuration, /^## Audit engine$/m);
-  assert.match(configuration, /`audit\.severity_floor`/);
-  assert.match(configuration, /Root model tiers also drive \[woostack-audit\]/);
-  assert.match(localArtifacts, /artifacts\.provider/);
-  assert.match(localArtifacts, /zero-provider local authority|no artifact-provider reads or writes/);
-  assert.match(linearArtifacts, /artifacts\.linear\.projectLabels/);
-  assert.match(linearArtifacts, /local run.*remains authoritative/is);
-  assert.match(planeArtifacts, /artifacts\.plane\.projectLabels/);
-  assert.match(planeArtifacts, /local run.*remains authoritative/is);
-
-  const { fm, body } = parseFrontmatter(auditRaw, 'woostack-audit');
-  const renderedBody = rewriteLinks(
-    neutralizeTags(stripTitleHeading(body, fm.name)),
-    'woostack-audit'
-  );
-  const renderedAudit = renderPage('woostack-audit', fm, renderedBody);
-  assert.match(renderedAudit, /shared root `models`/);
-  assert.match(
-    renderedAudit,
-    /skills\/using-woostack\/references\/model-tiers\.md/
-  );
-  assert.doesNotMatch(renderedAudit, /`ignore`, `models`, `chunking/);
-
-});

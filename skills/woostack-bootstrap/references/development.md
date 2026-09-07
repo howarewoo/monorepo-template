@@ -1,61 +1,45 @@
-# Development Guide
+# Development guide
 
-End-to-end workflow for shipping a change into a project bootstrapped from this spec.
+Use these workflows when changing a project created with woostack.
 
 ## The loop
 
-The loop is **automated by the woostack skill collection** — these are the source of truth
-for each phase:
+Each skill owns its procedure:
 
 | Phase | Skill |
 |---|---|
-| Build a feature or work item requiring multiple PRs, idea → implementation (gated chain — the skill owns the steps) | `woostack-build` |
-| Fix a bug or do root-cause work, diagnosis → implementation (gated fix loop) | `woostack-fix` |
-| Implement a bounded non-bug enhancement or refactor that fits one reviewable PR (no approval gate or persisted plan) | `woostack-change` |
-| Review | `woostack-review` |
-| Audit standing code (simplify + production-readiness) | `woostack-audit` |
-| Exploratory-QA a running app in the browser | `woostack-qa` |
+| Plan a feature that needs several PRs, then choose whether to execute | `woostack-build` |
+| Diagnose a bug and obtain approval for its correction | `woostack-fix` |
+| Deliver a small enhancement or refactor in one PR | `woostack-change` |
+| Review an existing PR | `woostack-review` |
+| Audit existing code | `woostack-audit` |
+| Check a running app in a browser | `woostack-qa` |
 | Production errors, Sentry issues, and monitoring defects | `woostack-fix` |
 | Evaluate approved behavior and trigger corpora for a skill without editing it | `woostack-eval` |
 | Reflect on the fixed active-conversation snapshot for concrete durable instruction suggestions | `woostack-reflect` |
 
-Each command is discrete and ends by offering the next step. Merge stays with the human.
+Follow the selected command's handoff rules. Only a human can merge a PR.
 
-Review config and explicitly non-authoritative diagnostic output may remain under `.woostack/`;
-review metrics `.woostack/metrics.json` are gitignored. None determine development scope, phase,
-approval, assignment, dependencies, or acceptance.
+Review configuration and diagnostic reports may remain under `.woostack/`.
+Review metrics in `.woostack/metrics.json` are ignored by Git. These records do not authorize work
+or determine its scope.
 
 ## Artifact provider records
 
-Canonical persistent local run manifests under `.woostack/tmp/runs/<run-id>/` own product scope and
-execution contracts for builds and post-diagnosis fixes, with optional Linear, Plane, or GitHub mirroring
-(`artifacts.provider: "linear"`, `artifacts.provider: "plane"`, or `artifacts.provider: "github"`). Git, Graphite, and canonical
-GitHub evidence remain authoritative for repository execution and delivery:
+Build and project-backed Fix save a local run under `.woostack/tmp/runs/<run-id>/`.
+The run contains the manifest, `project-spec.md`, and `execution-plan.md`.
+Linear, Plane, and GitHub can hold optional remote copies. A failed mirror operation is recorded
+and does not block local planning.
 
-- a build project stores the evolving high-level specification;
-- one direct project issue or parentless work item per build increment stores the complete
-  executor-ready plan and native dependency/blocking edges encode the DAG; and
-- one fix issue or work item stores the proved diagnosis and complete executor-ready fix plan.
+The [artifact contract](../../woostack-init/references/artifact-backends.md) defines storage,
+provider selection, synchronization, and recovery. Use the selected provider's linked profile
+for its resource types and authentication requirements. Keep credentials in the host's
+authentication store, not in repository configuration.
 
-The responsible user's exact native approval event clears only its matching content revision. It
-does not assign a worker, prove source-control state, or replace review or acceptance. Every mutation
-uses stable operation identity and independent read-back under the canonical
-[artifact contract](../../woostack-init/references/artifact-backends.md).
-
-Provider documents, unconfigured backends, and local spec, plan, fix, progress, or overnight files
-are not build/fix product authority. Effective repository configuration (`.woostack/config.json` plus
-optional local override) is non-secret policy; its `artifacts.linear`, `artifacts.plane`, or `artifacts.github` object may
-provide validated repository/workspace/team/native-name defaults but never credentials, write
-permission, or approval. Provider authentication stays in the host's official Linear or Plane
-MCP/OAuth connection or host-authenticated gh CLI. Missing required capability blocks build or a proved fix at its retained
-boundary. Woostack does not issue custom HTTP/GraphQL requests or consume repository credentials.
-GitHub GraphQL remains valid for Projects v2 and issue dependency operations through host-authenticated gh, and GitHub source-control operations such as review-thread handling.
-
-Artifact-optional workflows retain their documented selection boundary. Missing optional artifact
-access blocks only that artifact operation. `woostack-change` never contacts a provider.
-[`woostack-build`](../../woostack-build/SKILL.md) uses two approvals: the exact project
-specification revision, then the exact complete direct-issue graph. Material edits invalidate the
-matching approval and return to specification hardening or graph hardening.
+[`woostack-build`](../../woostack-build/SKILL.md) verifies requirements with the user, writes the
+specification and plan, then offers `Stop here`, `Execute`, or `Abandon`. Follow its
+current handoff procedure. Saved files and provider records do not grant permission to start work.
+Small Fix and Change workflows do not contact an artifact provider.
 
 [`woostack-bootstrap`](../SKILL.md) owns greenfield routing and complete-design approval;
 its [filesystem procedure](bootstrap.md#filesystem-write-barrier-and-collision-check) owns bounded
@@ -81,26 +65,21 @@ chooses Linear persistence.
 
 ## Branching model
 
-| Branch | Role | Parent | Direction |
-|---|---|---|---|
-| `main` | Production. What's running for users. | — | Receives from the integration branch |
-| `staging` | Example integration branch. Pre-prod testing. | `main` | Receives from feature branches |
-| `feature/<name>` | One change. One PR. | resolved integration branch | Merged into the integration branch via PR |
+The repository chooses its integration branch. Some projects use `main`; others test changes on
+a branch such as `staging` before a human merges a release into `main`.
 
-**Rules:**
-- Every feature branch is cut from the resolved integration branch, not `main`.
-- Every PR targets the resolved integration branch.
-- The integration branch is merged into `main` on a regular cadence (weekly, or per release) after manual/automated testing on the integration environment.
-- Never PR directly into `main` except for emergency hotfixes (and even then, cherry-pick into the integration branch immediately after).
-- Never force-push to `main` or the integration branch.
+| Branch | Purpose | Parent and PR target |
+| --- | --- | --- |
+| Integration branch | Shared base for new work | Resolved from repository configuration and Git evidence |
+| First feature branch | First PR in a plan | Verified integration branch |
+| Dependent feature branch | Next PR in a stack | The approved predecessor's branch |
 
-Use Graphite (`gt create`, `gt modify`, `gt submit`) to manage stacks. The integration/trunk branch is **per-repo configurable**; resolve it through the [worktree/base-branch contract](../../woostack-init/references/worktrees.md) and use that value as the base of the stack. The example table above uses `staging` to illustrate the integration role, not as a hardcoded requirement.
+Use Graphite (`gt create`, `gt modify`, `gt submit`) to manage stacks. Follow the
+[worktree/base-branch contract](../../woostack-init/references/worktrees.md) to resolve the base
+and verify each predecessor before starting dependent work. Never force-push to `main` or the
+integration branch.
 
 ## When to deviate
 
-The loop is the default. Bypassing steps is allowed when the change is genuinely small (typo fix, comment edit, version bump) or genuinely urgent (production incident).
-
-Document any deviation in the PR description so reviewers understand why the usual gates were skipped.
-
-
-Wall time: 0.18 seconds
+Use the selected skill's rules for small or urgent changes. Document any permitted deviation in
+the PR description so reviewers understand it. Urgency does not waive approval or merge restrictions.

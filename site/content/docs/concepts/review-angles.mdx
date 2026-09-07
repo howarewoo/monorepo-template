@@ -3,25 +3,26 @@ title: Review angle reference
 description: The review lenses, automatic detection rules, and model tier for each angle.
 ---
 
-Review lenses cover concerns such as correctness, security, SQL, and accessibility. Local bounded
-low-risk changes use one holistic reviewer; risk-bearing, broad, CI, audit, or explicitly configured
-reviews retain specialist workers. Every route uses independent adjudication and verified receipts.
+A review angle is a concern to check, such as correctness, security, database behavior, or
+accessibility. A bounded low-risk local review uses one worker to cover the relevant concerns.
+Broader, riskier, CI, audit, or explicitly configured reviews use specialists. An independent
+adjudicator checks proposed findings against evidence, and receipts record the work each reviewer did.
 
 ## Angle selection
 
 The [detector](https://github.com/howarewoo/woostack/blob/main/skills/woostack-review/scripts/detect-angles.sh)
-owns the selection heuristics. It starts with general correctness and adds specialists from
-changed-path, changed-line, or verified context signals. Before dispatch it may consolidate the
-bounded local queue into `general`, which covers correctness, security/compatibility, simplicity,
-project rules, acceptance, documentation, and tests.
+defines automatic selection. It starts with correctness and adds angles based on changed paths,
+changed lines, or verified context. Before starting workers, it may combine a bounded low-risk local
+review into one `general` pass. That pass covers correctness, security and compatibility, simplicity,
+project rules, acceptance criteria, documentation, and tests.
 
 Explicit force/skip settings preserve specialist selection. `force` wins a tie; the base `bugs`
 pass cannot be skipped. See [angle selection](/docs/configuration#angle-selection).
 
 ## Angle catalog
 
-The catalog describes each lens. Automatic path/token rules live only in the detector; prompt
-frontmatter owns the worker tier.
+The catalog describes each concern. The detector contains the automatic path and text rules;
+each angle's prompt metadata sets its default worker tier. Angles can also be explicitly selected.
 
 | Angle | Concern |
 | --- | --- |
@@ -49,26 +50,31 @@ frontmatter owns the worker tier.
 
 
 <Callout type="info">
-  Three angles behave specially. `comments` is always non-blocking: it posts nits, never a blocking finding. `conventions` only runs when the repo carries a rule file (AGENTS.md, CLAUDE.md, .cursorrules, .windsurfrules, or GEMINI.md) along the changed paths. `acceptance` only runs when prefetch resolves governing woostack intent; a later-increment `woostack-defer(<ref>)` marker can demote matching missing work to a visible non-blocking nit, but never defers security.
+  `comments` findings are always non-blocking. Automatic selection adds `conventions` when prefetch
+  finds applicable repository rules, and `acceptance` when it resolves the intent governing the
+  change. Explicit configuration can request these angles too, but they still need their supporting
+  context. Only the adjudicator can use a verified later-increment `woostack-defer(<ref>)` marker to
+  turn matching missing work into a visible non-blocking finding. Security findings cannot be deferred.
 </Callout>
 
 ## Pre-flight use
 
-The same angle vocabulary also applies before implementation. When
-[`woostack-harden`](/docs/skills/woostack-harden) hardens a specification or plan, and when
-[`woostack-plan`](/docs/skills/woostack-plan) reviews its own work, a specification and plan
-pre-flight translates each relevant lens into questions to answer before implementation. A
-separate premise lens always checks the problem at the earliest problem-bearing artifact. Plan
-hardening also verifies that the linked source specification records the evidence. These checks do
-not add an approval gate. Pull request review still applies the angles to each code increment.
+[`woostack-harden`](/docs/skills/woostack-harden) uses relevant review concerns as questions while
+checking a specification or plan against repository evidence. It always checks the premise: does
+the evidence support the stated problem or constraint? Other questions apply only where relevant.
+Harden raises one discrepancy at a time and waits for the user's decision.
+
+[`woostack-plan`](/docs/skills/woostack-plan) checks the ordered increments and their contracts.
+Neither owns an approval gate. These planning checks do not replace pull request review of the code.
 
 ## Tiers
 
-Each angle runs at a model tier matched to its work: `fast` for rubric and pattern checks, and
-`standard` for reasoning-heavy passes. One evidence adjudicator filters every candidate at `deep`.
-The tier-to-model mapping per provider is documented in
-[Context management](/docs/concepts/context-management#isolated-agents-receive-bounded-envelopes). The
-[model selection reference](/docs/configuration#model-selection) lists the available overrides.
+A tier selects the level of model work: `fast` for rubric and pattern checks, `standard` for
+reasoning-heavy passes, and `deep` for the independent evidence adjudicator. Prompt metadata supplies
+defaults; supported overrides can change the effective tier or model.
+[Context management](/docs/concepts/context-management#isolated-agents-receive-bounded-envelopes)
+links to the host-specific routing rules, including OMP's host-owned roles. See
+[model selection](/docs/configuration#model-selection) for overrides.
 
 ## Where to go next
 

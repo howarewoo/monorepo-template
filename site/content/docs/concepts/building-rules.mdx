@@ -3,9 +3,9 @@ title: Building rules
 description: The plain-artifact local-authority build loop, optional Linear, Plane, or GitHub mirroring, and bounded one-PR routes.
 ---
 
-The user owns product decisions. Git and GitHub prove repository delivery. Project-backed work
-retains its specification, plan, and recovery state locally; bounded work uses its active approved
-contract.
+The user decides the product and authorizes work. Git and GitHub show what was delivered.
+Project-backed work keeps a specification, ordered plan, and recovery state locally. Bounded
+work fits one pull request (PR) and uses the agreed scope in the current conversation.
 
 ## Workflow scope
 
@@ -14,7 +14,7 @@ contract.
 | Bounded bug or regression | [woostack-fix](/docs/skills/woostack-fix) | proved diagnosis and complete user-approved correction/verification | none |
 | Bounded non-bug change | [woostack-change](/docs/skills/woostack-change) | one explicit goal/contract | none |
 | Larger or explicitly project-backed fix | [woostack-fix](/docs/skills/woostack-fix) | complete user-verified specification and increment plan | optional mirror |
-| Multi-increment feature | [woostack-build](/docs/skills/woostack-build) | plain specification plus direct-issue graph | local run manifest, direct increment contracts, dependencies (optional Linear, Plane, or GitHub mirror) |
+| Multi-increment feature | [woostack-build](/docs/skills/woostack-build) | user-verified specification and ordered local increment plan | optional Linear, Plane, or GitHub mirror |
 | Greenfield codebase | [woostack-bootstrap](/docs/skills/woostack-bootstrap) | complete approved design | exact artifact or explicit persistence request only |
 
 The shape of the work determines the workflow. Development records cannot turn ambiguous scope
@@ -22,11 +22,12 @@ into a complete contract or replace direct repository evidence.
 
 ## Planning and informed approval
 
-The [workflow map](/docs/concepts/workflows) owns the human-readable Build/Fix sequence. Ideate
-collects complete user-verified decisions; Harden reconciles them against repository evidence one
-discrepancy at a time. Technical details do not become approved merely because they match existing
-code. Plan records outcomes, scope, acceptance, verification, material risks, and sequential
-dependency/parent bindings rather than prescribing each coding step or estimating changed lines.
+The [workflow map](/docs/concepts/workflows) shows the Build/Fix sequence. Ideate collects decisions
+that the user verifies. Harden checks those decisions against the repository and raises one
+discrepancy at a time. Technical details do not become approved just because they match existing code.
+Plan divides the work into increments, each small enough for one PR. It records outcomes, scope,
+acceptance criteria, verification, risks, and the dependency order and parent branches. It does not
+prescribe every coding step or estimate changed lines.
 
 Build and project-backed Fix use the
 [verified handoff](/docs/skills/woostack-build#verified-handoff). The user sees the complete artifacts
@@ -34,39 +35,45 @@ before choosing whether to execute, stop, or abandon. Clear natural-language cho
 ambiguity or a material change to the approved contract cannot start execution.
 
 The [artifact contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/artifact-backends.md)
-owns persistence, base-change admission, mirrors, and recovery. A changed integration parent tip
-still requires the user's explicit choice before source mutation.
+defines storage, optional mirrors, recovery, and how to handle a changed base branch. If the
+integration branch's tip has changed since planning, the user must choose what to do before mutation.
 
 ## Execution invariants
 
-- One independently shippable increment maps to at most one PR.
-- Execute accepts `--run <exact-run-id> [--recheck]`, `--project <...>`, or `--issue <...>`. Sequential
-  execution within each run; distinct runs in isolated worktrees may run concurrently when
-  responsibility surfaces do not collide.
-- Each active task has one controller identity, branch, collision-safe worktree, allowed surface,
-  and current head.
-- Implementation may run inline or in an isolated worker. Focused verification, the real changed-path
-  smoke scenario, and independent specification validation precede commit/PR delivery.
-- Graphite preserves stack ancestry. GitHub proves PR/head/base/check/review/merge state.
-- Every workflow stops on scope, ancestry, collision, evidence, or review drift. No workflow merges.
+- Each increment fits at most one PR.
+- Execute requires exactly one of `--run <exact-run-id> [--recheck]`, `--project <...>`, or
+  `--issue <...>`. Provider forms require configured provider access. Plane uses `--issue`;
+  its project is not an executable scope. See [Execute](/docs/skills/woostack-execute) for exact inputs.
+- Tasks run sequentially within each run. Separate runs may run concurrently only when their paths,
+  branches, worktrees, PRs, and responsibilities do not overlap.
+- Each active task has one controller, branch, collision-safe worktree, allowed set of paths, and
+  current head commit.
+- Implementation may run in the current session or in a separate worker. Focused checks, a smoke
+  test of the changed behavior, and independent comparison against the approved task precede delivery.
+- Graphite manages parent-child branch relationships. GitHub shows PR, commit, review, and merge
+  state. Available CI checks are observation-only; their result or availability alone does not block.
+- Unresolved scope, ancestry, collision, required-evidence, or review conflicts stop the workflow.
+  Agents never merge, mark a PR ready, enable auto-merge, or queue a PR for merge.
 
 ## Canonical local records and optional remote mirroring
 
-Build and project-backed Fix use local authority by default. Provider selection and native resource
-semantics live in the [configuration reference](/docs/configuration) and the linked provider
-profiles, not a second workflow definition here. Bounded Fix and Change make no provider calls.
+Build and project-backed Fix use local records as the source of truth for the plan. The
+[configuration reference](/docs/configuration) and its provider profiles explain provider selection
+and each provider's resource types. Bounded Fix and Change make no provider calls.
 
 Run artifacts are retained after completion or abandonment. Abandoning a local run leaves its mirror
 unchanged. Standalone provider lifecycle operations follow the selected profile and never confer
 source-control authority.
+
 ## Authority boundaries
 
 | Surface | Authority |
 | --- | --- |
 | User request and decisions | initiates the selected workflow and authorizes decisions |
-| Local run manifest (`.woostack/tmp/runs/<run-id>/`) | project-backed scope, plans, contracts, and recovery state |
+| Local run manifest (`.woostack/tmp/runs/<run-id>/`) | records project-backed scope, plans, task contracts, and recovery state; does not grant permission |
 | Git and GitHub | source, ancestry, commits, PRs, checks, reviews, merge evidence |
 | Graphite | stack and branch operations |
 | Audit, QA, response reports | sanitized non-authoritative diagnostic evidence |
+
 The [Hermes guide](/docs/hermes) documents how an external engineer can review harness evidence
 without receiving implementation authority.

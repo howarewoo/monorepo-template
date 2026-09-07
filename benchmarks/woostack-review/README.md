@@ -2,32 +2,41 @@
 
 ## Purpose and cohort
 
-[`benchmark.mjs`](benchmark.mjs) owns the deterministic evidence contract for `woostack-review`.
-[`corpus.json`](corpus.json) remains the pinned ten-case Code Review Bench inventory at commit
-`fbc5425c5eec52932aa1303708873d341968fa1c`; `verify-corpus` still verifies all ten cases and all 30
-goldens byte-for-byte. A development run selects only the five retained rank-one cases recorded in
-`manifest.json.caseIds`. That is the only cohort comparable with the historical five-PR baseline.
+[`benchmark.mjs`](benchmark.mjs) checks the evidence used to score `woostack-review`.
+[`corpus.json`](corpus.json) lists ten fixed Code Review Bench cases from commit
+`fbc5425c5eec52932aa1303708873d341968fa1c`. With the upstream checkout supplied, `verify-corpus`
+checks all ten selected cases and their 30 reference findings, called *goldens*.
+A development run uses only the five rank-one cases listed in `manifest.json.caseIds`.
+Only that group can be compared with the historical five-PR baseline.
 
-A single completed run is **directional development evidence**. It is not a ten-PR or 50-PR score,
-a release result, or a variance estimate. The benchmark preserves the existing Core definitions of
-TP, FP, FN, precision, recall, F1, and F2. Core includes `api`, `bug`, `concurrency`, `data`,
-`doc_defect`, `perf`, `security`, and `test_gap`; a candidate matched only to an excluded golden is
-not a false positive.
+One completed run can show whether a change looks promising. It cannot establish a release score,
+show variation across repeated runs, or stand in for a ten-PR or 50-PR benchmark.
+
+The Core scoring categories are `api`, `bug`, `concurrency`, `data`, `doc_defect`, `perf`,
+`security`, and `test_gap`. A true positive (TP) is a matched Core golden; a false negative (FN)
+is a missed Core golden. A false positive (FP) is a candidate not selected as a match for any golden.
+A candidate selected as the match for an excluded golden is not a false positive.
+Precision is `TP / (TP + FP)`; recall is `TP / (TP + FN)`. F1 balances both, while F2 gives
+recall more weight. These definitions are unchanged from the historical benchmark.
 
 ## Prerequisites
+
+This is a maintainer benchmark that creates remote repositories and incurs model costs.
+Repository policy requires prior approval of the exact owner, repository names, count, purpose,
+and cleanup plan before creating them. Use local temporary repositories for other evaluation work.
 
 - `git`, `gh`, `jq`, `node`, `omp`, and `sqlite3` on `PATH`.
 - `gh` authenticated to an owner where five fresh private fixture repositories and pull requests
   may be created.
 - Code Review Bench checked out at `fbc5425c5eec52932aa1303708873d341968fa1c` (the standard local
   checkout is `/tmp/woostack-code-review-benchmark`).
-- Fresh isolated OMP review and judge sessions and the benchmark judge model available through host
-  roles; direct provider API keys are not required.
-- OMP accounting at `$HOME/.omp/stats.db`, or `WOO_BENCHMARK_USAGE_DB` set to the exact database.
-  The harness uses exact database rows when present and otherwise reads the same immutable usage
-  records from bound session JSONL files; it never recalculates provider prices.
-- A create-new run root outside the repository and five fresh fixture PRs. Existing reviews cannot
-  be reused because incremental state and prior threads change the review contract.
+- Fresh, separate OMP sessions for reviewers and judges, with the benchmark judge model available
+  through host roles. Direct provider API keys are not required.
+- An OMP accounting database at `$HOME/.omp/stats.db`, or an existing database selected by
+  `WOO_BENCHMARK_USAGE_DB`. The runner requires this file. If it has no rows for the bound sessions,
+  the scorer reads usage records from those exact session JSONL files. It never recalculates prices.
+- A new run directory outside the repository and five new fixture PRs (PRs created as test inputs).
+  Do not reuse reviews: prior comments and incremental review state can change the result.
 
 Resolve inputs without creating the run root:
 
@@ -35,7 +44,7 @@ Resolve inputs without creating the run root:
 ./benchmarks/woostack-review/run.sh --dry-run --org OWNER
 ```
 
-Run the complete directional cohort from the repository root:
+After obtaining that approval, run the five-case benchmark from the repository root:
 
 ```bash
 ./benchmarks/woostack-review/run.sh --org OWNER
@@ -46,16 +55,19 @@ Use `--run-root PATH`, `WOO_BENCHMARK_RUN_ROOT`, `WOO_BENCHMARK_ORG`, and
 
 ## Evidence protocol
 
-1. Verify the immutable corpus against the pinned upstream checkout:
+The controller coordinates the run. Reviewers propose findings, one adjudicator checks them,
+and judges compare accepted findings with the goldens. A receipt is a saved record linking an
+operation to its inputs and result. Keep the required files below so the scorer can verify each step.
+
+1. Check the corpus against the fixed upstream checkout:
 
    ```bash
    node benchmarks/woostack-review/benchmark.mjs verify-corpus \
      --benchmark-root /tmp/woostack-code-review-benchmark
    ```
 
-2. Initialize one create-new historical-five-PR run. Initialization snapshots the full corpus and a
-   byte inventory of the complete review skill while creating case directories only for the five
-   rank-one case IDs:
+2. Initialize a new historical-five-PR run. This saves the full corpus and hashes of all review
+   skill files, then creates case directories for only the five rank-one case IDs:
 
    ```bash
    node benchmarks/woostack-review/benchmark.mjs init \
@@ -103,13 +115,12 @@ Use `--run-root PATH`, `WOO_BENCHMARK_RUN_ROOT`, `WOO_BENCHMARK_ORG`, and
      --gh "$(command -v gh)"
    ```
 
-   The helper derives the repository and PR from the case fixture, derives the event from the
-   payload, atomically claims a durable per-case lock, and invokes exactly one native
-   `gh api --method POST ... --input <payload>` process without a shell. Before it returns, it
-   persists the returned review ID, event, and attempt in `delivery-create.json`. If the native
-   outcome cannot be established, the same path remains a durable `INDETERMINATE` receipt. The lock
-   is never removed: no later helper or native create is permitted, including after read-back
-   failure.
+   The helper reads the repository and PR from the case fixture and the event from the payload.
+   It creates an exclusive per-case lock, then runs exactly one
+   `gh api --method POST ... --input <payload>` process without a shell. Before returning, it saves
+   the review ID, event, and attempt in `delivery-create.json`. An uncertain outcome is recorded as
+   `INDETERMINATE`. The lock stays in place: never retry the helper or create the review another way,
+   even if reading the posted review fails.
 
    After a successful create, invoke the benchmark-owned read-back exactly once:
 
@@ -137,11 +148,10 @@ Use `--run-root PATH`, `WOO_BENCHMARK_RUN_ROOT`, `WOO_BENCHMARK_ORG`, and
    `COMMENTED`, `APPROVE` to `APPROVED`, and `REQUEST_CHANGES` to `CHANGES_REQUESTED`.
 
 
-   Candidate-generation job counts come only from `swarm-metrics.json` and its receipts.
-   Adjudication completion comes only from the sole adjudicator receipt and artifacts. Rejections
-   are reported as first-pass candidate failures, invalid-after-retry candidates, missing receipts,
-   candidates rejected by the adjudicator, and deterministic-finalizer rejections. No retired
-   prosecutor/defender counters are accepted.
+   Count candidate-generation jobs from `swarm-metrics.json` and its receipts. Confirm adjudication
+   from its single receipt and output files. Report first-pass failures, invalid candidates after
+   retry, missing receipts, findings rejected by the adjudicator, and finalizer rejections separately.
+   Do not use the retired prosecutor/defender counters.
 
 4. Record exact stage intervals and closed OMP session bindings in
    `<run-root>/stage-timings.json`:
@@ -178,7 +188,7 @@ Use `--run-root PATH`, `WOO_BENCHMARK_RUN_ROOT`, `WOO_BENCHMARK_ORG`, and
    attestation, prompt assertion, time window, nearest session, partial ingestion, or incomplete
    aggregate is invalid.
 
-5. Freeze candidates and semantic pairs:
+5. Save the candidate list and golden/candidate pairs that judges will compare:
 
    ```bash
    node benchmarks/woostack-review/benchmark.mjs plan \
@@ -196,13 +206,13 @@ Use `--run-root PATH`, `WOO_BENCHMARK_RUN_ROOT`, `WOO_BENCHMARK_ORG`, and
      -- <all-other-omp-arguments>
    ```
 
-   The helper owns the create-new session directory, selects `30m` for candidates and `15m` for
-   adjudicators and judges, inserts the session and timeout arguments, spawns with ignored stdin,
-   captures stdout/stderr, and waits for exit. It fails closed on a nonzero exit, a session-directory
-   collision, anything other than one JSONL session, or a session without a terminal assistant entry.
-   Its JSON output is evidence derived from the actual child argv, exit, and session and is appended
-   unchanged to `stage-timings.json`; callers do not supply timeout, stdin, closure, session-file, or
-   terminal-entry claims.
+   The helper creates a new session directory and sets a `30m` timeout for candidates or `15m` for
+   adjudicators and judges. It ignores stdin, captures stdout/stderr, and waits for the process to exit.
+   It stops on a nonzero exit, an existing session directory, anything other than one JSONL session,
+   or a session without a final assistant entry.
+   Append its JSON output unchanged to `stage-timings.json`. The helper derives these records from
+   the actual process and session; callers must not supply their own claims about the timeout,
+   stdin, process closure, session file, or final entry.
 
    Every candidate is exactly `<title>. <description>` in retained finding order. Before dispatch,
    write one `judge-contract.json` pinning provider, model, agent type, tier, and effort for the
@@ -224,12 +234,12 @@ Use `--run-root PATH`, `WOO_BENCHMARK_RUN_ROOT`, `WOO_BENCHMARK_ORG`, and
      --usage-db "$HOME/.omp/stats.db"
    ```
 
-Missing, malformed, duplicate, inconsistent, or incomplete manifests, receipts, review artifacts,
-delivery read-backs, stage intervals, exact bound-session terminal OMP usage, judge contracts,
-judgments, or judge receipts block before `result.json` is created. The harness never fabricates
-zero usage or marks partial accounting as success. `result.json` is create-new; retain it with the
-manifest, corpus/skill inventory, review OUTDIRs, fixture/delivery evidence, timing and
-terminal-session bindings, judge plan/contract/decisions/receipts, and usage-source identity.
+The scorer stops before creating `result.json` if required evidence is missing, malformed,
+duplicated, inconsistent, or incomplete. This includes manifests, receipts, review files, posted-review
+read-backs, timings, session usage, judge settings, and judgments. Missing usage must not become zero
+usage, and partial accounting is not success.
+`result.json` must be a new file. Keep it with the manifest, corpus and skill inventory, review output
+directories, fixture and delivery records, timings and session links, judge files, and usage-source identity.
 
 ## Result schema and authoritative sources
 
@@ -264,16 +274,15 @@ All checks must pass:
 | Wall time | `< 19m 17.335s` (`1,157,335 ms`) | 38m 34.670s |
 | Exact bound-session model cost | `< $79.5203485` | $159.040697 |
 
-A failed check is evidence that the correction did not clear the approved boundary. Report the
-first failed design boundary and preserve the run; do not claim completion, release variance, or a
-larger-cohort result.
+A failed check means the change did not meet the benchmark's development threshold. Report the
+first failure and keep the run files. Do not report a passing result, variation across runs, or a
+larger benchmark score.
 
 ## Historical five-PR runs
 
-Keep completed directional runs here in chronological order. Record the exact run identity and
-skill bytes, not only the branch or PR that produced them. A run remains historical evidence even
-when `comparison.passed` is false; do not reinterpret a narrower change-specific acceptance gate as
-the benchmark's directional gate.
+Keep completed runs here in chronological order. Record the run identity and exact skill hashes,
+not just the branch or PR. A failed run is still useful historical evidence. Passing a narrower
+change-specific check does not mean the benchmark passed.
 
 | Date | Run | TP / FP / FN | Precision / recall / F2 | Wall time | Exact cost | Directional gate |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
@@ -281,7 +290,7 @@ the benchmark's directional gate.
 | 2026-08-13 | `woo189-20260813i` | 3 / 6 / 9 | 33.3% / 25.0% / 26.3% | 34m 17.903s | $15.022457 | Failed |
 | 2026-08-14 | `woo-fp-e5ec6afc-tmp2` | 3 / 2 / 9 | 60.0% / 25.0% / 28.3% | 9m 43.285s | $15.6895778 | Failed |
 
-### Retained baseline — 2026-08-12
+### Retained baseline (2026-08-12)
 
 The retained baseline used `woostack-review` revision
 `249522f3f3f0a33949b28c0515e8db62ef66b413` on Oh My Pi across the five rank-one fixtures. It
@@ -295,7 +304,7 @@ across 1,427 model requests: 12,425,670 input tokens, 300,971 output tokens, and
 cache-read tokens. This is one historical observation under the retired workflow, not a price
 forecast, release distribution, ten-PR result, or 50-PR result.
 
-### Single-adjudicator run — 2026-08-13
+### Single-adjudicator run (2026-08-13)
 
 Run `woo189-20260813i` captured skill fingerprint
 `sha256:52297cb08f418683c5bc0ea89b7c08412f95aaba6b5e455ebf0af2e6aba0400c`.
@@ -307,7 +316,7 @@ Wall time was 34 minutes 17.903 seconds. Exact accounting was $15.022457 across 
 1,339,867 input tokens, 74,903 output tokens, and 12,152,064 cache-read tokens. The run reduced cost
 but did not clear the directional gate: TP, recall, F2, and wall time failed their thresholds.
 
-### Absence-only test-gap evidence gate — 2026-08-14
+### Absence-only test-gap evidence gate (2026-08-14)
 
 Run `woo-fp-e5ec6afc-tmp2` captured skill fingerprint
 `sha256:df0cc38a3de1ec0dee7adc32b8659b8bbe564ebd228a8565855d2d00c85321bf`.

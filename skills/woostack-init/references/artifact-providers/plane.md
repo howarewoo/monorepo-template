@@ -9,7 +9,7 @@ capabilities, membership, and work-item lifecycle mappings.
 ## Configuration and scope
 
 Require a validated `artifacts.plane` object containing canonical `baseUrl`, `workspace`,
-`repository` (canonical repository `owner/name` or URL), `project` (exact Plane project URL or
+`repository` (canonical HTTPS GitHub URL, `https://github.com/owner/repo`), `project` (exact Plane project URL or
 native UUID), nonempty `projectLabels`, and `issueStates`. Resolve configuration only after Plane is
 selected. `issueStates` owns lifecycle mapping for both top-level specification work items and child
 increment work items. Plane project status is not configurable because the project is association,

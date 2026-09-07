@@ -3,11 +3,11 @@ title: Repository structure and rules
 description: Technology-neutral ownership, dependency, production, testing, Git, and scaffold rules for projects bootstrapped with woostack.
 ---
 
-Woostack defines engineering outcomes for new projects created through
-[woostack-bootstrap](/docs/skills/woostack-bootstrap), not a built-in technology stack. Bootstrap
-researches current named options, requires explicit approval, and records the selected technologies
-and live-resolved versions. Existing repository conventions and history remain authoritative for
-brownfield work, which routes to Build, Fix, or Change.
+[woostack-bootstrap](/docs/skills/woostack-bootstrap) defines engineering requirements for new
+projects without prescribing a technology stack. It researches current options, gets explicit
+approval, and records the selected technologies and versions checked against live registries.
+Greenfield means a new codebase; brownfield means an existing one. For brownfield work, follow
+the repository's conventions and history and use Build, Fix, or Change.
 
 ## Repository-owned structure
 
@@ -24,12 +24,11 @@ brownfield work, which routes to Build, Fix, or Change.
 
 ### Application internals
 
-Group code according to the selected technology and repository conventions. An application may need
-boundary adapters, contracts, services, UI, layouts, or validation, but those role names do not
-mandate a directory tree.
+Group code according to the selected technology and repository conventions. Role names such as
+services, layouts, or validation do not require matching directories.
 
-Boundary adapters map wire or vendor representations to domain models and isolate transport errors;
-see [Application-boundary adapters](https://github.com/howarewoo/woostack/blob/main/skills/woostack-bootstrap/references/patterns.md#3-application-boundary-adapters).
+A boundary adapter translates data and errors between an external API or client and the models used
+inside your application. See [Application-boundary adapters](https://github.com/howarewoo/woostack/blob/main/skills/woostack-bootstrap/references/patterns.md#3-application-boundary-adapters).
 
 ## APIs and application boundaries
 
@@ -45,20 +44,19 @@ Within the repository's supported compatibility window:
 
 ### Application-boundary adapters
 
-When data crosses application boundaries (HTTP/RPC server-client, service-to-service, webhooks,
-queues/events, or third-party APIs in either direction):
+When applications exchange data through HTTP/RPC, webhooks, queues, events, or third-party APIs:
 
-- Keep transport, client, and vendor formats out of domain and business logic through boundary adapters.
-- Adapters own input validation/narrowing, wire/domain bidirectional mapping, and transport error translation.
-- Place adapters in the owning application; extract them only when multiple applications share the
-  exact contract or implementation.
-- Functions or modules satisfy the pattern; classes are not required.
-- Do not add identity-only or no-op wrappers when a deliberately shared contract is already the
-  domain model shape.
-- Apply the rule to new and materially touched boundary flows; untouched legacy flows remain unchanged.
-- Review blocks concrete changed-code transport leaks or missing boundary validation/error
-  translation, but does not police naming, implementation style, or justified identity mapping
-  omissions.
+- Use adapters to keep client, transport, and vendor-specific formats out of business logic.
+- Validate untrusted input, translate data in both directions, and translate transport errors.
+- Keep adapters in the owning application. Share them only when multiple applications need the
+  exact same contract or implementation.
+- Functions or modules are enough; classes are not required.
+- Skip wrappers that only return the same data when a deliberately shared contract already matches
+  the application's model. Input validation and error handling still apply.
+- Apply this rule to new flows and existing flows materially changed by the task. Leave untouched
+  legacy flows alone. Ordinary calls within one process and database persistence mapping are excluded.
+- Review can block concrete leaks of transport details into business logic or missing required
+  validation and error translation. It does not dictate file names, classes, or no-op wrappers.
 
 See [patterns.md §3](https://github.com/howarewoo/woostack/blob/main/skills/woostack-bootstrap/references/patterns.md#3-application-boundary-adapters) for the canonical pattern.
 
@@ -79,42 +77,45 @@ See [patterns.md §3](https://github.com/howarewoo/woostack/blob/main/skills/woo
 - Keep only genuine repository-wide tooling at the root.
 - Enable lifecycle scripts only for dependencies whose required installation behavior has been
   verified.
-- Resolve peer or compatibility warnings in each consumer, verify local shared-code resolution, and
-  check dependency support for the target runtime.
+- Resolve dependency compatibility warnings in each consumer. Check that shared local code loads
+  from the repository and that dependencies support the target runtime.
 - Preserve the approved package manager's lockfile and integrity metadata.
 
 ## Type safety
 
-- Use the approved stack's strongest practical static and runtime type-safety mechanisms.
-- Validate or narrow untrusted values at trust boundaries before application code consumes them.
-- Derive related contract types from one source of truth when the selected technology supports it.
+- Use the approved stack's strongest practical compile-time and runtime checks.
+- Check untrusted values at entry points before application code uses them.
+- Derive related contract types from one definition when the technology supports it.
 - Do not bypass type checks without a narrow, documented reason.
-- Keep type and contract helpers application-local; extract only definitions shared by multiple
+- Keep type and contract helpers in the application; share only definitions needed by multiple
   applications.
 
 ## Data, identity, and observability
 
 ### Data and migrations
 
-- Keep every schema mutation discrete, ordered, version-controlled, and reproducible with the
+- Keep each database schema change separate, ordered, version-controlled, and repeatable with the
   approved data tooling.
 - Do not run production migrations directly from a developer machine; use controlled deployment
   automation with observable failure and recovery behavior.
 - Configure connection limits, pooling, retries, backups, restoration, and destructive-change
   safeguards to match the selected database and runtime.
-- Add a project-owned interface around a vendor client only when it provides real portability,
-  testability, isolation, or reuse; do not add a pass-through abstraction.
-- Centralize client or connection instantiation when shared lifecycle, pooling, or rate-limit control
-  requires it.
+- Add your own interface around a vendor client only when it improves portability, testing,
+  isolation, or reuse. Do not add a wrapper that merely forwards calls.
+- Create clients or connections in one place when their shared lifecycle, pooling, or rate limits
+  require it.
 
 ### Authentication
 
-- Wrap a third-party identity client only when a project-owned interface provides real portability,
-  testability, isolation, or reuse.
-- Verify tokens and sessions only in trusted server-side contexts and keep authorization decisions
-  explicit at protected boundaries.
+- Wrap a third-party identity client only when your own interface improves portability, testing,
+  isolation, or reuse.
+- Verify tokens and sessions only on trusted servers. Check permissions explicitly at each
+  protected boundary.
 
 ### Observability
+
+Observability means being able to understand a running system through its logs and other monitoring
+data.
 
 - Emit structured, queryable events with consistent time, severity, message, service, and
   environment fields.
@@ -144,9 +145,11 @@ See [patterns.md §3](https://github.com/howarewoo/woostack/blob/main/skills/woo
 
 ## Testing
 
-- Follow Red → Green → Refactor and write the failing test first for new implementation.
+- Follow Red → Green → Refactor: first write a failing test, implement the behavior, then improve
+  the code while keeping the test passing.
 - Use the repository's approved test runner, file layout, and naming conventions.
-- Cover observable behavior, boundaries, invariants, transitions, precedence, and real failure paths.
+- Test observable behavior, boundaries, conditions that must hold, state transitions, rule
+  precedence, and real failures.
 - A change is incomplete until its required verification passes.
 
 ## Least code, still safe
@@ -168,12 +171,12 @@ Additional rules:
 - Prefer deletion over addition and boring code over clever code.
 - Never remove validation, error handling, security, accessibility, or data-loss protection to make
   code smaller.
-- Preserve deliberate defense in depth; it is not ordinary DRY duplication.
-- Keep a regression test for a behavior-changing simplification.
-- Give a deliberate known limitation a `why` comment that names its ceiling and upgrade path.
-- Document user-facing components and procedures with the repository's native convention.
-- Comments explain non-obvious reasons, constraints, workarounds, or invariants—not what the code
-  already states.
+- Keep deliberate layers of protection, even when they repeat a check.
+- Keep a regression test for a simplification that changes behavior.
+- Give a deliberate known limitation a `why` comment explaining its limit and when to replace it.
+- Document user-facing components and procedures using the repository's usual format.
+- Use comments for non-obvious reasons, constraints, workarounds, or conditions that must hold.
+  Do not repeat what the code already states.
 - Replace unexplained repeated or policy-bearing literals with descriptively named constants using
   the repository's naming convention.
 
@@ -181,11 +184,11 @@ See [Least code, still safe](/docs/concepts/least-code) for the rationale and re
 
 ## Greenfield admission and scaffolding
 
-Before creating a repository:
+Scaffolding creates the initial files for a new project. Before doing so:
 
-- Preflight the target read-only before committing to a design.
-- Complete the live research and explicit technology-approval gate above before writes.
-- Refresh the collision check immediately before scaffolding.
+- Inspect the target path without changing it before committing to a design.
+- Complete live research and get explicit approval of the technology choices and complete design.
+- Check the target again immediately before scaffolding to catch newly created files or directories.
 - Proceed only when the path is absent or an empty non-Git directory.
 - Reject symlinks, populated directories, existing repositories or worktrees, unreadable paths,
   ambiguous results, and paths owned by another run.
@@ -197,7 +200,7 @@ For every approved surface:
 - Use the smallest supported scaffold for the selected stack.
 - Remove demo and example code outside the approved product.
 - Establish each application's native structure and only the shared code the approved surfaces need.
-- Implement only the minimum vertical slice needed to prove the architecture.
+- Implement only the minimum working path through each application needed to prove the architecture.
 - Configure environment validation without including secret values.
 - Add required security, error, accessibility, data-loss, migration, and observability protections.
 - Keep generated output and runtime evidence out of source control.
@@ -220,15 +223,15 @@ For every approved surface:
 - `main` represents production.
 - Each repository configures its integration branch; `staging` is only an example.
 - A `feature/<name>` branch represents one change and one PR.
-- Cut feature branches from the resolved integration branch, not automatically from `main`.
-- Target feature PRs at the integration branch.
-- Promote the integration branch to `main` after integration testing and according to the release
-  cadence.
+- A standalone feature starts from the resolved integration branch. In a planned stack, a dependent
+  increment starts from its approved predecessor and targets that parent branch.
+- Humans promote the integration branch to `main` after integration testing and according to the
+  release cadence.
 - Do not open a PR directly against `main` except for an emergency hotfix.
 - Cherry-pick an emergency hotfix back into the integration branch immediately.
 - Never force-push to `main` or the integration branch.
-- Use Graphite to manage branch stacks.
-- Merge authority remains human-only.
+- Use Graphite to manage branch stacks, the parent-child relationships between dependent PRs.
+- Agents never merge, mark a PR ready, enable auto-merge, or queue it for merge.
 
 ## Required README
 
@@ -259,8 +262,8 @@ formatter output. A nonexistent command cannot be reported as passing.
 
 ## Existing repositories
 
-Woostack does not impose greenfield architecture on an existing repository. Existing conventions and
-history own brownfield work:
+Do not apply new-project architecture rules to an existing repository without an approved reason.
+Follow its established conventions and history:
 
 - bugs, regressions, and root-cause work route to [Fix](/docs/skills/woostack-fix);
 - bounded one-PR enhancements and refactors route to [Change](/docs/skills/woostack-change); and

@@ -3,33 +3,33 @@ title: Status board reference
 description: Repository inputs, identity rules, derived states, and failure behavior for the status board.
 ---
 
-[woostack-status](/docs/skills/woostack-status) computes a fresh view from Git, Graphite, and
-canonical GitHub data. It maintains no separate board or development ledger. Linear, Plane, and
-GitHub projects, issues, and work items are optional specification, plan, and fix artifacts.
+[woostack-status](/docs/skills/woostack-status) builds a fresh board from Git, Graphite, and
+the verified GitHub repository. It does not save a separate board or development ledger. Exact
+Linear, Plane, or GitHub records can add context about specifications, plans, or fixes.
 
 ## Display shapes
 
-The repository graph defines two display shapes:
+The board groups work in two ways:
 
-- **Stacks/features:** Graphite-connected branches and PRs above the resolved integration base,
-  grouped by declared plan/dependency context when available.
-- **Standalone work:** a non-stacked branch/PR or bounded task with direct repository evidence.
+- Stacks/features: connected branches and PRs above the integration base, the branch into which
+  work will eventually land. Verified plans and dependencies can supply grouping context.
+- Standalone work: a branch, PR, or bounded task outside a stack, supported by repository evidence.
 
-A row exists because repository work exists, not because an artifact exists. Canonical repository,
-ref, commit SHA, PR number, head/base, and ancestry establish identity; titles and branch names are
-display text.
+An artifact alone cannot create a row. The repository, branch reference, commit SHA, PR number,
+head and base branches, and Git ancestry identify the work. Titles and branch display names do not
+establish ownership or permission.
 
 ## Derivation
 
 Each status run:
 
-1. resolves the canonical repository, integration base, local branches/worktrees, and Graphite
-   ancestry;
-2. fully reads candidate PRs, checks, reviews, unresolved threads, merge evidence, and timestamps;
-3. derives work/review/merge state from that complete snapshot;
-4. optionally reads exact caller-supplied Linear, Plane, or GitHub artifacts and joins only through independently
-   verified repository/PR identity; and
-5. prints the current board, terminal counts, blockers, staleness, and one next action per row.
+1. Identifies the repository, integration base, branches, worktrees, and Graphite parent relationships.
+2. Reads all relevant PRs, reviews, unresolved threads, merge evidence, and timestamps.
+3. Derives each row's work, review, and merge state from that snapshot. Available CI checks are
+   displayed separately; missing, pending, or failed checks do not change the row's state.
+4. Optionally reads exact caller-supplied Linear, Plane, or GitHub records and attaches them only
+   after verifying their repository or PR identity.
+5. Prints the board with completion counts, blockers, stale-work labels, and one next action per row.
 
 The
 [canonical status conventions](https://github.com/howarewoo/woostack/blob/main/skills/woostack-status/references/conventions.md)
@@ -37,18 +37,20 @@ own the precise state derivation and output contract.
 
 ## Authority and failure boundaries
 
-- The active user-approved workflow defines scope and acceptance.
-- Git and GitHub own source-control, PR, review, and merge truth.
-- Linear, Plane, or GitHub artifacts may explain an explicitly linked spec, plan, or fix but cannot create a row,
-  grant permission, or override repository evidence. For Plane, the repository project is reported as
-  repository association only, exposing specification aggregate lifecycle and child increment states
-  without presenting project lifecycle as delivery state.
-- Local diagnostic reports are supporting evidence only.
-Missing Graphite may degrade to Git ancestry plus GitHub with disclosure. Missing GitHub evidence
-makes affected rows `unknown` or `blocked`. Missing provider access affects only explicitly requested
-artifact enrichment. Status never synchronizes or mutates artifacts.
+- The user's request and explicit decisions authorize the workflow and define its scope.
+- Git and GitHub show source-control, PR, review, and merge state.
+- Linked Linear, Plane, or GitHub records may explain the specification, plan, or fix. They cannot
+  create a row, grant permission, or override repository evidence. In Plane, the project identifies
+  the repository; specification parent items group the increments. Their lifecycle states remain
+  separate from repository delivery state.
+- Local diagnostic reports provide supporting evidence only.
+
+Missing or incomplete required Git, Graphite, or GitHub evidence leaves affected facts unknown and
+can make a row `unknown` or `blocked`. Unavailable CI checks are excluded from this rule.
+Missing provider access affects only the requested artifact context. Status never changes or
+synchronizes artifacts.
 
 <Callout type="info">
-  The board is a fresh repository view, not a third record system. Re-run it whenever source-control
-  or review state changes.
+  Re-run the board when branches, commits, or reviews change. It reports a fresh view of the
+  repository and does not maintain its own status records.
 </Callout>

@@ -1,10 +1,10 @@
 # Contributing
 
-This repo publishes skills and their support assets, plus the documentation site. The command and
-internal-skill inventory lives in [AGENTS.md](AGENTS.md#what-this-repo-is); the
-[routing skill](skills/using-woostack/SKILL.md#command-routing) maps user intent to those workflows.
+This repo publishes skills for AI coding assistants, their supporting files, and a documentation
+site. [AGENTS.md](AGENTS.md#what-this-repo-is) lists the public commands and internal skills.
+The [command index](skills/using-woostack/SKILL.md#command-routing) explains when to use each one.
 
-See [AGENTS.md](AGENTS.md) for the full repo contract; this file is the short contributor's version.
+This guide covers common edits. Read [AGENTS.md](AGENTS.md) for the full repository rules.
 
 ## What to change
 
@@ -21,59 +21,73 @@ See [AGENTS.md](AGENTS.md) for the full repo contract; this file is the short co
 | Update the branching model | `skills/woostack-bootstrap/references/development.md` |
 | Refine the bootstrap procedure | `skills/woostack-bootstrap/references/bootstrap.md` |
 | Change the bootstrap skill entry / discovery description | `skills/woostack-bootstrap/SKILL.md` |
-| Change the build loop (ideate→spec→harden→approve spec→plan→execute) | `skills/woostack-build/SKILL.md` |
-| Change the small-change fix loop (`/woostack-fix`) | `skills/woostack-fix/SKILL.md` |
-| Change the bounded non-bug one-PR workflow (`/woostack-change`) | `skills/woostack-change/SKILL.md` |
-| Change the ideate phase (the build loop's first step) | `skills/woostack-ideate/SKILL.md` |
-| Change the harden phase (the build loop's stress-test step) | `skills/woostack-harden/SKILL.md` |
+| Change requirements, planning, or the choice to start execution | `skills/woostack-build/SKILL.md` |
+| Change bug diagnosis, fix approval, or delivery | `skills/woostack-fix/SKILL.md` |
+| Change the one-PR enhancement or refactor workflow | `skills/woostack-change/SKILL.md` |
+| Change requirements gathering (Ideate) | `skills/woostack-ideate/SKILL.md` |
+| Change the check of requirements against the repository (Harden) | `skills/woostack-harden/SKILL.md` |
 | Change the plan phase (the build loop's planning step) | `skills/woostack-plan/SKILL.md` |
 | Change the execute phase (the build loop's implementation step) | `skills/woostack-execute/SKILL.md` |
-| Change the stack review-sweep engine (`/woostack-sweep`) | `skills/woostack-sweep/SKILL.md` |
+| Change how a stack of dependent PRs is reviewed and corrected (`/woostack-sweep`) | `skills/woostack-sweep/SKILL.md` |
 | Change the commit / PR update workflow | `skills/woostack-commit/SKILL.md` |
 | Change the review engine | `skills/woostack-review/SKILL.md`, `skills/woostack-review/scripts/`, `skills/woostack-review/prompts/` |
-| Change the standing-code audit engine (`/woostack-audit`) | `skills/woostack-audit/SKILL.md`, `skills/woostack-audit/scripts/` |
-| Change the exploratory browser QA engine (`/woostack-qa`) | `skills/woostack-qa/SKILL.md`, `skills/woostack-qa/references/` |
+| Change audits of existing code (`/woostack-audit`) | `skills/woostack-audit/SKILL.md`, `skills/woostack-audit/scripts/` |
+| Change browser-based app checks (`/woostack-qa`) | `skills/woostack-qa/SKILL.md`, `skills/woostack-qa/references/` |
 | Change skill evaluation (`/woostack-eval`) | `skills/woostack-eval/SKILL.md`, `skills/woostack-eval/references/`, `skills/woostack-eval/scripts/` |
 | Change session reflection (`/woostack-reflect`) | `skills/woostack-reflect/SKILL.md`, `skills/woostack-reflect/scripts/` |
 | Change the systematic-debugging behavior (`/woostack-debug`) | `skills/woostack-debug/SKILL.md` |
-| Change the test-adder / TDD doctrine home (`/woostack-tdd`) | `skills/woostack-tdd/SKILL.md` |
-| Change the address-comments delegator | `skills/woostack-address-comments/SKILL.md` |
+| Change test-writing guidance or the add-tests command | `skills/woostack-tdd/SKILL.md` |
+| Change how review comments are addressed | `skills/woostack-address-comments/SKILL.md` |
 | Change the status board / feature-state conventions | `skills/woostack-status/SKILL.md`, `skills/woostack-status/references/conventions.md`, `skills/woostack-status/scripts/` |
-| Change the workspace-health diagnose/repair (`/woostack-doctor`) | `skills/woostack-doctor/SKILL.md` |
+| Change workspace checks and repairs (`/woostack-doctor`) | `skills/woostack-doctor/SKILL.md` |
 | Update agent instructions (Claude or any) | `AGENTS.md` (`.claude/CLAUDE.md` is a symlink to it) |
+| Update reader-facing guides | `site/content/docs/` |
+| Change the documentation site or skill-page generator | `site/` |
 
 ## Workflow
 
-1. Branch from `main` (`main` is protected — PRs only, never push directly).
-2. Edit the relevant skill files. One concern per PR where possible.
-3. Verify every cross-link still resolves (`[label](path.md#anchor)`).
-4. Run the affected asset's real CLI/smoke scenarios and focused behavioral tests, plus syntax and
-   cross-link checks. Do not pin instruction wording or duplicate the implementation in a test-local
-   simulator. This repo has no universal app test runner or self-CI.
-5. Open a PR — fill out the template.
+1. Use Graphite to create a branch from `main`. The branch is a separate line of work;
+   `main` is protected, so changes go through a pull request (PR).
+2. Edit the relevant files. Keep each PR focused on one concern where possible.
+3. Check that relative links and heading links still resolve (`[label](path.md#anchor)`).
+4. Run the changed asset's actual command or a focused smoke check, plus relevant behavioral
+   tests and syntax checks. Tests should check behavior, not exact instruction wording or a
+   test-only copy of the implementation. This repo has no universal test command or CI for its own PRs.
+5. Submit the PR with Graphite and fill out the PR template. Agents must not mark it ready,
+   enable auto-merge, queue it for merging, or merge it.
+
+For site changes, run `pnpm -C site build`. The site is the exception to this repository's
+no-application-code rule. Its [README](site/README.md) covers local development and deployment.
 
 ## Editing conventions
 
-- **Skill assets only.** Markdown, plus the support files a skill ships (HTML templates and specs, the review engine's shell scripts and prompts, JSON config). No *application* code, app build configs, or app lockfiles belong in this repo.
-- **No fabricated versions.** When a skill needs a version, the procedure resolves it live (`npm view <pkg> version`). Reference frameworks by name, not by version, except in `skills/woostack-bootstrap/references/frameworks.md`, which may pin exact versions when a known incompatibility forces it.
-- **One artifact contract.** Local run authority, optional provider mirrors, storage mechanics, and
-  recovery live in the [artifact contract](skills/woostack-init/references/artifact-backends.md).
-  Load the selected provider profile rather than repeating its native-resource rules.
-- Prefer tables for option matrices, bulleted lists for stepwise procedures.
-- Keep examples short. The skill describes intent; project-local docs cover the specifics.
-- **Cross-link rather than duplicate.** If a fact lives in `architecture.md`, link to it from `patterns.md`; don't restate.
-- **Preserve the public surface.** Keep the command and fixed skill paths named in
-  [AGENTS.md](AGENTS.md). Provider integrations do not add command-routing rows.
-- Keep each `SKILL.md` in sync with its references. Its `description` must state *when* to use the skill, not summarize the workflow — a workflow summary causes agents to skip the references.
+- Keep workflow changes in skill files and their supporting Markdown, templates, scripts,
+  prompts, or JSON. Application code, build configuration, and lockfiles belong only in `site/`.
+  The consumer review action and reusable workflow are also shipped assets; do not delete them as stray CI.
+- Resolve package versions from the registry when needed (`npm view <pkg> version`).
+  Name frameworks without versions, except where a known incompatibility requires a pin in
+  `skills/woostack-bootstrap/references/frameworks.md`.
+- Keep plan storage, optional remote copies, and recovery rules in the
+  [artifact contract](skills/woostack-init/references/artifact-backends.md).
+  Link to the relevant provider profile for Linear, Plane, or GitHub details.
+- Use tables to compare options and numbered lists for steps.
+- Keep examples short. Skills explain the workflow; project-local docs cover project details.
+- Link to the document that owns a fact instead of repeating it elsewhere.
+- Keep the command names and fixed skill paths listed in [AGENTS.md](AGENTS.md).
+  Provider integrations do not add commands.
+- Keep each `SKILL.md` consistent with its references. Its `description` should explain when to
+  use the skill; put the procedure in the body and linked references.
+- Update affected authored site guides when behavior changes. Do not edit generated skill pages;
+  they are rebuilt from `skills/*/SKILL.md`.
 
 ## Reviewing
 
 Reviewers should ask:
 
 - Does this change make the skill clearer or just longer?
-- Is there a load-bearing reason this isn't already in the skill?
-- Will an AI agent applying this guidance produce a working result (a bootstrapped project, a posted review, an addressed thread)?
-- Does it conflict with an existing pattern? If so, update the pattern explicitly rather than letting two patterns disagree.
+- Does each added instruction address a real need?
+- Will an AI agent following it produce a working result, such as a project, posted review, or resolved thread?
+- Does it conflict with existing guidance? Update the owning document so readers do not get two different answers.
 
 ## Questions
 

@@ -4,104 +4,106 @@ description: Drive one persistent OMP coding session from Hermes without giving 
 sidebar: { order: 4 }
 ---
 
-Hermes is an **external engineer**, not a supported woostack host or installed woostack runtime.
-Install woostack in OMP or another supported coding harness. Hermes may coordinate decisions and
-review evidence, but it must not edit implementation source or replace repository evidence.
+Hermes can coordinate decisions and review evidence as an external engineer. Install woostack in
+OMP or another supported coding harness, the application that runs the coding agent and its tools.
+Hermes is not a supported woostack host. It must not edit implementation source or substitute its
+own conclusions for repository evidence.
 
 ## Before you start
 
 You need:
 
-- an approved bounded task;
-- an isolated worktree for that task;
+- an approved task with a defined scope and acceptance criteria;
+- an isolated worktree, a separate checkout for that task;
 - an interactive OMP profile with woostack installed; and
-- an argument-safe process or PTY interface that keeps a process handle.
+- a process or PTY (pseudo-terminal) interface that passes arguments safely and retains a handle
+  for sending input to the running process.
 
-The OMP session owns the worktree, implementation, worker routing, and focused verification.
-Hermes owns the contract boundary and reviews the returned evidence.
+The OMP session manages the worktree, implementation, workers, and focused verification.
+Hermes checks that the work stays within the approved task and reviews the returned evidence.
 
 ## 1. Start one persistent OMP session
 
-Drive one persistent OMP session per live interaction.
-Keep one OMP process identity for each active bounded interaction.
-Do not switch processes during a live interaction.
+A persistent session keeps the same OMP process running between messages. Use one process for
+each active task conversation, and do not switch processes while that conversation is in progress.
 
-Pass the profile, working directory, and initial prompt as separate argument values. Confirm the
-installed CLI flags with `omp --help`. For current OMP releases:
+Pass the profile, working directory, and initial prompt as separate argument values so prompt text
+cannot become shell syntax. Confirm the installed CLI flags with `omp --help`. The launch form is:
 
 ```text
 omp --profile <profile> --cwd <worktree> <prompt>
 ```
 
 Do not add `-p` or `--print`. Those flags select non-interactive mode and exit after one response.
-If the process interface cannot set a working directory, put the canonical worktree path in the
-prompt and require OMP to verify it before reading or writing. Stop on a profile, working directory,
-repository, branch, head, or allowed-path mismatch.
+If the process interface cannot set a working directory, put the exact canonical worktree path
+in the prompt and require OMP to verify it before reading or writing. Stop if the profile,
+working directory, repository, branch, current commit, or allowed paths do not match the task.
 
 ## 2. Keep using the same process
 
-Retain the interactive process handle. Send every correction and responsible-user response as new
-input through that handle. Do not interpolate task, artifact, issue, or user-response prose into a
-shell command.
+Keep the interactive process handle. Send every correction and response from the responsible user
+as new input through that handle. Never insert task descriptions, artifact text, issue text, or
+user responses into a shell command.
 
-The same process must remain attached to the same isolated worktree during retries, approval relay,
-and bounded redispatch.
+Keep the same process attached to the same isolated worktree during retries, approval relay,
+and any request for a bounded correction.
 
 ## 3. Keep decisions inside the approved contract
 
-Hermes may interpret the approved contract, inspect OMP's diff and command results, review the
-evidence, accept an in-contract result, or request one bounded correction. It may not expand scope,
-edit source, run implementation commands, commit, push, open a pull request, or infer missing
-context.
+Hermes may interpret the approved task, inspect OMP's diff and command results, review the
+evidence, accept a result that meets the contract, or request one correction within that scope.
+It may not expand scope, edit source, run implementation commands, commit, push, open a pull
+request, or guess missing context.
 
-OMP workers return observations, changes, commands, results, and blockers. Hermes reviews that
-evidence independently. Missing, contradictory, or stale evidence stops the interaction.
+OMP workers return observations, changes, commands, results, and blockers. Hermes checks that
+evidence independently. Stop if evidence is missing, contradictory, or stale.
 
 ## 4. Escalate contract changes
 
-Send any new path, changed acceptance criterion, unresolved decision, or out-of-contract question
-to the responsible user. Keep OMP at the last verified boundary while waiting. A user question is
-not implicit approval.
+Ask the responsible user about any new path, changed acceptance criterion, unresolved decision,
+or question outside the approved scope. Keep OMP at the last verified point while waiting.
+A question from the user does not itself approve a change.
 
 ## 5. Relay the user's response verbatim
 
-When OMP presents an Ask during an active conversation, only the responsible user's live response
-may decide it. Relay that response **verbatim and unmodified** through the same OMP process that
-presented the Ask. Do not summarize, rewrite, splice, or replay it.
+An Ask is a question or approval choice that OMP needs the responsible user to decide. During an
+active conversation, relay only that user's live response, verbatim and unmodified, through the
+same OMP process that asked the question. Do not summarize, rewrite, splice, or replay it.
 
-A provider record, status, assignment, label, cached transcript, or Hermes-authored message is not
-a decision. If the process restarts during the active conversation, present a fresh Ask, obtain a
-fresh response, and continue through that new process.
+A provider record, status, assignment, label, cached transcript, or Hermes-authored message cannot
+make that decision. If the process restarts during the conversation, present a fresh Ask, obtain
+a fresh response, and continue through the new process.
 
 ## 6. Review evidence before accepting or redispatching
 
-Check the exact worktree, branch and head, changed paths, complete diff, commands, observed results,
-focused verification, and blockers. Compare them with the approved contract and acceptance
-criteria.
+Check the exact worktree, branch and current commit, changed paths, complete diff, commands,
+observed results, focused verification, and blockers. Compare them with the approved task and
+its acceptance criteria.
 
-If the evidence is complete and in contract, accept the result or send one bounded correction
-through the same process and worktree. Read the complete evidence again after a correction. Do not
-silently change the profile, worktree, process, or contract.
+If the evidence is complete and meets the contract, accept the result or send one correction within
+the approved scope through the same process and worktree. Read the complete evidence again after
+a correction. Do not silently change the profile, worktree, process, or contract.
 
-Git, Graphite, and GitHub remain authoritative for source, ancestry, commits, pull requests,
-reviews, and merges. Hermes acceptance is not source-control evidence.
+Git, Graphite, and GitHub remain authoritative for source, branch ancestry, commits, pull requests,
+reviews, and merges. Hermes accepting a result does not prove any of those source-control facts.
 
 ## 7. Resume a retained run later
 
-Build and project-backed Fix retain `project-spec.md`, `execution-plan.md`, and the run manifest
-under `.woostack/tmp/runs/<run-id>/`. A later OMP process may resume unchanged approved artifacts
-with:
+Build and project-backed Fix retain `project-spec.md`, `execution-plan.md`, and the run manifest,
+which records recovery state, under `.woostack/tmp/runs/<run-id>/`. A later OMP process may resume
+unchanged approved artifacts with:
 
 ```text
 /woostack-execute --run <exact-run-id> [--recheck]
 ```
 
-This cross-session resume path validates the retained run. It does not permit process switching
-during an active conversation or reuse of a previous live response.
+Resume validates the retained run before continuing. Execute rejects abandoned runs and verifies
+completed runs without starting more work. Resume does not permit switching processes during an
+active conversation or reusing a previous live response.
 
 ## 8. Clean up legacy launchers when safe
 
-Clean up is optional and manual. Legacy installations may contain host-owned `launch-omp` or
-`bind-engineer-unit` files. Verify that no active session or recovery path depends on them, preserve
-needed evidence, and remove only the files the owner selects. Woostack does not install, invoke,
-repair, or delete those launchers.
+Cleanup is optional and manual. Legacy installations may contain host-owned `launch-omp` or
+`bind-engineer-unit` files. Before removing any, verify that no active session or recovery path
+depends on them and preserve needed evidence. Remove only the files the owner selects.
+Woostack does not install, invoke, repair, or delete those launchers.
