@@ -27,6 +27,12 @@ Build and project-backed Fix create one run directory. After planning finishes, 
 └── execution-plan.md
 ```
 
+New run IDs start with their UTC creation timestamp, followed by a short goal slug:
+`20260908T143052Z-timestamp-first-run-ids`. Sorting directories by name orders these runs
+chronologically to the second. Existing runs retain their exact IDs and resume commands.
+The [run-store contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/artifact-backends.md#owner-only-local-run-store)
+defines naming and collision handling.
+
 | Entry | Purpose |
 | --- | --- |
 | `.lock` | Prevents concurrent run-store operations from overwriting each other. |
