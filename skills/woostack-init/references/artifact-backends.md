@@ -161,6 +161,13 @@ It requires Python 3 on POSIX and Git; it uses no Python dependencies. Invoke it
 python3 <init-skill>/scripts/run-store.py --repo <canonical-repo-root> --run <exact-run-id> <command>
 ```
 
+For each new run, choose `<YYYYMMDDTHHMMSSZ>-<slug>` using the current UTC creation time and a
+short lowercase kebab-case goal slug, for example `20260908T143052Z-timestamp-first-run-ids`.
+The fixed-width timestamp must come first so file-explorer name sorting follows creation time
+to the second. If that exact ID already exists, append a unique suffix; never reuse or overwrite
+another run. Preserve the allocated ID in the directory name, manifest `runId`, and all resume
+commands. Existing runs keep their exact IDs; resuming never renames them.
+
 The helper admits only `<repo-root>/.woostack/tmp/runs/<exact-run-id>/`, after proving that the
 canonical Git worktree ignores `.woostack/tmp/` and has no tracked files beneath it. Run IDs are
 single components matching `[A-Za-z0-9][A-Za-z0-9_.-]*`. Repository traversal and symlinks in any
