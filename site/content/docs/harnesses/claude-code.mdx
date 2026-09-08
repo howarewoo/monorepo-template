@@ -3,15 +3,18 @@ title: Claude Code
 description: Task-based dispatch with per-call model routing and prompt-pinned worktrees.
 ---
 
-Claude Code exposes the `Task` tool with named worker profiles and a per-call model parameter.
-woostack resolves each task's effective tier and passes the corresponding model, plus an effort
-form when that model family supports one, on every spawn. Independent tasks are dispatched
-together so the host can schedule them concurrently.
+Claude Code starts workers through the `Task` tool. For each worker, woostack selects a model
+from the task's tier (`fast`, `standard`, or `deep`) and passes the model explicitly. It also
+passes the reasoning effort setting when the model family supports one. Independent tasks are
+submitted together so Claude Code can run them concurrently.
 
-Claude Code's spawn primitive does not expose a per-call working directory. Every worker receives
-the expected worktree in its dispatch prompt, self-pins there, and aborts before writing if the
-path does not match. Provider exhaustion surfaces as a spawn error; Claude Code has no documented
-host-owned usage-limit failover for spawned agents.
+The tool cannot set a separate working directory for each worker. Instead, the task prompt names
+the exact worktree, the separate checkout assigned to that task. The worker must use that directory
+and stop before writing if the path does not match.
 
-For detection, worker-profile rules, per-skill instructions, and degradation behavior, read the
+If the provider's usage limit is exhausted, starting the worker returns an error. Claude Code has
+no documented automatic fallback for spawned workers. If the runtime cannot accept the selected
+model, the worker uses the session model and woostack reports that limitation.
+
+For detection, worker-profile rules, per-skill instructions, and fallback behavior, read the
 [canonical Claude Code reference](https://github.com/howarewoo/woostack/blob/main/skills/using-woostack/references/hosts/claude-code.md).

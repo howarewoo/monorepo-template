@@ -3,19 +3,19 @@ title: Overview
 description: "woostack's local run authority, optional Linear, Plane, and GitHub mirror records, delivery boundaries, and context management."
 ---
 
-woostack coordinates development through explicit user decisions, isolated implementation, and
-independent review. Bounded fixes and changes use one-PR delivery. Build and project-backed Fix retain
-complete user-verified specifications, outcome-based plans, and recovery state locally, with optional
-provider mirrors. Git and GitHub prove code and pull-request state.
+woostack uses explicit user decisions, separate workspaces for implementation, and independent
+review. A bounded fix or change fits one pull request (PR). Build and project-backed Fix keep the
+user-verified specification, ordered plan, and recovery state locally. Optional provider mirrors
+copy those records to Linear, Plane, or GitHub. Git and GitHub show the actual code and PR state.
 
-The [core concepts](/docs/concepts) explain the authority boundaries; the
-[workflow maps](/docs/concepts/workflows) show how to choose and run each route.
-[woostack-reflect](/docs/skills/woostack-reflect) suggests novel durable rules from a fixed
-active-conversation snapshot and routes each finding to the narrowest applicable rule or canonical
-skill owner. Local diagnostic reports remain non-authoritative evidence.
+The [core concepts](/docs/concepts) explain who can authorize work and which records prove its
+results. The [workflow maps](/docs/concepts/workflows) help you choose and run a workflow.
+[woostack-reflect](/docs/skills/woostack-reflect) looks for reusable instruction improvements in a
+fixed snapshot of the current conversation. It directs each suggestion to the file or skill that
+owns the rule. Its report, like other diagnostic reports, does not authorize changes.
 
 <Cards>
-  <Card title="Building rules" href="/docs/concepts/building-rules" description="The plain-artifact local-authority loop, fix route, and split authority boundary." />
+  <Card title="Building rules" href="/docs/concepts/building-rules" description="How local plans, user decisions, and repository evidence guide delivery." />
   <Card title="Repository structure and rules" href="/docs/concepts/repository-rules" description="The complete app-local code, shared extraction, dependencies, production, testing, Git, and scaffold contract." />
   <Card title="Workflow maps" href="/docs/concepts/workflows" description="Compare Bootstrap, Build, Fix, and Change with local run authority and optional Linear, Plane, or GitHub mirroring." />
   <Card title="Least code, still safe" href="/docs/concepts/least-code" description="Write as little code as necessary without cutting edge cases or risks." />

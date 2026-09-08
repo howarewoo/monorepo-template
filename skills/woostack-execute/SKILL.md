@@ -97,8 +97,8 @@ Before any worktree or source mutation in local run mode:
 3. If the observed parent tip differs from `planningParentTip`, report the old and current parent
    evidence plus any concrete conflict or plan risk, then ask the user before source mutation:
    - **`Continue`**: executes against the current admitted parent under existing branch/worktree safeguards.
-   - **`Revise spec/plan`**: returns to the owning Build/Fix run for ordinary file updates without an
-     acceptance gate.
+   - **`Revise spec/plan`**: returns to the owning Build/Fix workflow under the shared
+     [revision and retention contract](../woostack-init/references/artifact-backends.md#repository-ancestry-and-base-change-detection).
    - **`Stop`**: makes no repository mutation.
 
 When `--recheck` is provided with `--run`, invoke bounded [`woostack-harden`](../woostack-harden/SKILL.md)

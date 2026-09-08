@@ -3,15 +3,18 @@ title: Antigravity CLI
 description: Dynamic subagents, single-session routing, and interactive authentication.
 ---
 
-Antigravity CLI (`agy`) creates an isolated-context subagent for each task and can dispatch
-independent tasks together. It exposes one model per session rather than a per-call model or effort
-knob, so woostack resolves one run model and every task tier collapses to it.
+Antigravity CLI (`agy`) creates a worker with its own conversation context for each task.
+Independent tasks can run together. This context isolation keeps each worker focused on its
+assigned task; the task still needs an explicit worktree and permission boundary.
 
-The spawn primitive does not expose a per-call working directory. Each worker receives the
-expected worktree through the dispatch prompt and self-pins before writing. Antigravity
-authenticates through the system keyring and Google Sign-In; it has no documented non-interactive
-API-key path, so it cannot run headless in ephemeral CI. Provider exhaustion surfaces as an error,
-with no documented host-owned fallback.
+Antigravity uses one model per session. Woostack selects that model before the run, and all task
+tiers use it. The runtime cannot set a separate working directory for each worker, so the task
+prompt names the expected worktree and the worker must use it before writing.
 
-For detection, exact orchestration behavior, per-skill instructions, and degradation rules, read
+Antigravity authenticates through the system keyring and Google Sign-In. It has no documented
+non-interactive API-key login, so it cannot run without an interactive login in a temporary CI
+environment. If the provider's usage limit is exhausted, the worker returns an error; no automatic
+fallback managed by Antigravity is documented.
+
+For detection, worker behavior, per-skill instructions, and fallback rules, read
 the [canonical Antigravity reference](https://github.com/howarewoo/woostack/blob/main/skills/using-woostack/references/hosts/antigravity.md).

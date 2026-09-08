@@ -3,22 +3,24 @@ title: Workflow maps
 description: "Choose bounded delivery or a complete user-verified project workflow."
 ---
 
-Every repository-changing workflow starts from an explicit user goal. Bounded work uses its active
-approved contract; project-backed work retains a local specification and plan, with optional provider
-mirroring. Git and GitHub prove implementation and delivery.
+Start with the user's explicit goal. Bounded work fits one pull request (PR) and uses the agreed
+scope in the current conversation. Project-backed work keeps a local specification and ordered
+plan, with optional copies in a provider. Git and GitHub show what was implemented and delivered.
 
 ## Routing by work shape
 
 | Work shape | Workflow |
 | --- | --- |
 | Fresh project in a new target | [Bootstrap](/docs/skills/woostack-bootstrap) |
-| Bug, regression, or root-cause work | [Fix](/docs/skills/woostack-fix) |
+| Bug or regression to fix | [Fix](/docs/skills/woostack-fix) |
 | Bounded non-bug work for one coherent PR | [Change](/docs/skills/woostack-change) |
 | Coordinated feature requiring a complete specification and plan | [Build](/docs/skills/woostack-build) |
 
-Routing is not an approval gate. When scope expands after work begins, the workflow preserves
-repository state and reports the handoff. The work then moves through the workflow that matches its
-new shape instead of silently changing the contract.
+For root-cause investigation without changes, use [Debug](/docs/skills/woostack-debug).
+
+Choosing a workflow does not approve its design or authorize extra work. If the scope grows, the
+workflow preserves repository state and reports where to resume. Work then moves to the matching
+workflow instead of silently expanding the agreed scope.
 
 ## Bootstrap
 
@@ -27,9 +29,10 @@ read-only target preflight → gather requirements → research and present comp
 approve design → refresh collision check → scaffold → run and verify
 ```
 
-Bootstrap is greenfield-only. No target write occurs before explicit design approval and a clean
-collision check. An exact Linear, Plane, or GitHub project may persist the approved design/plan after approval,
-but is not a write barrier or repository authority.
+Bootstrap is greenfield-only: it creates a new codebase. It writes nothing to the target before
+explicit design approval and a fresh check that the path is safe to create. After approval and
+that check, an exact Linear, Plane, or GitHub project may store the approved design when selected.
+The project record cannot authorize target writes.
 
 Validate a user-specified stack directly. Compare alternatives when an unresolved material tradeoff
 requires a choice; a stack preference is not approval of the complete design.
@@ -43,13 +46,14 @@ write `execution-plan.md` (and optional bounded mirror sync) → retain run arti
 verified `Stop here`/`Execute`/`Abandon` handoff
 ```
 
-The complete specification, including technical details, remains explicitly user-verified through
-Ideate and Harden. The plan records outcomes, scope, acceptance, verification, material risks, and
-sequential dependency/parent bindings. Increments remain independently reviewable PRs.
+The user verifies the complete specification, including technical details, through Ideate and Harden.
+An increment is a piece of the plan that fits one independently reviewable PR. Each increment records
+its outcome, scope, acceptance criteria, verification, risks, dependencies, and parent Git branch.
 
 The [artifact contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/artifact-backends.md)
 owns local run storage and optional provider profiles. Run IDs remain exact, artifacts are retained,
 and mirror failures do not replace or invalidate local authority.
+
 ## Fix
 
 ```text
@@ -62,8 +66,9 @@ PR through [bounded delivery](https://github.com/howarewoo/woostack/blob/main/sk
 No project manifest or artifact-provider call is needed.
 
 Multi-increment or materially uncertain fixes, exact `--run`, `--project`, or `--issue` selections,
-and requested coordinated persistence use the project-backed Build sequence. A configured provider
-alone does not force that route. Source issues remain context, not plans or permission.
+explicitly required provider context, and requested coordinated persistence use the project-backed
+Build sequence. A configured provider alone does not force that route. Source issues provide
+context; they do not become execution plans or grant permission.
 
 ### Project-backed handoff
 
@@ -82,16 +87,18 @@ classify → scope → repository preflight → execute → verify → review �
 Change handles one bounded non-bug enhancement/refactor and has no hard approval gate. It still
 requires an explicit goal, one coherent PR boundary, verification, smoke testing, and review. It
 never reads or writes an artifact provider.
+
 ## Shared execution boundary
 
 Build and project-backed Fix hand approved work to [woostack-execute](/docs/skills/woostack-execute):
 
-1. resolve canonical repository/base and one collision-safe worktree per task;
-2. implement inline or delegate where isolation or independent work benefits;
-3. run focused verification and the real changed-path smoke test;
-4. obtain independent bounded specification validation on the complete uncommitted diff;
-5. use [woostack-commit](/docs/skills/woostack-commit) only after the diff passes; and
-6. independently read the PR/head/base/check/review result back.
+1. verify the repository and base branch, then create or resume a collision-safe worktree for each task;
+2. implement in the current session or delegate work that benefits from isolation;
+3. run focused checks and a smoke test that exercises the changed behavior in the real program;
+4. have an independent validator compare the complete uncommitted diff with the approved task;
+5. use [woostack-commit](/docs/skills/woostack-commit) only after that validation passes; and
+6. independently read back the PR, its exact head and base, and its review state. Available CI checks
+   are reported for observation; their result or availability alone does not block delivery.
 
 Execution stays sequential within a run. Separate runs may proceed concurrently only with disjoint
 worktrees, branches, and responsibility surfaces. Delegation does not grant a worker provider,
@@ -99,20 +106,20 @@ commit, posting, or acceptance authority.
 
 ## Review and corrections
 
-Local Review selects a holistic reviewer for bounded low-risk changes and specialists for
-risk-bearing or broad changes. One independent adjudicator verifies the candidates. CI and audit
-retain their specialist coverage, receipt checks, and exact source bindings.
+Local Review uses one reviewer across all relevant concerns for bounded low-risk changes and
+specialists for broader or riskier changes. An independent adjudicator checks each proposed finding
+against the evidence. CI and audit keep specialist coverage. Review receipts record what was checked
+and bind the result to the exact source.
 
 Address-comments investigates every thread, batches coherent corrections and verification, then
 replies and resolves each thread independently. Unsafe decisions stay open without discarding
 independent safe work.
+
 ## Terminal outcomes
 
-Every route returns one of:
+Depending on the command, the result is a verified scaffold, a reviewable PR or reviewed stack,
+an approved handoff before implementation, or a blocker that states exactly where work can safely
+resume. Explicit abandonment preserves recoverable work and any retained run artifacts.
 
-- verified reviewed PR or reviewed stack;
-- approved handoff before implementation;
-- truthful blocker with exact safe resume boundary; or
-- explicit abandonment preserving recoverable work and any retained run artifacts.
-
-No woostack development workflow merges.
+No woostack workflow merges, marks a PR ready, enables auto-merge, or queues a PR for merge.
+Those decisions remain with the human.

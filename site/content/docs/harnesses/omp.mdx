@@ -3,70 +3,86 @@ title: omp (Oh My Pi)
 description: Host-owned worker routing and project-scoped OMP workers.
 ---
 
-OMP is a supported coding harness. It routes work through project-scoped role workers provisioned
-by `woostack-init`; woostack is installed here, not in an external engineer such as Hermes.
+OMP is a supported coding harness, the application that runs your agent and its tools.
+`woostack-init` creates project workers that OMP can use for delegated tasks. Install woostack
+in OMP, even when an external engineer such as Hermes coordinates the work.
 
 ## Native OMP worker routing
 
-OMP's `task` primitive accepts a worker selector but no per-call model, tier, or effort argument.
-Woostack provisions three neutral project workers whose model fields point to OMP-owned role
-aliases. OMP owns concrete models, provider credentials, thinking level, and retry/fallback
-behavior; repository model leaves are ignored.
+OMP's `task` tool accepts a worker name but no model, tier, or effort setting for that individual
+call. Woostack creates three general-purpose project workers that refer to OMP's model roles.
+OMP chooses the models behind those roles and manages provider credentials, thinking level,
+retries, and fallbacks. It ignores repository model settings.
 
-- Run `woostack-init` before review; gated `woostack-doctor` repair restores missing or drifted
-  managed definitions while preserving other project agents.
-- After review angle detection, OMP verifies the complete planned selector set in the active agent
-  registry before launching any summary, angle, or validator worker.
-- Review never generates or repairs agents and never launches a partial swarm.
-- Execute dispatches one implementation task at a time per local run; disjoint run IDs may dispatch
-  concurrently.
-- Pass the exact worktree and complete task contract.
-- Workers return observations/changes; the controller owns synthesis and acceptance.
-- If the spawn API cannot set cwd, pin it in the prompt and require the worker to verify it.
+- Run `woostack-init` before review. If managed worker definitions are missing or have changed,
+  `woostack-doctor` can repair them after approval while preserving other project agents.
+- After choosing its review angles, Review checks that every worker it needs is available in the
+  active registry. It does this before starting any summary, angle, or validator worker.
+  Review never creates or repairs agents, or starts only part of the planned review group.
+- Execute handles one implementation task at a time per local run. Separate run IDs may execute
+  concurrently only in isolated worktrees with no conflicting branches, paths, or responsibilities.
+- Each worker receives the exact worktree and full task contract, including its allowed scope.
+  Workers return observations and changes; the main agent combines their results, checks them,
+  and decides whether they satisfy the task.
+- If the tool cannot set a working directory, the prompt must name the exact worktree and require
+  the worker to verify it before reading or writing.
 
 See OMP's published [model roles](https://omp.sh/docs/roles), [custom
 subagents](https://omp.sh/docs/subagents), and the canonical
 [host adapter](https://github.com/howarewoo/woostack/blob/main/skills/using-woostack/references/hosts/omp.md)
-for the exact mapping and lifecycle.
+for the exact role mapping and worker lifecycle.
 
 ## Goal-derived session naming
 
-When a woostack workflow (`/woostack-change`, `/woostack-build`, or `/woostack-fix`) is invoked, OMP
-renames the active session to a concise title derived from the trusted goal. A resume-only Build or
-Fix uses the exact verified run goal.
+When a woostack skill is invoked, OMP uses a concise session title based on the user's goal.
+For `/woostack-change`, `/woostack-build`, and `/woostack-fix`, it uses the input goal.
+A resume-only Build or Fix uses the exact verified run goal.
 
-Session naming uses an in-process project extension:
+A local extension handles session naming inside OMP:
 
-- `woostack-init` provisions the local extension `.omp/extensions/woostack-session-name.ts`, adds
-  standalone ignore rules in `.omp/.gitignore`, and safely merges its explicit path into local
-  `.omp/settings.json`.
-- The extension registers the tool `woostack_rename_session`, which calls OMP's automatic session-naming
-  API. If a user title was explicitly set via `/rename`, the user title is preserved.
-- If the extension is not yet loaded, extensions are disabled, or the tool call fails, naming degrades
-  gracefully with a concise warning without blocking the workflow.
-- OMP loads project extensions and settings at startup; restart OMP after initial installation or
-  repair so the extension becomes active. Tracked or malformed `.omp/settings.json` fails closed
-  to protect shared configuration.
-
+- `woostack-init` installs `.omp/extensions/woostack-session-name.ts`, adds standalone ignore
+  rules in `.omp/.gitignore`, and adds the extension's explicit path to local `.omp/settings.json`
+  while preserving other settings.
+- The extension registers `woostack_rename_session`, which calls OMP's automatic session-naming
+  API. A title you set explicitly with `/rename` takes precedence.
+- If the extension is not loaded, extensions are disabled, or the tool call fails, woostack gives
+  a concise warning and continues without changing the title.
+- OMP loads project extensions and settings at startup. Restart OMP after installation or repair
+  to load the extension. If `.omp/settings.json` is tracked by Git or malformed, provisioning stops
+  without changing it to protect shared configuration.
 
 ## Local run artifacts and optional remote mirroring
 
-Build and project-backed Fix operate with canonical persistent local authority under
-`.woostack/tmp/runs/<run-id>/` by default (`artifacts.provider: "local"` or omitted). When
-`artifacts.provider: "github"`, `"linear"`, or `"plane"`, local artifacts mirror to the
-configured provider. OMP credentials stay in its host-owned MCP/OAuth secret environment and never
-enter repository config, prompts, logs, or generated output. Follow the
-[Local run artifact and provider mirror contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/artifact-backends.md).
+Build and project-backed Fix save their authoritative planning records under
+`.woostack/tmp/runs/<run-id>/`. By default, `artifacts.provider` is `"local"` or omitted and these
+workflows make no provider calls. Selecting `"github"`, `"linear"`, or `"plane"` enables copies in
+the configured provider; the local records remain authoritative.
 
-Build and project-backed Fix write plain Markdown `project-spec.md` and `execution-plan.md` files.
-Run artifacts are retained upon completion and abandonment for the audit trail. A nonterminal run can
-resume exactly with `/woostack-execute --run <exact-run-id> [--recheck]`. Retained artifacts do not
-authorize worker assignment, dispatch, edits, commits, review, product acceptance, or repository
-delivery claims. Before proof, Fix makes no provider call. `woostack-change` never contacts a provider.
+Credentials stay in the host's secret store and never enter repository config, prompts, logs, or
+generated output. The
+[Local run artifact and provider mirror contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/artifact-backends.md)
+defines storage, synchronization, and recovery.
 
-Optional provider writers (Bootstrap and Commit) execute only upon explicit caller opt-in (requested persistence after design approval for Bootstrap; `--issue` for Commit), using only the official host interface matching `artifacts.provider` (host-authenticated `gh` for GitHub, or official Linear/Plane MCP), with independent read-back and nonblocking optional synchronization that preserves Git/GitHub repository authority.
+The run contains plain Markdown `project-spec.md` and `execution-plan.md` files and a recovery
+manifest. These records are retained on completion and abandonment. Resume with
+`/woostack-execute --run <exact-run-id> [--recheck]`. Execute rejects abandoned runs and verifies
+completed runs without starting more work.
+
+Saved records do not grant permission to assign workers, edit code, commit, review, or accept a
+product. They also do not prove delivery. Fix makes no provider call before proving the cause,
+and `woostack-change` never contacts a provider.
+
+Bootstrap and Commit write optional provider records only when explicitly requested: persistence
+after design approval and target collision checks for Bootstrap, or `--issue` for Commit.
+They use the official interface for `artifacts.provider`: host-authenticated `gh` for GitHub,
+or official Linear/Plane MCP tools. Each write requires a separate read to confirm its result.
+Optional synchronization failures do not block repository work unless synchronization was
+explicitly required as part of the deliverable.
+Git and GitHub remain authoritative for repository results.
+
 ## Recovery
 
-Stop on profile, cwd, worktree, branch, ancestry, credential, process-exit, verification, review, or
-submission drift. Preserve recoverable work and report the exact safe resume boundary. Never switch
-profiles/worktrees silently or claim missing worker evidence.
+Stop if the profile, working directory, worktree, branch, ancestry, or credentials no longer match
+the verified task, or if process exit, verification, review, or submission results are incomplete
+or conflicting. Preserve recoverable work and report the last safe point to resume. Never switch
+profiles or worktrees silently, or claim results that a worker did not provide.

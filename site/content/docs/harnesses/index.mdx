@@ -3,41 +3,48 @@ title: Harness reference
 description: Supported coding harnesses, native capability differences, and host-specific behavior.
 ---
 
-woostack's skill logic should work in any harness that loads and follows skills. The harnesses in
-this section are the integrations woostack explicitly documents. Native capabilities such as
-subagent dispatch, working-directory placement, model selection and routing, PTY execution,
-profile isolation, and credential boundaries differ by host. A missing capability degrades
-visibly or blocks the workflow; woostack never pretends the integration succeeded.
+A harness is the application that runs your coding agent and gives it tools to read files, edit
+code, and run commands. Woostack provides skills for that agent to follow. The six harnesses below
+have documented adapters, which tell woostack how to use each host's tools.
 
-Hermes is not a harness in this list. It is an external engineer that may drive one persistent
-OMP process; the [top-level Hermes guide](/docs/hermes) owns that boundary. Woostack installs in
-the coding harness, and the harness retains implementation, worker, and process authority.
+Capabilities differ: a host may let woostack choose a model for each worker, set its working
+directory, or run several workers at once. A worker (also called a subagent) handles an assigned
+task and returns its results to the main agent. Giving it a separate conversation context does not
+by itself restrict which files it can edit; the workflow must also set the allowed paths and
+worktree, a separate checkout for the task.
+
+When a required capability is missing, woostack reports the limitation or stops the workflow.
+Unlisted hosts have no supported per-call routing.
+
+Hermes may coordinate decisions and review results from one persistent OMP process, but woostack
+does not install in Hermes. The coding harness runs the implementation and its workers. See the
+[top-level Hermes guide](/docs/hermes) for the permission and process boundaries.
 
 ## Capability comparison
 
 | Harness | Model and effort routing | Working directory | Host behavior |
 | --- | --- | --- | --- |
-| [omp (Oh My Pi)](/docs/harnesses/omp) | Host-owned roles through init-managed project workers; no per-call model knob | Passed when exposed; explicit cwd pins when needed | OMP-owned model identity, workers, and recovery |
-| [opencode](/docs/harnesses/opencode) | Per-call model routing | Passed when exposed; prompt pin always | Provider exhaustion surfaces as an error |
-| [Claude Code](/docs/harnesses/claude-code) | Per-call model and supported effort routing | No per-call cwd; subagent self-pins | Provider exhaustion surfaces as an error |
-| [Codex](/docs/harnesses/codex) | Per-call locally; one model per Codex Action job | Passed when exposed; prompt pin always | Local and CI routing differ |
-| [Cursor / Composer](/docs/harnesses/cursor) | Session model; no per-call routing | No per-call cwd; subagent self-pins | Requested tiers collapse to the session model |
-| [Antigravity CLI](/docs/harnesses/antigravity) | One model per session | No per-call cwd; subagent self-pins | Cannot run headless in ephemeral CI |
+| [omp (Oh My Pi)](/docs/harnesses/omp) | OMP roles through project workers created by Init; no per-call model setting | Passed when supported; otherwise verified from the task prompt | OMP manages models and recovery |
+| [opencode](/docs/harnesses/opencode) | Model selection for each worker | Passed when supported; always included in the prompt | Provider usage-limit errors stop the worker |
+| [Claude Code](/docs/harnesses/claude-code) | Model and supported effort selection for each worker | Worker uses and checks the directory named in the prompt | Provider usage-limit errors stop the worker |
+| [Codex](/docs/harnesses/codex) | Model selection for local workers; one model per Codex Action job | Passed when supported; always included in the prompt | Local and CI routing differ |
+| [Cursor / Composer](/docs/harnesses/cursor) | All workers use the session model | Worker uses the directory named in the prompt | Requested tiers use the same model |
+| [Antigravity CLI](/docs/harnesses/antigravity) | One model per session | Worker uses the directory named in the prompt | Requires interactive login; cannot run in temporary headless CI |
 
-For normal in-process OMP use,
+For OMP,
 [host-owned role routing](https://github.com/howarewoo/woostack/blob/main/skills/using-woostack/references/hosts/omp.md)
-selects init-managed project workers while OMP owns concrete models, provider credentials, and
-fallback policy. External Hermes does not change that installation or worker boundary.
+selects project workers created by Init. OMP controls the models behind those roles, provider
+credentials, and fallback policy, including when Hermes coordinates the work.
 
 The [model-tier reference](https://github.com/howarewoo/woostack/blob/main/skills/using-woostack/references/model-tiers.md)
-defines the shared `fast`, `standard`, and `deep` policy. Each page below links to its canonical
-host reference for the exact mechanics.
+defines the shared `fast`, `standard`, and `deep` policy. Each host page links to its adapter for
+the exact tool calls and rules.
 
 <Cards>
-  <Card title="omp (Oh My Pi)" href="/docs/harnesses/omp" description="Host-owned worker routing and project-scoped OMP workers." />
-  <Card title="opencode" href="/docs/harnesses/opencode" description="Per-call routing through the runtime subagent primitive." />
-  <Card title="Claude Code" href="/docs/harnesses/claude-code" description="Task-based dispatch with per-call models and prompt-pinned worktrees." />
-  <Card title="Codex" href="/docs/harnesses/codex" description="Local per-call routing and Codex Action's single-session mode." />
-  <Card title="Cursor / Composer" href="/docs/harnesses/cursor" description="Parallel dispatch with session-model tier collapse." />
-  <Card title="Antigravity CLI" href="/docs/harnesses/antigravity" description="Dynamic subagents, single-session routing, and interactive authentication." />
+  <Card title="omp (Oh My Pi)" href="/docs/harnesses/omp" description="Use project workers while OMP controls their models." />
+  <Card title="opencode" href="/docs/harnesses/opencode" description="Choose a model for each delegated task." />
+  <Card title="Claude Code" href="/docs/harnesses/claude-code" description="Assign workers a model and a specific working directory." />
+  <Card title="Codex" href="/docs/harnesses/codex" description="Compare local workers with the single-model CI setup." />
+  <Card title="Cursor / Composer" href="/docs/harnesses/cursor" description="Run workers in parallel using the session model." />
+  <Card title="Antigravity CLI" href="/docs/harnesses/antigravity" description="Use workers with one session model and an interactive login." />
 </Cards>

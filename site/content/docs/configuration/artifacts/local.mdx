@@ -17,10 +17,11 @@ Omitting `artifacts.provider` has the same effect.
 
 ## Storage layout
 
-Build and project-backed Fix allocate one run directory:
+Build and project-backed Fix create one run directory. After planning finishes, it contains:
 
 ```text
 .woostack/tmp/runs/<run-id>/
+├── .lock
 ├── manifest.json
 ├── project-spec.md
 └── execution-plan.md
@@ -28,18 +29,24 @@ Build and project-backed Fix allocate one run directory:
 
 | Entry | Purpose |
 | --- | --- |
-| `manifest.json` | Recovery state, stable task mappings, mirror receipts, and monotonic revision data. |
+| `.lock` | Prevents concurrent run-store operations from overwriting each other. |
+| `manifest.json` | Resume state, stable task mappings, mirror results, and revision numbers that increase on each update. |
 | `project-spec.md` | The complete approved specification. For Fix, this includes the proved root cause. |
-| `execution-plan.md` | The ordered PR-sized increment contracts and dependency graph. |
+| `execution-plan.md` | Ordered increments, each sized for one PR, and their dependencies. |
 
 The run directory uses owner-only `0700` permissions. Run files use owner-only `0600` permissions.
-Manifest updates use compare-and-swap and atomic replacement.
+Before replacing the manifest, the run store checks that its revision still matches the expected
+value. This compare-and-swap check prevents overwriting a newer update. Replacement is atomic,
+so readers do not see a partly written manifest.
+
+The final specification and plan are each written once. Revisions require a new run; the old run
+is retained.
 
 ## Authority
 
-The local run is the canonical development-artifact record for Build and project-backed Fix. Git,
-Graphite, and GitHub remain authoritative for source, branches, commits, pull requests, reviews, and
-merge state. Artifacts record work; they do not authorize it.
+The local run is the source of truth for Build and project-backed Fix development artifacts. Git,
+Graphite, and GitHub own source, branches, commits, pull requests, reviews, and merge state.
+Artifacts record work; they do not authorize it.
 
 Remote mirroring does not transfer authority away from the local run. A mirror failure is recorded in
 `manifest.json` and does not invalidate complete local artifacts.
@@ -61,7 +68,7 @@ is a setup operation. It does not select remote storage or authorize later provi
 Completed and explicitly abandoned runs are retained. Explicit abandonment records
 `status: "abandoned"` in the manifest and does not mutate a mirrored provider project.
 
-A nonterminal run resumes by exact run ID:
+Resume an unfinished run by its exact run ID:
 
 ```text
 /woostack-execute --run <exact-run-id> [--recheck]

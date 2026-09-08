@@ -3,36 +3,37 @@ title: Parallelism with worktrees
 description: How woostack isolates bounded implementation work independently from artifact storage.
 ---
 
-Worktrees isolate tracked writes. They do not own scope, approval, status, or acceptance. The
+A Git worktree is a separate checkout of the same repository. It lets a task edit its own branch
+without changing files in the primary checkout. A worktree does not grant scope, approval, status,
+or acceptance. The
 [canonical worktree contract](https://github.com/howarewoo/woostack/blob/main/skills/woostack-init/references/worktrees.md)
-defines collision checks, ancestry, recovery, and teardown.
+defines collision checks, parent relationships, recovery, and removal.
 
 ## One worktree per bounded task
 
-Each active task has one controller/run identity, one branch, one worktree, one allowed surface, and
-at most one implementation PR. Local run manifests and task IDs remain separate from optional
-provider identities and mirror records.
+Each active implementation task has one controller and run identity, one branch, one worktree,
+one allowed set of paths, and at most one PR. Task and run IDs remain separate from optional
+provider IDs and mirror records.
 
 ```text
 .woostack/worktrees/tasks/<stable-task-id>
 ```
 
-Before create, resume, review reopen, commit, or teardown, woostack reconciles the deterministic
-path and active task/run contract directly with filesystem state, `git worktree list --porcelain`,
-local/remote branches and commits, dirty/index/diff state, Graphite ancestry, and canonical GitHub
-PR facts. The branch may have only one checkout and every observed head/base/path must form one
-consistent state.
+Before creating, resuming, reopening for review, committing, or removing a worktree, woostack checks
+its expected path and task against the filesystem, `git worktree list --porcelain`, local and remote
+branches, commits, uncommitted changes, Graphite parents, and GitHub PR evidence. A branch can be
+checked out in at most one worktree, and all observed paths and commits must agree.
 
-For new work, `git worktree add -b` creates the branch and deterministic checkout together and lets
-Git reject an existing branch, path, or checkout. A retained task resumes only when every direct
-fact agrees with the same approved contract or completely verified handoff. Partial, foreign, or
-competing state blocks without reset, stash, deletion, adoption, or create-around.
+For new work, `git worktree add -b` creates the branch and checkout together. Git rejects an
+existing branch, path, or checkout. Retained work resumes only when all evidence matches the same
+approved task or a fully verified handoff. Partial, unrelated, or competing state stops the task.
+The agent must not reset, stash, delete, adopt another checkout, or create around the collision.
 
-The parent branch intent and last admitted tip come from approved content and verified Git ancestry.
-A same-branch descendant tip is compatible only when fresh delivery-checkpoint and current-head
-review/check evidence match that exact tip. Fresh work then starts at the latest re-admitted tip,
-while retained work preserves its recorded start/head and revalidates ancestry, diff, and PR base
-without silent rebase, reset, or recreate.
+The approved task names its parent branch. Direct Git evidence verifies the branch's tip, its
+latest commit. A newer tip on the same branch must pass the shared ancestry and user-choice rules
+before new work can start there. Retained work keeps its recorded start and head commits and
+rechecks ancestry, diff, and PR base without silently rebasing, resetting, or recreating it.
+Available CI checks are observation-only; their result or availability alone does not block.
 
 | Task kind | Fresh branch start | Graphite parent |
 | --- | --- | --- |
@@ -40,10 +41,9 @@ without silent rebase, reset, or recreate.
 | Independent feature root | latest compatible tip of the approved parent branch | approved parent branch |
 | Dependency child | latest compatible tip/head of its declared Git parent | declared parent branch |
 
-Branch identity changes, rewrites, conflicts, duplicate ancestry, delivery-evidence mismatch, and
-incomplete evidence block.
-Titles, nearby branches, artifact relations alone, and task order do not substitute for the
-approved dependency graph and Git ancestry.
+A changed branch identity, rewritten history, conflict, duplicate ancestry, delivery-evidence
+mismatch, or missing required evidence stops the task. Titles, nearby branches, artifact links, and
+task order cannot replace approved dependencies and verified Git ancestry.
 
 ## The primary tree stays clean
 
@@ -52,21 +52,21 @@ approved dependency graph and Git ancestry.
   stable coordination point.
 </Callout>
 
-Execute processes tasks strictly sequentially within each local run. Distinct local run IDs may run
-concurrently only when their responsibility surfaces, branches, worktrees, and PRs are disjoint.
-Dependent tasks always follow their declared Git parent. Subagents receive the exact path and verify
-that their physical working directory matches the Git top level before writing.
+Execute processes tasks one at a time within each local run. Separate runs can proceed concurrently
+only when their allowed paths, branches, worktrees, and PRs do not overlap. Dependent tasks follow
+their declared Git parent. Before writing, each worker checks that its physical working directory
+is the exact Git root it was assigned.
 
 ## Teardown and recovery
 
-- **Success:** after the finalized commit and canonical PR identity read back and the task worktree
-  is clean, remove only the exact deterministic worktree. Branch, commits, PR, and remote evidence
-  remain.
-- **Failure, handoff, or unknown:** preserve the worktree. Report task/run contract, deterministic
-  path, worktree inventory, branch/ancestry, dirty state, observed boundary, and safe next action; a
-  timeout proves neither success nor absence.
-- **Review reopen:** reattach only the existing verified branch/head when its deterministic path is
-  free and the branch is checked out nowhere; never invent or adopt an unrelated checkout.
+- After success, the controller verifies the finalized commit, clean task worktree, and canonical
+  PR identity when submission was requested. It removes only the exact task worktree. The branch,
+  commits, PR, and remote evidence remain.
+- On failure, handoff, or an unknown result, keep the worktree. Report the task and run, expected
+  path, worktree inventory, branch ancestry, uncommitted changes, first unverified step, and safe next
+  action. A timeout proves neither success nor absence.
+- When reopening for review, attach only the verified existing branch and head. Its expected path
+  must be free and the branch checked out nowhere else. Never adopt an unrelated checkout.
 
-Artifact synchronization and delivery evidence remain separate. Optional provider failure never
-weakens local collision or ancestry checks and is nonblocking for verified local authority.
+Optional provider failure does not weaken collision or ancestry checks. A failed mirror operation
+does not block delivery that has been verified against the local run and repository.
