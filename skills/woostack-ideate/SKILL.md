@@ -53,6 +53,15 @@ schemas, migrations, or endpoints from repository inspection.
 
 ## Dialogue and local drafting
 
+Use the active harness's native ask/question tool for every decision batch. Select the supported
+adapter through the [host index](../using-woostack/references/hosts/README.md) and discover the
+question tool and its schema from the live session; never assume another harness's tool name or
+arguments. Submit the eligible questions together using the tool's batch support. If its schema
+limits batch size, split only at that limit without postponing known independent questions.
+If the tool is unavailable or cannot represent a required question, state that limitation and ask
+the affected questions in a clearly numbered chat batch instead. Tool defaults, preselected options,
+and recommendations are not user verification; only explicit user answers may enter the draft.
+
 Brainstorm exhaustively within the requested feature, ask only for missing decisions, and resolve
 upstream decisions first. Use this progressive coverage order to expose dependencies and keep the
 conversation anchored to the contract:
@@ -77,9 +86,10 @@ Apply each category only when it is relevant to the project and its answer can a
 specification or design. Architecture, interface, and technology choices still require explicit
 user verification. The ordering does not justify serializing independent decisions: ask every
 currently known independent question together
-in one clearly numbered batch, including questions from later categories when their upstream
-decisions are already verified or unnecessary. A batch may contain one question only when it is the
-sole currently eligible question. Do not ask a dependent question until its upstream decision is
+in one clearly numbered batch through that tool, subject only to its schema limits, including
+questions from later categories when their upstream decisions are already verified or unnecessary.
+Outside tool-imposed splits, a batch may contain one question only when it is the sole currently
+eligible question. Do not ask a dependent question until its upstream decision is
 verified. A later batch may contain only questions that become dependent after verified answers or
 questions that remained unresolved or ambiguous in an earlier batch; do not defer a question that
 was already known to be independent. Options and an explicit recommendation may help the user decide,
