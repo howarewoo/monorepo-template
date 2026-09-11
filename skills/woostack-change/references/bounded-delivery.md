@@ -49,6 +49,10 @@ accessibility, compatibility, and data-loss protections. Follow the canonical
 for new or materially changed boundaries; do not migrate untouched legacy boundaries or add no-op
 wrappers for shared identity contracts.
 
+When considering optional implementation delegation, use the shared
+[model-tier guidance](../../using-woostack/references/model-tiers.md), including its speed and
+cost considerations for simple tasks. The calling skill retains delivery ownership.
+
 Inspect the complete diff and changed paths. Run focused verification and the changed-path smoke
 scenario, retaining exact commands and observed results. For Fix, confirm the proved reproduction
 no longer triggers and retain a regression test when it defends the failure; if impractical, report

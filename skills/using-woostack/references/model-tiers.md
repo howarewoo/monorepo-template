@@ -11,6 +11,11 @@ Tiers are `fast | standard | deep`. The caller selects an effective tier or uses
 frontmatter; the runtime resolves it to a concrete model or host-owned role according to the
 current host's capability class. The context/summary helper subagent is implicitly `fast`.
 
+For simple, fully specified tasks, delegating to `fast` is often much faster and cheaper than
+implementing in the main session. Consider that benefit alongside dispatch, context preparation,
+and verification overhead under the calling workflow's delegation rules. Delegation remains
+optional; keep work inline when the total cost or risk favors it.
+
 | Tier | Use for | Anthropic | OpenAI (Codex) | Google (Gemini) | OpenRouter |
 |---|---|---|---|---|---|
 | `fast` | rubric checklists, mechanical fully-specified 1–2-file tasks, context summaries | `claude-opus-4-8` + `effort: low` | `gpt-5.5` + `reasoning_effort: low` | `gemini-3-5-flash` | `openrouter/deepseek/deepseek-v4-flash` |
