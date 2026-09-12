@@ -93,7 +93,7 @@ never reads or writes an artifact provider.
 Build and project-backed Fix hand approved work to [woostack-execute](/docs/skills/woostack-execute):
 
 1. verify the repository and base branch, then create or resume a collision-safe worktree for each task;
-2. implement in the current session or delegate work that benefits from isolation;
+2. choose inline or delegated implementation using the [delegation guidance](/docs/concepts/context-management#isolated-agents-receive-bounded-envelopes);
 3. run focused checks and a smoke test that exercises the changed behavior in the real program;
 4. have an independent validator compare the complete uncommitted diff with the approved task;
 5. use [woostack-commit](/docs/skills/woostack-commit) only after that validation passes; and
