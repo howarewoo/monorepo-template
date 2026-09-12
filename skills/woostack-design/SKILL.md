@@ -45,10 +45,15 @@ Apply this spatial standard to all arranged flows:
 
 - **Dedicated rows beneath source.** Place alternative paths, error branches, and forks in their own
   horizontal rows positioned beneath the exact source sequence from which they branch.
-- **Column alignment.** Align the first frame of a fork directly beneath the column of the step
-  frame from which it branches.
-- **Matching rhythm.** Subsequent frames in a fork proceed left-to-right following the same
-  horizontal spacing rhythm as the primary sequence.
+- **Equivalent-step alignment.** Place steps representing the same stage or outcome in the same
+  column across the primary sequence and fork rows, so equivalent steps align vertically.
+  Match by meaning, not ordinal position within each row.
+- **Fork start.** When a fork's first frame has an equivalent step, use that step's column;
+  otherwise align it directly beneath the source step from which it branches.
+- **Matching rhythm.** Subsequent frames proceed left-to-right using the primary sequence's
+  horizontal spacing rhythm. Leave empty column space for skipped steps and reserve columns for
+  branch-only steps across affected rows; equivalent-step alignment takes precedence over uniform
+  gaps between occupied frames. Preserve each path's step order.
 - **Clear vertical separation.** Maintain a distinct relative vertical gap between the source
   sequence and each fork row.
 - **Optional branch label.** Include a concise fork label above the branch sequence only when the
