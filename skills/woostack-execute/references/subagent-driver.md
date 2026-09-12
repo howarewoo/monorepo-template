@@ -1,9 +1,12 @@
 # Implementation and optional subagent driver
 
-Implement inline when delegation adds no useful separation. Delegate substantial work when an
-independent responsibility or isolated context makes the implementation easier to complete and
-check. Either path implements only the one admitted increment in its exact isolated worktree;
-neither permits another increment to start early.
+Before choosing inline or delegated implementation, use the shared
+[model-tier guidance](../../using-woostack/references/model-tiers.md), including its speed and
+cost considerations for simple, fully specified tasks. Weigh those benefits alongside dispatch,
+context preparation, verification overhead, and risk; useful separation is not the only reason
+to delegate. Implement inline when that comparison favors it. Either path implements only the
+one admitted increment in its exact isolated worktree; neither permits another increment to
+start early.
 
 The controller retains admission, issue selection, predecessor/Graphite proof, worktree allocation,
 lifecycle writes, commit, PR submission, read-backs, and teardown. Delegation transfers only the
