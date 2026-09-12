@@ -45,6 +45,9 @@ Apply this spatial standard to all arranged flows:
 
 - **Dedicated rows beneath source.** Place alternative paths, error branches, and forks in their own
   horizontal rows positioned beneath the exact source sequence from which they branch.
+- **Fork row order.** Order fork rows from top to bottom by their source steps' order in the flow:
+  earlier forks sit above later forks. Keep forks from the same source step together in their
+  existing relative order, and keep nested forks beneath their own source sequence.
 - **Equivalent-step alignment.** Place steps representing the same stage or outcome in the same
   column across the primary sequence and fork rows, so equivalent steps align vertically.
   Match by meaning, not ordinal position within each row.
@@ -56,9 +59,10 @@ Apply this spatial standard to all arranged flows:
   gaps between occupied frames. Preserve each path's step order.
 - **Clear vertical separation.** Maintain a distinct relative vertical gap between the source
   sequence and each fork row.
-- **Optional branch label.** Include a concise fork label above the branch sequence only when the
-  branch condition or trigger is not evident from the frame content.
-- **Contained in flow group.** All fork rows and labels remain inside the parent flow group.
+- **Branch explanation.** Precede every fork's first screen with a concise explanation of the branch
+  condition or trigger, placed immediately to the left of that screen. Keep the explanation outside
+  screen frames and reserve space for it without shifting screens out of their aligned columns.
+- **Contained in flow group.** All fork rows and explanations remain inside the parent flow group.
 
 ### 4. Multi-flow arrangement
 
